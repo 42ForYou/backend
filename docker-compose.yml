@@ -5,7 +5,7 @@ services:
     container_name: web
     build: .
     # command: python manage.py runserver 0.0.0.0:8000
-    command: daphne -b 0.0.0.0 -p 8000 pong.asgi:application
+    command: /tmp/server_run.sh
     ports:
       - "8000:8000"
     volumes:

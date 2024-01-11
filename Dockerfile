@@ -8,6 +8,7 @@ WORKDIR /app
 
 # 의존성 파일 복사 및 설치
 COPY requirements.txt /tmp/requirements.txt
+COPY ./scripts/server_run.sh /tmp/server_run.sh
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 # 프로젝트 파일 복사
