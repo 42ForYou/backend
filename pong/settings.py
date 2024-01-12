@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "accounts.apps.AccountsConfig",
     "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -135,3 +136,8 @@ STATIC_URL = "/static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Use our custom User class for authorization
+# in app "accounts", file "models.py"
+
+AUTH_USER_MODEL = "accounts.User"
