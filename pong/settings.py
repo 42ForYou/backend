@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "channels",
     "channels_redis",
     "django_filters",
+    "authentication",
 ]
 
 MIDDLEWARE = [
