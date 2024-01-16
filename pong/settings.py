@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "channels_redis",
     "django_filters",
     "authentication",
+    "game",
 ]
 
 MIDDLEWARE = [
