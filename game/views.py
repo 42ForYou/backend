@@ -9,7 +9,6 @@ from rest_framework import status
 
 from .models import Game, GameRoom
 from .serializers import GameSerializer, GameRoomSerializer, GameRoomJoinSerializer
-from time import sleep
 
 
 def wrap_data(serializer):

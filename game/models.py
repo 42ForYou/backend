@@ -1,4 +1,5 @@
 from django.db import models
+from accounts.models import User
 
 
 class Game(models.Model):
@@ -23,3 +24,15 @@ class GameRoom(models.Model):
 
     def __str__(self):
         return f"GameRoom {self}"
+
+
+class GamePlayer(models.Model):
+    id = models.AutoField(primary_key=True)
+    game_id = models.ForeignKey(
+        Game, on_delete=models.CASCADE, related_name="game_player", default=1
+    )
+    nick_name = models.CharField(max_length=50, default="anonymous")
+    rank = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"GamePlayer {self}"
