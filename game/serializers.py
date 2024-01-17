@@ -1,4 +1,5 @@
-from .models import Game, GameRoom
+from .models import Game, GameRoom, GamePlayer
+from accounts.models import User
 from rest_framework import serializers
 
 
@@ -20,8 +21,20 @@ class GameRoomJoinSerializer(serializers.ModelSerializer):
     class Meta:
         model = GameRoom
         fields = [
+            "id",
             "room_title",
             "status",
             "join_players",
             "game",
         ]
+
+
+class GamePlayerSerializer(serializers.ModelSerializer):
+    intra_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        required=True,
+    )
+
+    class Meta:
+        model = GamePlayer
+        fields = "__all__"
