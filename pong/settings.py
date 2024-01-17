@@ -144,8 +144,4 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # in app "accounts", file "models.py"
 
 AUTH_USER_MODEL = "accounts.User"
-
-AUTHENTICATION_BACKENDS = [
-    # "authentication.backends.IntraIDBackend",
-    "django.contrib.auth.backends.ModelBackend",
-]
+DEFAULT_AUTHENTICATION_CLASSES = "rest_framework.authentication.TokenAuthentication"
