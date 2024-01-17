@@ -36,11 +36,12 @@ def authenticate_user_and_token(intra_id, request):
         )
         user = User.objects.get(intra_id=intra_id)
         token = Token.objects.get(user=user, key=token_key)
-        return (
-            user,
-            None if token else None,
-            JsonResponse({"status": False, "error": "Invalid Token"}, status=401),
-        )
+        if token:
+            return user, None  # 유효한 토큰인 경우
+        else:
+            return None, JsonResponse(
+                {"status": False, "error": "Invalid Token"}, status=401
+            )
     except (User.DoesNotExist, Token.DoesNotExist):
         return (
             None,
