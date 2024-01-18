@@ -12,3 +12,4 @@ django-otp
 psycopg2
 redis
 daphne
+drf-yasg

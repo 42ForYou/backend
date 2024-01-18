@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "django_filters",
     "authentication",
     "game",
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [
