@@ -20,8 +20,6 @@ from .serializers import (
     GamePlayerSerializer,
 )
 
-from django.views.decorators.csrf import csrf_exempt
-
 
 def get_game_room(game_id):
     try:
@@ -86,7 +84,7 @@ def create_game_room(request):
     game_serializer = GameSerializer(data=request.data)
     if game_serializer.is_valid():
         game = game_serializer.save()
-        game_room_data = request.data.copy()
+        game_room_data = request.data.copy()["room"]
         game_room_data["game_id"] = game.game_id
         game_room_serializer = GameRoomSerializer(data=game_room_data)
         if game_room_serializer.is_valid():
