@@ -6,7 +6,7 @@ class Game(models.Model):
     game_id = models.AutoField(primary_key=True)
     is_tournament = models.BooleanField(default=True)
     game_point = models.PositiveIntegerField(default=1)
-    time_limt = models.PositiveIntegerField(default=180)
+    time_limit = models.PositiveIntegerField(default=180)
     n_players = models.PositiveIntegerField(default=2)
 
     def __str__(self):
@@ -32,7 +32,7 @@ class GamePlayer(models.Model):
         User, on_delete=models.DO_NOTHING, default="anonymous", null=False
     )
     game_id = models.ForeignKey(
-        Game, on_delete=models.CASCADE, related_name="game_player", default=1
+        Game, on_delete=models.CASCADE, related_name="game_player"
     )
     nick_name = models.CharField(max_length=50, default="anonymous")
     rank = models.PositiveIntegerField(default=0)
