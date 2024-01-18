@@ -18,12 +18,12 @@ class GameRoom(models.Model):
     game_id = models.OneToOneField(
         Game, on_delete=models.CASCADE, related_name="game_room"
     )
-    room_title = models.CharField(max_length=50)
+    title = models.CharField(max_length=50)
     status = models.CharField(max_length=10, default="waiting")
     join_players = models.PositiveIntegerField(default=0)
 
     def __str__(self):
-        return f"GameRoom {self.game_id} of {self.room_title}"
+        return f"GameRoom {self.game_id} of {self.title}"
 
 
 class GamePlayer(models.Model):

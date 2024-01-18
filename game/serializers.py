@@ -22,7 +22,7 @@ class GameRoomJoinSerializer(serializers.ModelSerializer):
         model = GameRoom
         fields = [
             "id",
-            "room_title",
+            "title",
             "status",
             "join_players",
             "game",
