@@ -39,12 +39,10 @@ def delete_game_room(game_room):
 
 
 def join_host(request, game_room):
-    host_data = request.data.get("host")
-    # nickname 추가로직 필요
-    host_data["game_id"] = game_room.game_id
-    host_serializer = GamePlayerSerializer(data=host_data)
-    if host_serializer.is_valid():
-        host_serializer.save()
+    host = game_room.host
+    game = game_room.game_id
+    game_player = GamePlayer(intra_id=host, game_id=game, rank=0)
+    game_player.save()
 
 
 def is_authorized_user(request):
@@ -62,50 +60,26 @@ class GameRoomViewSet(
     # permission_classes = [IsAuthenticated]
     # authentication_classes = [TokenAuthentication]
 
-    def get_serializer_class(self):
-        if self.request.method in ["PUT", "PATCH"]:
-            return EmptySerializer
-        return super().get_serializer_class()
-
     def list(self, request):
         game_rooms = GameRoom.objects.all()
-        serializer = GetGameRoomSerializer(game_rooms, many=True)
+        serializer = GameRoomSerializer(game_rooms, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, **kwargs):
         try:
             game_room = GameRoom.objects.select_related("game_id").get(pk=kwargs["pk"])
-            serializer = GetGameRoomSerializer(game_room)
+            serializer = GameRoomSerializer(game_room)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except GameRoom.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-    @swagger_auto_schema(
-        request_body=GameRoomCreateSerializer,
-        responses={201: "Created", 400: "Bad Request"},
-    )
     def create(self, request, *args, **kwargs):
-        serializer = GameRoomCreateSerializer(data=request.data)
+        serializer = GameRoomSerializer(data=request.data)
         if serializer.is_valid():
-            game_data = request.data.get("game")
-            game_serializer = GameSerializer(data=game_data)
-
-            if game_serializer.is_valid():
-                game = game_serializer.save()
-                game_room_data = request.data.get("room")
-                game_room_data["game_id"] = game.game_id
-                game_room_serializer = GameRoomSerializer(data=game_room_data)
-
-                if game_room_serializer.is_valid():
-                    game_room = game_room_serializer.save()
-                    join_host(request, game_room)
-                    return Response(
-                        game_room_serializer.data, status=status.HTTP_201_CREATED
-                    )
-                return Response(
-                    game_room_serializer.errors, status=status.HTTP_400_BAD_REQUEST
-                )
-        return Response(game_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            game_room = serializer.save()
+            join_host(request, game_room)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, *args, **kwargs):
         if not kwargs.get("pk"):
@@ -116,22 +90,22 @@ class GameRoomViewSet(
         return delete_game_room(game_room)
 
 
-class PlayerViewSet(viewsets.ModelViewSet):
+class PlayerViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
     queryset = GamePlayer.objects.all()
     serializer_class = GamePlayerSerializer
     # permission_classes = [IsAuthenticated]
     # authentication_classes = [TokenAuthentication]
 
     def list(self, request):
-        game_id = request.data["game_id"]
-        if not game_id:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
         try:
-            players = GamePlayer.objects.select_related("game_id").filter(
-                game_id=game_id
-            )
+            players = GamePlayer.objects.all()
             serializer = GamePlayerSerializer(players, many=True)
-            return Response((serializer), status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except GamePlayer.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 

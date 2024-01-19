@@ -14,11 +14,14 @@ class Game(models.Model):
 
 
 class GameRoom(models.Model):
-    id = models.AutoField(primary_key=True)
+    host = models.ForeignKey(
+        User, on_delete=models.DO_NOTHING, default="anonymous", null=False
+    )
     game_id = models.OneToOneField(
         Game, on_delete=models.CASCADE, related_name="game_room"
     )
-    title = models.CharField(max_length=50)
+    id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=50, null=False)
     status = models.CharField(max_length=10, default="waiting")
     join_players = models.PositiveIntegerField(default=0)
 
