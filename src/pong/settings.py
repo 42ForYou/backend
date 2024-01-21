@@ -50,6 +50,9 @@ INSTALLED_APPS = [
     "authentication",
     "game",
     "drf_yasg",
+    "socketcontrol",
+    "livechat",
+    "livegame",
 ]
 
 MIDDLEWARE = [
