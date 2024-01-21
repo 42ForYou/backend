@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import Http404
 
-from .models import Game, GameRoom, GamePlayer, User
+from .models import Game, GameRoom, GamePlayer, User, SubGame
 from .serializers import *
 
 
@@ -148,3 +148,13 @@ class PlayerViewSet(
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
         except GamePlayer.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+class SubGameViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    queryset = SubGame.objects.all()
+    serializer_class = SubGameSerializer
