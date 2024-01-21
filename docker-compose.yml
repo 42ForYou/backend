@@ -38,7 +38,7 @@ volumes:
     driver_opts:
       o: bind
       type: none
-      device: ${PWD}
+      device: ${PWD}/src
 
 networks:
   default:
