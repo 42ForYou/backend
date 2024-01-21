@@ -45,3 +45,24 @@ class GamePlayer(models.Model):
 
     def __str__(self):
         return f"GamePlayer {self}"
+
+
+class SubGame(models.Model):
+    game_id = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="sub_game")
+    rank = models.PositiveIntegerField()  # 0: 결승, 1: 4강, 2: 8강 ...
+    idx_in_rank = models.PositiveIntegerField()  # 각 "강" 내부에서의 인덱스 (0부터 시작)
+
+    player_a = models.ForeignKey(
+        GamePlayer, on_delete=models.DO_NOTHING, null=False, related_name="player_a"
+    )
+    player_b = models.ForeignKey(
+        GamePlayer, on_delete=models.DO_NOTHING, null=False, related_name="player_b"
+    )
+
+    point_a = models.PositiveIntegerField(default=0)  # A 플레이어가 최종적으로 획득한 점수
+    point_b = models.PositiveIntegerField(default=0)  # B 플레이어가 최종적으로 획득한 점수
+
+    winner = models.CharField(max_length=1)  # "A" or "B"
+
+    def __str__(self):
+        return f"SubGame rank {self.rank}, [{self.idx_in_rank}] in Game {self.game_id}"

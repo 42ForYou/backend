@@ -1,76 +1,5 @@
-from .models import Game, GameRoom, GamePlayer
-from accounts.models import User
 from rest_framework import serializers
-
-
-# class EmptySerializer(serializers.Serializer):
-#     pass
-
-
-# class HostSerializer(serializers.Serializer):
-#     intra_id = serializers.CharField()
-
-
-# class RoomSerializer(serializers.Serializer):
-#     class Meta:
-#         model = GameRoom
-#         fields = "__all__"
-
-
-# class GameSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Game
-#         fields = "__all__"
-
-
-# class GameRoomCreateSerializer(serializers.Serializer):
-#     host = HostSerializer()
-#     game = GameSerializer()
-#     room = RoomSerializer()
-
-
-# class GameRoomSerializer(serializers.ModelSerializer):
-#     host = HostSerializer()
-#     game = GameSerializer()
-#     room = RoomSerializer()
-
-#     class Meta:
-#         model = GameRoom
-#         fields = [
-#             "host",
-#             "game",
-#             "room",
-#         ]
-
-
-# class GetGameRoomSerializer(serializers.ModelSerializer):
-#     game = GameSerializer(source="game_id")
-
-#     class Meta:
-#         model = GameRoom
-#         fields = [
-#             "game",
-#             "id",
-#             "title",
-#             "status",
-#             "join_players",
-#             "game_id",
-#         ]
-
-
-# class GamePlayerSerializer(serializers.ModelSerializer):
-#     intra_id = serializers.PrimaryKeyRelatedField(
-#         queryset=User.objects.all(),
-#         required=True,
-#     )
-
-#     class Meta:
-#         model = GamePlayer
-#         fields = "__all__"
-
-
-from rest_framework import serializers
-from .models import Game, GameRoom, GamePlayer
+from .models import Game, GameRoom, GamePlayer, SubGame
 from accounts.models import User
 
 
@@ -112,3 +41,9 @@ class GamePlayerSerializer(serializers.ModelSerializer):
     class Meta:
         model = GamePlayer
         fields = ["id", "intra_id", "game_id", "nick_name", "rank"]
+
+
+class SubGameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubGame
+        fields = "__all__"
