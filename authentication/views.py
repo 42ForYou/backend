@@ -4,8 +4,8 @@ from django.views import View
 from django.contrib.auth import login, logout
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
-from accounts.models import User
-from accounts.serializers import UserSerializer
+from accounts.models import User, Profile
+from accounts.serializers import UserSerializer, ProfileSerializer
 
 from channels.db import database_sync_to_async
 from asgiref.sync import sync_to_async
@@ -15,6 +15,16 @@ from django.utils.decorators import method_decorator
 from django.db import IntegrityError
 
 import json
+
+
+async def create_profile(request, user):
+    # creste profile if not exists
+    profile, _ = await sync_to_async(Profile.objects.get_or_create)(
+        user=user,
+        nickname=user.intra_id,
+        email=user.intra_id + "@42seoul.kr",
+        image="default.jpg",
+    )
 
 
 async def load_json_data(request):
@@ -59,6 +69,7 @@ class RegisterView(View):
         if await sync_to_async(serializer.is_valid)():
             user = await self.create_user(serializer.validated_data)
             if user:
+                await create_profile(request, user)
                 user_dict = await sync_to_async(model_to_dict)(user)
                 user_dict.pop("password", None)
                 return JsonResponse({"status": True, "data": user_dict}, status=201)
@@ -181,3 +192,23 @@ class LogoutView(View):
             return False
         except User.DoesNotExist:
             return False
+
+
+from rest_framework import viewsets
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
+from rest_framework import mixins, viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
+
+from asgiref.sync import sync_to_async
+from rest_framework.response import Response
+
+
+class ProfileViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
