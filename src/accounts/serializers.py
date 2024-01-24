@@ -30,21 +30,16 @@ class UserSerializer(serializers.ModelSerializer):
     intra_id = serializers.CharField(
         max_length=32, validators=[UniqueValidator(queryset=User.objects.all())]
     )
-    password = serializers.CharField(
-        write_only=True, required=True, validators=[validate_password]
-    )
 
     class Meta:
         model = User
-        fields = (
-            "intra_id",
-            "password",
-        )
+        fields = ("intra_id",)
 
     def create(self, validated_data):
         validated_data["username"] = validated_data["intra_id"]
         user = User.objects.create_user(**validated_data)
         return user
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     intra_id = serializers.CharField(source="user.intra_id", read_only=True)

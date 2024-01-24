@@ -6,7 +6,6 @@ django-cors-headers
 channels
 channels_redis
 djangorestframework-simplejwt
-django-allauth
 django-two-factor-auth
 django-otp
 psycopg2
@@ -14,3 +13,5 @@ redis
 daphne
 drf-yasg
 python-socketio
+python-dotenv
+requests
