@@ -150,7 +150,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # in app "accounts", file "models.py"
 
 AUTH_USER_MODEL = "accounts.User"
-DEFAULT_AUTHENTICATION_CLASSES = "rest_framework.authentication.TokenAuthentication"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ]
+}
 
 CLIENT_ID = os.environ.get("CLIENT_ID")
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
