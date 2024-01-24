@@ -1,0 +1,120 @@
+// Profile
+GET /profiles/{intra_id}
+"data": {
+    "user": {
+        "intra_id": "string",
+        "nickname": "string",
+        "email": "string",
+        "avator": "string",
+        "2FA": "boolean",
+    },
+    "match_history": [
+        {...}
+		]
+}
+
+PATCH /profiles/{intra_id}
+"data": {
+    "nickname": "string"
+}
+
+// gameRoom?is_tournament=true
+GET /game/game_rooms/?is_tournament=true&page=2
+"data": {
+	[
+	  {
+	    "game": {
+	      "game_id": int,
+	      "is_tournament": boolean,
+	      "game_point": int,
+	      "time_limit": int,
+	      "n_players": int
+	    },
+			"room": {
+		    "id": int,
+		    "title": "string",
+		    "status": "string",
+		    "join_players": int,
+		    "host": {
+					"nickname": "string"
+				}
+			}
+	  }
+	]
+},
+"pages": {
+	"previous_page": "/game/game_rooms/?is_tournament=true&page=1",  // 이전 페이지 URL
+	"next_page": "/game/game_rooms/?is_tournament=true&page=3"  // 다음 페이지 URL
+}
+
+POST /game/game_rooms/
+"data": {
+	"game": {
+		"is_tournament": boolean,
+		"game_point": int,
+		"time_limit": int,
+		"n_players": int
+	},
+	"room": {
+		"title": "string",
+		"host": {
+		"nickname": "string"
+		}
+	}
+}
+
+DELETE /game/game_rooms/{game_id}/
+{}
+
+// gameRoom?is_tournament=false
+GET /game/game_rooms/?is_tournament=false&page=2
+"data": {
+	[
+	  {
+	    "game": {
+	      "game_id": int,
+	      "is_tournament": boolean,
+	      "game_point": int,
+	      "time_limit": int,
+	      "n_players": int
+	    },
+			"room": {
+		    "id": int,
+		    "title": "string",
+		    "status": "string",
+		    "join_players": int,
+		    "host": {
+					"nickname": "string",
+					"avator": "string"
+				}
+				"guest": {
+					"nickname": "string",
+					"avator": "string"
+				}
+			}
+	  }
+	]
+},
+"pages": {
+	"previous_page": "/game/game_rooms/?is_tournament=false&page=1",  // 이전 페이지 URL
+	"next_page": "/game/game_rooms/?is_tournament=false&page=3"  // 다음 페이지 URL
+}
+
+POST /game/game_rooms/
+"data": {
+	"game": {
+		"is_tournament": boolean,
+		"game_point": int,
+		"time_limit": int,
+		"n_players": int
+	},
+	"room": {
+		"title": "string",
+		"host": {
+		"nickname": "string"
+		}
+	}
+}
+
+DELETE /game/game_rooms/{game_id}/
+{}
