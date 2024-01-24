@@ -1,13 +1,10 @@
-from django.urls import path, include
-from .views import RegisterView, LoginView, LogoutView, ProfileViewSet
-from rest_framework import routers
+from django.urls import path
+from .views import LoginView, LogoutView
+from .oauthviews import OAuthView
 
-router = routers.DefaultRouter()
-router.register("profiles", ProfileViewSet, basename="profiles")
 
 urlpatterns = [
-    path("register/", RegisterView.as_view(), name="register"),
     path("login/", LoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),
-    path("", include(router.urls), name="profiles"),
+    path("oauth/", OAuthView.as_view(), name="oauth"),
 ]

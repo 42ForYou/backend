@@ -10,6 +10,8 @@ services:
       - "8000:8000"
     volumes:
       - django_dev:/app
+    env_file:
+      - .env
     environment:
       - POSTGRES_NAME=${POSTGRES_NAME}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -23,6 +25,8 @@ services:
     pull_policy: always
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - .env
     environment:
       - POSTGRES_DB=${POSTGRES_NAME}
       - POSTGRES_USER=${POSTGRES_USER}
