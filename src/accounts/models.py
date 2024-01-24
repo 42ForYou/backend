@@ -13,4 +13,5 @@ class Profile(models.Model):
     nickname = models.CharField(max_length=32, unique=True)
     email = models.CharField(max_length=128, unique=True)
     # FIXME: "profile_pics" may cause directory path issues
-    image = models.ImageField(default="default.jpg", upload_to="profile_pics")
+    avator = models.ImageField(default="default.jpg", upload_to="profile_pics")
+    two_factor_auth = models.BooleanField(default=False)
