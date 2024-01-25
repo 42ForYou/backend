@@ -23,7 +23,7 @@ class GameRoom(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=50, null=False)
     status = models.CharField(max_length=10, default="waiting")
-    join_players = models.PositiveIntegerField(default=0)
+    join_players = models.PositiveIntegerField(default=1)
 
     def __str__(self):
         return f"GameRoom {self.game_id} of {self.title}"

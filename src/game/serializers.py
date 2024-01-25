@@ -1,13 +1,10 @@
 from rest_framework import serializers
-from .models import Game, GameRoom, GamePlayer, SubGame, GameResult, GameResultEntry
-from accounts.models import User
+from .models import Game, GameRoom, GamePlayer, SubGame
+from accounts.models import User, Profile
+from accounts.serializers import UserSerializer, ProfileNotOwnerSerializer
 
 
-class RoomSerializer(serializers.Serializer):
-    title = serializers.CharField()
-    join_players = serializers.IntegerField()
-
-
+# Game related serializers
 class GameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
@@ -15,19 +12,20 @@ class GameSerializer(serializers.ModelSerializer):
 
 
 class GameRoomSerializer(serializers.ModelSerializer):
-    game = GameSerializer(source="game_id")
+    host = serializers.SerializerMethodField()
 
     class Meta:
         model = GameRoom
-        fields = ["game", "id", "title", "status", "join_players", "host"]
+        fields = "__all__"
+
+    def get_host(self, obj):
+        profile = Profile.objects.get(user=obj.host)
+        return profile.nickname
 
     def create(self, validated_data):
-        game_data = validated_data.pop("game_id")
-        room_data = validated_data
-        game = Game.objects.create(**game_data)
-        intra_id = User.objects.get(intra_id=room_data.pop("host"))
-        room = GameRoom.objects.create(**room_data, game_id=game, host=intra_id)
-        return room
+        validated_data.pop("join_players", None)
+        validated_data.pop("status", None)
+        return super().create(validated_data)
 
 
 class GamePlayerSerializer(serializers.ModelSerializer):
@@ -49,13 +47,40 @@ class SubGameSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class GameResultSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GameResult
-        fields = "__all__"
+## Swagger를 위한 Serializers
 
 
-class GameResultEntrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GameResultEntry
-        fields = "__all__"
+class RoomHostSerializer(serializers.Serializer):
+    nickname = serializers.CharField()
+
+
+class RoomSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    status = serializers.CharField()
+    join_players = serializers.IntegerField()
+    host = RoomHostSerializer()
+
+
+# Page related serializers
+class SwaggerPagesSerializer(serializers.Serializer):
+    total_pages = serializers.IntegerField()
+    count = serializers.IntegerField()
+    current_page = serializers.IntegerField()
+    previous_page = serializers.CharField()
+    next_page = serializers.CharField()
+
+
+# Wrapping serializers
+class SwaggerGameRoomSerizlizer(serializers.Serializer):
+    gmae = GameSerializer()
+    room = RoomSerializer()
+
+
+class SwaggerGameListSerializer(serializers.Serializer):
+    data = SwaggerGameRoomSerizlizer(many=True)
+    pages = SwaggerPagesSerializer()
+
+
+class SwaggerGameRetriveSerializer(serializers.Serializer):
+    data = SwaggerGameRoomSerizlizer()
