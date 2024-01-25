@@ -15,8 +15,21 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import Http404
 
-from .models import Game, GameRoom, GamePlayer, User, SubGame
-from .serializers import *
+from .models import (
+    Game,
+    GameRoom,
+    GamePlayer,
+    SubGame,
+    GameResult,
+    GameResultEntry,
+)
+from .serializers import (
+    GameRoomSerializer,
+    GamePlayerSerializer,
+    SubGameSerializer,
+    GameResultSerializer,
+    GameResultEntrySerializer,
+)
 
 
 def get_game_room(id):
@@ -158,3 +171,23 @@ class SubGameViewSet(
 ):
     queryset = SubGame.objects.all()
     serializer_class = SubGameSerializer
+
+
+class GameResultViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    queryset = GameResult.objects.all()
+    serializer_class = GameResultSerializer
+
+
+class GameResultEntryViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    queryset = GameResultEntry.objects.all()
+    serializer_class = GameResultEntrySerializer
