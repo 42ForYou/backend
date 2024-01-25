@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Game, GameRoom, GamePlayer, SubGame
+from .models import Game, GameRoom, GamePlayer, SubGame, GameResult, GameResultEntry
 from accounts.models import User
 
 
@@ -46,4 +46,16 @@ class GamePlayerSerializer(serializers.ModelSerializer):
 class SubGameSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubGame
+        fields = "__all__"
+
+
+class GameResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GameResult
+        fields = "__all__"
+
+
+class GameResultEntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GameResultEntry
         fields = "__all__"
