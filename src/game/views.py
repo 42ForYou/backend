@@ -48,7 +48,7 @@ def get_game_room(id):
 def delete_game_room(game_room):
     if game_room.status == "waiting":
         try:
-            game = game_room.game_id
+            game = game_room.game
             game.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Game.DoesNotExist:
@@ -58,14 +58,19 @@ def delete_game_room(game_room):
 
 
 def join_host(request, game_room):
-    host = game_room.host
-    game = game_room.game_id
-    game_player = GamePlayer(intra_id=host, game_id=game, rank=0)
-    if game_player:
-        game_player.save()
-        game_room.join_players += 1
-    else:
+    try:
+        host = game_room.host
+        game = game_room.game
+        player_data = {"user": host, "game": game.game_id}
+        serializer = GamePlayerSerializer(data=player_data)
+        if serializer.is_valid():
+            serializer.save()
+            game_room.join_players += 1
+        else:
+            raise AuthenticationFailed()
+    except Exception as e:
         game.delete()
+        raise e
 
 
 class GameRoomViewSet(
@@ -96,14 +101,14 @@ class GameRoomViewSet(
         is_tournament = request.query_params.get("is_tournament", None)
         if is_tournament:
             is_tournament = is_tournament == "true"
-            game_rooms = GameRoom.objects.filter(game_id__is_tournament=is_tournament)
+            game_rooms = GameRoom.objects.filter(game__is_tournament=is_tournament)
         else:
             game_rooms = GameRoom.objects.all()
         context = paginator.paginate_queryset(game_rooms, request)
         data = []
         for game_room in context:
             game_room_serializer = GameRoomSerializer(game_room)
-            game_serializer = GameSerializer(game_room.game_id)
+            game_serializer = GameSerializer(game_room.game)
             data.append(
                 {"game": game_serializer.data, "room": game_room_serializer.data}
             )
@@ -114,8 +119,8 @@ class GameRoomViewSet(
     )
     def retrieve(self, request, *args, **kwargs):
         try:
-            game_room = GameRoom.objects.select_related("game_id").get(pk=kwargs["pk"])
-            data = self.serialize_game_and_room(game_room.game_id, game_room)
+            game_room = GameRoom.objects.select_related("game").get(pk=kwargs["pk"])
+            data = self.serialize_game_and_room(game_room.game, game_room)
             return Response({"data": data}, status=status.HTTP_200_OK)
         except GameRoom.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -132,7 +137,6 @@ class GameRoomViewSet(
                 status=status.HTTP_201_CREATED,
             )
         except Exception as e:
-            print(e)
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, *args, **kwargs):
@@ -148,23 +152,22 @@ class GameRoomViewSet(
         if serializer.is_valid():
             game = serializer.save()
             return game
-        return None
+        raise AuthenticationFailed()
 
-    # request.user가 host인 GameRoom을 생성해야함(테스트 불가)
     def create_room(self, request, request_data, game):
-        room_data = request_data.get("room")
-        room_data["game_id"] = game.game_id
-
-        token = request.META.get("HTTP_AUTHORIZATION", None)
-        user = Token.objects.get(key=token.split(" ")[1]).user
-        room_data["host"] = user.intra_id
-        serializer = GameRoomSerializer(data=room_data)
-        if serializer.is_valid():
-            game_room = serializer.save()
-            return game_room
-        else:
-            game.delete()
-            return None
+        try:
+            room_data = request_data.get("room")
+            room_data["game"] = game.game_id
+            user = request.auth.user
+            room_data["host"] = user.intra_id
+            serializer = GameRoomSerializer(data=room_data)
+            if serializer.is_valid():
+                game_room = serializer.save()
+                return game_room
+        except Exception as e:
+            if game:
+                game.delete()
+            raise e
 
     def serialize_game_and_room(self, game, room):
         game_serializer = GameSerializer(game)
@@ -197,10 +200,10 @@ class PlayerViewSet(
             return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = GamePlayerSerializer(data=request.data)
         if serializer.is_valid():
-            game_room = GameRoom.objects.get(game_id=game_id)
+            game_room = GameRoom.objects.get(game=game_id)
             if (
                 game_room.status == "waiting"
-                and game_room.join_players < game_room.game_id.n_players
+                and game_room.join_players < game_room.game.n_players
             ):
                 serializer.save()
                 game_room.join_players += 1
@@ -215,11 +218,9 @@ class PlayerViewSet(
         if not game_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         try:
-            game_room = get_game_room(game_id=game_id)
-            print(game_room)
+            game_room = get_game_room(game=game_id)
             if game_room and game_room.status == "waiting":
-                print(request.data)
-                player = GamePlayer.objects.get(game_id=game_id, intra_id=intra_id)
+                player = GamePlayer.objects.get(game=game_id, intra_id=intra_id)
                 player.delete()
                 game_room.join_players -= 1
                 if game_room.join_players == 0:

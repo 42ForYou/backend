@@ -14,41 +14,41 @@ class Game(models.Model):
 
 
 class GameRoom(models.Model):
-    host = models.ForeignKey(
+    host = models.OneToOneField(
         User, on_delete=models.DO_NOTHING, default="anonymous", null=False
     )
-    game_id = models.OneToOneField(
+    game = models.OneToOneField(
         Game, on_delete=models.CASCADE, related_name="game_room"
     )
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=50, null=False)
     status = models.CharField(max_length=10, default="waiting")
-    join_players = models.PositiveIntegerField(default=1)
+    join_players = models.PositiveIntegerField(default=0)
 
     def __str__(self):
-        return f"GameRoom {self.game_id} of {self.title}"
+        return f"GameRoom {self.title}"
 
 
 class GamePlayer(models.Model):
     id = models.AutoField(primary_key=True)
-    intra_id = models.ForeignKey(
+    user = models.ForeignKey(
         User, on_delete=models.DO_NOTHING, default="anonymous", null=False
     )
-    game_id = models.ForeignKey(
+    game = models.OneToOneField(
         Game, on_delete=models.CASCADE, related_name="game_player"
     )
-    nick_name = models.CharField(max_length=50, default="anonymous")
+    nickname = models.CharField(max_length=50, default="anonymous")
     rank = models.PositiveIntegerField(default=0)
 
     class Meta:
-        unique_together = [["game_id", "intra_id"]]
+        unique_together = [["game", "user"]]
 
     def __str__(self):
-        return f"GamePlayer {self}"
+        return f"GamePlayer {self.nickname}"
 
 
 class SubGame(models.Model):
-    game_id = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="sub_game")
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="sub_game")
     rank = models.PositiveIntegerField()  # 0: 결승, 1: 4강, 2: 8강 ...
     idx_in_rank = models.PositiveIntegerField()  # 각 "강" 내부에서의 인덱스 (0부터 시작)
 

@@ -4,7 +4,6 @@ from accounts.models import User, Profile
 from accounts.serializers import UserSerializer, ProfileNotOwnerSerializer
 
 
-# Game related serializers
 class GameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
@@ -12,33 +11,45 @@ class GameSerializer(serializers.ModelSerializer):
 
 
 class GameRoomSerializer(serializers.ModelSerializer):
-    host = serializers.SerializerMethodField()
+    host = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), write_only=True
+    )
+    host_nickname = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = GameRoom
         fields = "__all__"
+        extra_kwargs = {
+            "host": {"write_only": True},
+        }
 
-    def get_host(self, obj):
+    def get_host_nickname(self, obj):
         profile = Profile.objects.get(user=obj.host)
         return profile.nickname
 
     def create(self, validated_data):
-        validated_data.pop("join_players", None)
-        validated_data.pop("status", None)
-        return super().create(validated_data)
+        host_user = validated_data.pop("host", None)
+        validated_data["host"] = host_user
+        game_room = GameRoom.objects.create(**validated_data)
+        return game_room
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["host"] = self.get_host_nickname(instance)
+        representation.pop("host_nickname", None)
+
+        return representation
 
 
 class GamePlayerSerializer(serializers.ModelSerializer):
-    intra_id = serializers.SlugRelatedField(
-        slug_field="intra_id", queryset=User.objects.all()
-    )
-    game_id = serializers.SlugRelatedField(
-        slug_field="game_id", queryset=Game.objects.all()
-    )
-
     class Meta:
         model = GamePlayer
-        fields = ["id", "intra_id", "game_id", "nick_name", "rank"]
+        fields = ["id", "user", "game", "nickname", "rank"]
+
+    def create(self, validated_data):
+        user = User.objects.get(intra_id=validated_data["user"])
+        validated_data["nickname"] = user.profile.nickname
+        return super().create(validated_data)
 
 
 class SubGameSerializer(serializers.ModelSerializer):
