@@ -51,7 +51,7 @@ class OAuthView(APIView):
             token, created = Token.objects.get_or_create(user=user)
             if created:
                 token.save()
-            login(request, user)
+            # login(request, user)
             return Response(
                 self.joinUserData(user, token.key), status=status.HTTP_200_OK
             )
