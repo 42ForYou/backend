@@ -10,7 +10,9 @@ class User(AbstractUser):
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, primary_key=True, related_name="profile"
+    )
     nickname = models.CharField(max_length=32, unique=True)
     email = models.CharField(max_length=128, unique=True)
     # FIXME: "profile_pics" may cause directory path issues
