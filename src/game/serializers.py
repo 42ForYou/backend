@@ -1,11 +1,7 @@
 from rest_framework import serializers
-from .models import Game, GameRoom, GamePlayer, SubGame, GameResult, GameResultEntry
-from accounts.models import User
-
-
-class RoomSerializer(serializers.Serializer):
-    title = serializers.CharField()
-    join_players = serializers.IntegerField()
+from .models import Game, GameRoom, GamePlayer, SubGame
+from accounts.models import User, Profile
+from accounts.serializers import UserSerializer, ProfileNotOwnerSerializer
 
 
 class GameSerializer(serializers.ModelSerializer):
@@ -15,32 +11,45 @@ class GameSerializer(serializers.ModelSerializer):
 
 
 class GameRoomSerializer(serializers.ModelSerializer):
-    game = GameSerializer(source="game_id")
+    host = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), write_only=True
+    )
+    host_nickname = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = GameRoom
-        fields = ["game", "id", "title", "status", "join_players", "host"]
+        fields = "__all__"
+        extra_kwargs = {
+            "host": {"write_only": True},
+        }
+
+    def get_host_nickname(self, obj):
+        profile = Profile.objects.get(user=obj.host)
+        return profile.nickname
 
     def create(self, validated_data):
-        game_data = validated_data.pop("game_id")
-        room_data = validated_data
-        game = Game.objects.create(**game_data)
-        intra_id = User.objects.get(intra_id=room_data.pop("host"))
-        room = GameRoom.objects.create(**room_data, game_id=game, host=intra_id)
-        return room
+        host_user = validated_data.pop("host", None)
+        validated_data["host"] = host_user
+        game_room = GameRoom.objects.create(**validated_data)
+        return game_room
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["host"] = self.get_host_nickname(instance)
+        representation.pop("host_nickname", None)
+
+        return representation
 
 
 class GamePlayerSerializer(serializers.ModelSerializer):
-    intra_id = serializers.SlugRelatedField(
-        slug_field="intra_id", queryset=User.objects.all()
-    )
-    game_id = serializers.SlugRelatedField(
-        slug_field="game_id", queryset=Game.objects.all()
-    )
-
     class Meta:
         model = GamePlayer
-        fields = ["id", "intra_id", "game_id", "nick_name", "rank"]
+        fields = ["id", "user", "game", "nickname", "rank"]
+
+    def create(self, validated_data):
+        user = User.objects.get(intra_id=validated_data["user"])
+        validated_data["nickname"] = user.profile.nickname
+        return super().create(validated_data)
 
 
 class SubGameSerializer(serializers.ModelSerializer):
@@ -49,13 +58,40 @@ class SubGameSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class GameResultSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GameResult
-        fields = "__all__"
+## Swagger를 위한 Serializers
 
 
-class GameResultEntrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GameResultEntry
-        fields = "__all__"
+class RoomHostSerializer(serializers.Serializer):
+    nickname = serializers.CharField()
+
+
+class RoomSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    status = serializers.CharField()
+    join_players = serializers.IntegerField()
+    host = RoomHostSerializer()
+
+
+# Page related serializers
+class SwaggerPagesSerializer(serializers.Serializer):
+    total_pages = serializers.IntegerField()
+    count = serializers.IntegerField()
+    current_page = serializers.IntegerField()
+    previous_page = serializers.CharField()
+    next_page = serializers.CharField()
+
+
+# Wrapping serializers
+class SwaggerGameRoomSerizlizer(serializers.Serializer):
+    gmae = GameSerializer()
+    room = RoomSerializer()
+
+
+class SwaggerGameListSerializer(serializers.Serializer):
+    data = SwaggerGameRoomSerizlizer(many=True)
+    pages = SwaggerPagesSerializer()
+
+
+class SwaggerGameRetriveSerializer(serializers.Serializer):
+    data = SwaggerGameRoomSerizlizer()
