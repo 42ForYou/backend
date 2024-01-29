@@ -64,11 +64,11 @@ class OAuthView(APIView):
             "client_id": settings.CLIENT_ID,
             "client_secret": settings.CLIENT_SECRET,
             "code": code,
-            "redirect_uri": "http://localhost:8000/oauth/",
+            "redirect_uri": settings.CALLBACK_URL,
         }
         headers = {"Content-Type": "application/json"}
         response = requests.post(
-            "https://api.intra.42.fr/oauth/token",
+            settings.TOKEN_URL,
             data=json.dumps(data),
             headers=headers,
         )

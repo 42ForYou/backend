@@ -10,14 +10,13 @@ from urllib.parse import quote
 
 class LoginView(APIView):
     def get(self, request):
-        print(request.headers)
         if request.user.is_authenticated:
             return redirect("http://localhost:8000/oauth/")
-        redirect_url = quote("http://localhost:8000/oauth/")
+        redirect_url = quote(settings.CALLBACK_URL)
         return Response(
             {
                 "data": {
-                    "url": f"https://api.intra.42.fr/oauth/authorize?client_id={settings.CLIENT_ID}&redirect_uri={redirect_url}&response_type=code"
+                    "url": f"{settings.OAUTH_URL}?client_id={settings.CLIENT_ID}&redirect_uri={redirect_url}&response_type=code"
                 }
             },
             status=status.HTTP_200_OK,
