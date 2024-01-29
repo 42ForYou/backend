@@ -47,9 +47,36 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ("intra_id", "nickname", "email", "avator", "two_factor_auth")
+        extra_kwargs = {
+            "nickname": {
+                "validators": [UniqueValidator(queryset=Profile.objects.all())],
+                "required": False,
+            },
+            "email": {
+                "validators": [UniqueValidator(queryset=Profile.objects.all())],
+                "required": False,
+            },
+        }
 
 
 class ProfileNotOwnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ("nickname", "avator")
+
+
+class SwaggerProfileSerializer(serializers.Serializer):
+    user = ProfileSerializer()
+    match_history = serializers.JSONField()
+
+
+class WrapDataSwaggerProfileSerializer(serializers.Serializer):
+    data = SwaggerProfileSerializer()
+
+
+class OnlyUserProfileSerializer(serializers.Serializer):
+    user = ProfileSerializer()
+
+
+class WrapDataSwaggerOnlyProfileSerializer(serializers.Serializer):
+    data = OnlyUserProfileSerializer()

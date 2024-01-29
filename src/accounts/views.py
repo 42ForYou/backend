@@ -5,10 +5,13 @@ from .serializers import (
     ProfileNotOwnerSerializer,
     ProfileResponseSerializer,
     DataWrapperSerializer,
+    WrapDataSwaggerProfileSerializer,
+    WrapDataSwaggerOnlyProfileSerializer,
 )
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
+from drf_yasg.utils import swagger_auto_schema
 
 
 class IsOwner(permissions.BasePermission):
@@ -30,6 +33,9 @@ class ProfileViewSet(
             self.permission_classes = [permissions.IsAuthenticated]
         return super().get_permissions()
 
+    @swagger_auto_schema(
+        responses={200: WrapDataSwaggerProfileSerializer()},
+    )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         if request.user.intra_id != kwargs["intra_id"]:
@@ -44,7 +50,18 @@ class ProfileViewSet(
             status=status.HTTP_200_OK,
         )
 
+    @swagger_auto_schema(
+        request_body=WrapDataSwaggerOnlyProfileSerializer(),
+        responses={200: WrapDataSwaggerOnlyProfileSerializer()},
+    )
     def update(self, request, *args, **kwargs):
         if "data" in request.data:
             request.data = request.data["data"]
-        return super().update(request, *args, **kwargs)
+        super().update(request, *args, **kwargs)
+        instance = self.get_object()
+        serializer = ProfileSerializer(instance)
+        return Response(
+            DataWrapperSerializer({"user": serializer.data}),
+            inner_serializer=ProfileResponseSerializer,
+            status=status.HTTP_200_OK,
+        )
