@@ -46,7 +46,7 @@ class ProfileViewSet(
                 status=status.HTTP_200_OK,
             )
         except Exception as e:
-            raise e
+            raise CustomError(e, "Profile")
 
     def update(self, request, *args, **kwargs):
         if "data" in request.data:
