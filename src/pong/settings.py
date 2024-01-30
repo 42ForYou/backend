@@ -159,7 +159,8 @@ AUTH_USER_MODEL = "accounts.User"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
-    ]
+    ],
+    "EXCEPTION_HANDLER": "pong.utils.custom_exception_handler",
 }
 
 CLIENT_ID = os.environ.get("CLIENT_ID")
