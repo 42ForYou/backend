@@ -6,7 +6,10 @@ from django.core.exceptions import ObjectDoesNotExist
 
 class CustomError(Exception):
     def __init__(self, exception, model_name=None, status=None):
-        if isinstance(exception, ObjectDoesNotExist):
+        if isinstance(exception, CustomError):
+            self.message = exception.message
+            self.status = exception.status
+        elif isinstance(exception, ObjectDoesNotExist):
             self.message = (
                 f"{model_name} does not exist"
                 if model_name
