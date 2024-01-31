@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 
 class CustomError(Exception):
-    def __init__(self, exception, model_name=None, status=None):
+    def __init__(self, exception, model_name=None, status_code=None):
         if isinstance(exception, CustomError):
             self.message = exception.message
             self.status = exception.status
@@ -18,7 +18,9 @@ class CustomError(Exception):
             self.status = status.HTTP_404_NOT_FOUND
         else:
             self.message = str(exception)
-            self.status = status if status else status.HTTP_500_INTERNAL_SERVER_ERROR
+            self.status = (
+                status_code if status_code else status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def __str__(self):
         return self.message
@@ -36,4 +38,4 @@ def custom_exception_handler(exc, context):
 
 
 def wrap_data(**kwargs):
-    return Response({"data": kwargs})
+    return {"data": kwargs}

@@ -1,6 +1,8 @@
 from rest_framework import viewsets
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.core.exceptions import ObjectDoesNotExist
+
 
 from rest_framework import mixins
 from rest_framework import permissions
@@ -17,6 +19,7 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from .models import Game, GameRoom, GamePlayer, SubGame
 from .serializers import *
+from pong.utils import wrap_data, CustomError
 
 
 class CustomPageNumberPagination(PageNumberPagination):
@@ -46,31 +49,14 @@ def get_game_room(id):
 
 
 def delete_game_room(game_room):
-    if game_room.status == "waiting":
-        try:
+    try:
+        if game_room.status == "waiting":
             game = game_room.game
             game.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Game.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-    game_room.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-def join_host(request, game_room):
-    try:
-        host = game_room.host
-        game = game_room.game
-        player_data = {"user": host, "game": game.game_id}
-        serializer = GamePlayerSerializer(data=player_data)
-        if serializer.is_valid():
-            serializer.save()
-            game_room.join_players += 1
         else:
-            raise AuthenticationFailed()
+            game_room.delete()
     except Exception as e:
-        game.delete()
-        raise e
+        raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
 
 
 class GameRoomViewSet(
@@ -97,62 +83,74 @@ class GameRoomViewSet(
         responses={200: SwaggerGameListSerializer(many=True)},
     )
     def list(self, request):
-        paginator = CustomPageNumberPagination()
-        is_tournament = request.query_params.get("is_tournament", None)
-        if is_tournament:
-            is_tournament = is_tournament == "true"
-            game_rooms = GameRoom.objects.filter(game__is_tournament=is_tournament)
-        else:
-            game_rooms = GameRoom.objects.all()
-        context = paginator.paginate_queryset(game_rooms, request)
-        data = []
-        for game_room in context:
-            game_room_serializer = GameRoomSerializer(game_room)
-            game_serializer = GameSerializer(game_room.game)
-            data.append(
-                {"game": game_serializer.data, "room": game_room_serializer.data}
-            )
-        return paginator.get_paginated_response(data)
+        try:
+            paginator = CustomPageNumberPagination()
+            is_tournament = request.query_params.get("is_tournament", None)
+            if is_tournament:
+                is_tournament = is_tournament == "true"
+                game_rooms = GameRoom.objects.filter(game__is_tournament=is_tournament)
+            else:
+                game_rooms = GameRoom.objects.all()
+            context = paginator.paginate_queryset(game_rooms, request)
+            data = []
+            for game_room in context:
+                game_room_serializer = GameRoomSerializer(game_room)
+                game_serializer = GameSerializer(game_room.game)
+                data.append(
+                    {"game": game_serializer.data, "room": game_room_serializer.data}
+                )
+            return paginator.get_paginated_response(data)
+        except Exception as e:
+            raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(
         responses={200: SwaggerGameRetriveSerializer()},
     )
     def retrieve(self, request, *args, **kwargs):
         try:
-            game_room = GameRoom.objects.select_related("game").get(pk=kwargs["pk"])
+            room_id = kwargs["pk"]
+            game_room = GameRoom.objects.get(id=room_id)
             data = self.serialize_game_and_room(game_room.game, game_room)
             return Response({"data": data}, status=status.HTTP_200_OK)
-        except GameRoom.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
 
     def create(self, request, *args, **kwargs):
         try:
             request_data = request.data.get("data")
             game = self.create_game(request_data)
-            room = self.create_room(request, request_data, game)
-            join_host(request, room)
-            data = self.serialize_game_and_room(game, room)
+            game_room = self.create_room(request, request_data, game)
+            self.join_host(game_room)
+            data = self.serialize_game_and_room(game, game_room)
             return Response(
                 {"data": data},
                 status=status.HTTP_201_CREATED,
             )
         except Exception as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            if game:
+                game.delete()
+            raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, *args, **kwargs):
-        if not kwargs.get("pk"):
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        game_room = get_game_room(kwargs["pk"])
-        if not game_room:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        return delete_game_room(game_room)
+        try:
+            if not kwargs.get("pk"):
+                raise CustomError(
+                    "game_room ID is required", status.HTTP_400_BAD_REQUEST
+                )
+            game_room = GameRoom.objects.get(pk=kwargs["pk"])
+            delete_game_room(game_room)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
 
     def create_game(self, request_data):
-        serializer = GameSerializer(data=request_data.get("game"))
-        if serializer.is_valid():
+        try:
+            serializer = GameSerializer(data=request_data.get("game"))
+            serializer.is_valid(raise_exception=True)
             game = serializer.save()
             return game
-        raise AuthenticationFailed()
+        except Exception as e:
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
 
     def create_room(self, request, request_data, game):
         try:
@@ -161,13 +159,24 @@ class GameRoomViewSet(
             user = request.auth.user
             room_data["host"] = user.intra_id
             serializer = GameRoomSerializer(data=room_data)
-            if serializer.is_valid():
-                game_room = serializer.save()
-                return game_room
+            serializer.is_valid(raise_exception=True)
+            game_room = serializer.save()
+            return game_room
         except Exception as e:
-            if game:
-                game.delete()
-            raise e
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
+
+    def join_host(self, game_room):
+        try:
+            host = game_room.host
+            game = game_room.game
+            player_data = {"user": host, "game": game.game_id}
+            serializer = GamePlayerSerializer(data=player_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            game_room.join_players += 1
+            game_room.save()
+        except Exception as e:
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
 
     def serialize_game_and_room(self, game, room):
         game_serializer = GameSerializer(game)
@@ -186,51 +195,79 @@ class PlayerViewSet(
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [TokenAuthentication]
 
-    def list(self, request):
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "game_id",
+                openapi.IN_PATH,
+                description="ID of the game",
+                type=openapi.TYPE_INTEGER,
+            )
+        ],
+        responses={200: GamePlayerSerializer(many=True)},
+    )
+    def list(self, request, game_id=None):
         try:
-            players = GamePlayer.objects.all()
+            game_id = request.query_params.get("game_id", None)
+            if not game_id:
+                raise CustomError(
+                    "game_id query string is required",
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                )
+            players = GamePlayer.objects.filter(game=game_id)
             serializer = GamePlayerSerializer(players, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        except GamePlayer.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            raise CustomError(e, "game_player", status_code=status.HTTP_400_BAD_REQUEST)
 
     def create(self, request, *args, **kwargs):
-        game_id = kwargs["pk"]
-        if not game_id:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = GamePlayerSerializer(data=request.data)
-        if serializer.is_valid():
-            game_room = GameRoom.objects.get(game=game_id)
+        try:
+            game_id = request.data.get("game_id")
+            game = Game.objects.get(game_id=game_id)
+            game_room = game.game_room
+            if not game_id:
+                raise CustomError(
+                    "game_id is required", status_code=status.HTTP_400_BAD_REQUEST
+                )
             if (
-                game_room.status == "waiting"
-                and game_room.join_players < game_room.game.n_players
+                game.n_players == game_room.join_players
+                or game_room.status == "playing"
             ):
-                serializer.save()
-                game_room.join_players += 1
-                game_room.save()
-                return Response((serializer), status=status.HTTP_201_CREATED)
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                raise CustomError("Can't join", status_code=status.HTTP_400_BAD_REQUEST)
+            user = request.auth.user
+            request.data["game"] = game_id
+            request.data["user"] = user.intra_id
+            serializer = GamePlayerSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            game_room.join_players += 1
+            game_room.save()
+            return Response((serializer), status_code=status.HTTP_201_CREATED)
+        except Exception as e:
+            raise CustomError(e, "game", status_code=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, *args, **kwargs):
-        game_id = kwargs["pk"]
-        intra_id = request.query_params["intra_id"]
-        if not game_id:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
         try:
-            game_room = get_game_room(game=game_id)
-            if game_room and game_room.status == "waiting":
-                player = GamePlayer.objects.get(game=game_id, intra_id=intra_id)
+            player_id = kwargs["pk"]
+            user = request.auth.user
+            if not player_id:
+                raise CustomError(
+                    "player_id is required", status_code=status.HTTP_400_BAD_REQUEST
+                )
+            player = GamePlayer.objects.get(pk=player_id)
+            game = player.game
+            game_room = game.game_room
+            if game_room.status == "waiting":
+                player = GamePlayer.objects.get(game=game, user=user)
                 player.delete()
                 game_room.join_players -= 1
                 if game_room.join_players == 0:
-                    return delete_game_room(game_room)
+                    delete_game_room(game_room)
+                    return Response(status=status.HTTP_204_NO_CONTENT)
                 game_room.save()
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response(status=status.HTTP_401_UNAUTHORIZED)
-        except GamePlayer.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            raise CustomError(e, "game room", status_code=status.HTTP_400_BAD_REQUEST)
 
 
 class SubGameViewSet(
@@ -243,21 +280,21 @@ class SubGameViewSet(
     serializer_class = SubGameSerializer
 
 
-class GameResultViewSet(
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
-):
-    queryset = GameResult.objects.all()
-    serializer_class = GameResultSerializer
+# class GameResultViewSet(
+#     mixins.CreateModelMixin,
+#     mixins.RetrieveModelMixin,
+#     mixins.ListModelMixin,
+#     viewsets.GenericViewSet,
+# ):
+#     queryset = GameResult.objects.all()
+#     serializer_class = GameResultSerializer
 
 
-class GameResultEntryViewSet(
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
-):
-    queryset = GameResultEntry.objects.all()
-    serializer_class = GameResultEntrySerializer
+# class GameResultEntryViewSet(
+#     mixins.CreateModelMixin,
+#     mixins.RetrieveModelMixin,
+#     mixins.ListModelMixin,
+#     viewsets.GenericViewSet,
+# ):
+#     queryset = GameResultEntry.objects.all()
+#     serializer_class = GameResultEntrySerializer

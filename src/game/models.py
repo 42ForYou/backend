@@ -15,7 +15,7 @@ class Game(models.Model):
 
 class GameRoom(models.Model):
     host = models.OneToOneField(
-        User, on_delete=models.DO_NOTHING, default="anonymous", null=False
+        User, on_delete=models.DO_NOTHING, related_name="game_room"
     )
     game = models.OneToOneField(
         Game, on_delete=models.CASCADE, related_name="game_room"
@@ -32,7 +32,7 @@ class GameRoom(models.Model):
 class GamePlayer(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(
-        User, on_delete=models.DO_NOTHING, default="anonymous", null=False
+        User, on_delete=models.DO_NOTHING, related_name="game_player"
     )
     game = models.OneToOneField(
         Game, on_delete=models.CASCADE, related_name="game_player"
