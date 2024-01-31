@@ -18,6 +18,7 @@ class GameRoom(models.Model):
         User, on_delete=models.DO_NOTHING, related_name="game_room"
     )
     game = models.OneToOneField(
+    game = models.OneToOneField(
         Game, on_delete=models.CASCADE, related_name="game_room"
     )
     id = models.AutoField(primary_key=True)
@@ -27,6 +28,7 @@ class GameRoom(models.Model):
 
     def __str__(self):
         return f"GameRoom {self.title}"
+        return f"GameRoom {self.title}"
 
 
 class GamePlayer(models.Model):
@@ -35,19 +37,24 @@ class GamePlayer(models.Model):
         User, on_delete=models.DO_NOTHING, related_name="game_player"
     )
     game = models.OneToOneField(
+    game = models.OneToOneField(
         Game, on_delete=models.CASCADE, related_name="game_player"
     )
+    nickname = models.CharField(max_length=50, default="anonymous")
     nickname = models.CharField(max_length=50, default="anonymous")
     rank = models.PositiveIntegerField(default=0)
 
     class Meta:
         unique_together = [["game", "user"]]
+        unique_together = [["game", "user"]]
 
     def __str__(self):
+        return f"GamePlayer {self.nickname}"
         return f"GamePlayer {self.nickname}"
 
 
 class SubGame(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="sub_game")
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="sub_game")
     rank = models.PositiveIntegerField()  # 0: 결승, 1: 4강, 2: 8강 ...
     idx_in_rank = models.PositiveIntegerField()  # 각 "강" 내부에서의 인덱스 (0부터 시작)
