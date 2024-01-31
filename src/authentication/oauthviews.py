@@ -55,7 +55,7 @@ class OAuthView(APIView):
             response.set_cookie("kimyeonhkimbabo_token", token.key, httponly=True, samesite="Strict")
             return response
         except Exception as e:
-            raise e
+            raise CustomError(e)
 
     def request42OAuth(self, code):
         data = {
@@ -72,7 +72,7 @@ class OAuthView(APIView):
             headers=headers,
         )
         if response.status_code != 200:
-            raise CustomError(response.text, response.status_code)
+            raise CustomError(response.text, status_code=response.status_code)
         return response
 
     def request42UserData(self, access_token):
@@ -81,7 +81,7 @@ class OAuthView(APIView):
             headers={"Authorization": "Bearer " + access_token},
         )
         if userData.status_code != 200:
-            raise CustomError(userData.text, userData.status_code)
+            raise CustomError(userData.text, status_code=userData.status_code)
         return userData
 
     def createUserProfileOauth(self, userData, response):
@@ -120,4 +120,4 @@ class OAuthView(APIView):
                 profile.delete()
             if oauth:
                 oauth.delete()
-            raise CustomError(str(e), status.HTTP_400_BAD_REQUEST)
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)

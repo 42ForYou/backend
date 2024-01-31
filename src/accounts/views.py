@@ -53,7 +53,7 @@ class ProfileViewSet(
                 status=status.HTTP_200_OK,
             )
         except Exception as e:
-            raise e
+            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(
         request_body=WrapDataSwaggerOnlyProfileSerializer(),
