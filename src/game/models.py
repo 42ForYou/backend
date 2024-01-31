@@ -18,7 +18,6 @@ class GameRoom(models.Model):
         User, on_delete=models.DO_NOTHING, related_name="game_room"
     )
     game = models.OneToOneField(
-    game = models.OneToOneField(
         Game, on_delete=models.CASCADE, related_name="game_room"
     )
     id = models.AutoField(primary_key=True)
@@ -28,7 +27,6 @@ class GameRoom(models.Model):
 
     def __str__(self):
         return f"GameRoom {self.title}"
-        return f"GameRoom {self.title}"
 
 
 class GamePlayer(models.Model):
@@ -36,7 +34,6 @@ class GamePlayer(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.DO_NOTHING, related_name="game_player"
     )
-    game = models.OneToOneField(
     game = models.OneToOneField(
         Game, on_delete=models.CASCADE, related_name="game_player"
     )
