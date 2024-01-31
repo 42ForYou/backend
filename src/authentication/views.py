@@ -48,6 +48,5 @@ class TokenValidationView(APIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         user = UserSerializer(request.user).data
         profile = ProfileSerializer(request.user.profile).data
-        return Response(
-            wrap_data(user=user, profile=profile), status=status.HTTP_200_OK
-        )
+        user.update(profile)
+        return Response(wrap_data(user=user), status=status.HTTP_200_OK)
