@@ -29,3 +29,11 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Token.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+# Token 유효성 검증 view
+class TokenValidationView(APIView):
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        return Response(wrap_data(is_valid=True), status=status.HTTP_200_OK)
