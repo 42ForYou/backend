@@ -6,7 +6,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import logout
 from urllib.parse import quote
-from pong.utils import custom_exception_handler, CustomError, wrap_data
+from pong.utils import (
+    custom_exception_handler,
+    CustomError,
+    wrap_data,
+    CookieTokenAuthentication,
+)
 
 
 class LoginView(APIView):
@@ -19,6 +24,8 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
+    authentication_classes = [CookieTokenAuthentication]
+
     def get(self, request):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
@@ -33,6 +40,8 @@ class LogoutView(APIView):
 
 # Token 유효성 검증 view
 class TokenValidationView(APIView):
+    authentication_classes = [CookieTokenAuthentication]
+
     def get(self, request):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)

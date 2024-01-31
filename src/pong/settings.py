@@ -175,6 +175,7 @@ CALLBACK_URL = os.environ.get("CALLBACK_URL")
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4242",
+    "http://localhost:8000",
 ]
 # CORS_ALLOW_ALL_ORIGINS = True
 # CORS_ORIGIN_ALLOW_ALL = True
