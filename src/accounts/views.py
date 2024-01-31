@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
 from drf_yasg.utils import swagger_auto_schema
-from pong.utils import custom_exception_handler, CustomError, wrap_data
+from pong.utils import CookieTokenAuthentication
 
 
 class IsOwner(permissions.BasePermission):
@@ -27,6 +27,7 @@ class ProfileViewSet(
     serializer_class = ProfileSerializer
     lookup_field = "user__intra_id"
     lookup_url_kwarg = "intra_id"
+    authentication_classes = [CookieTokenAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_permissions(self):
