@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
 from drf_yasg.utils import swagger_auto_schema
-from pong.utils import CookieTokenAuthentication
+from pong.utils import CookieTokenAuthentication, CustomError
 
 
 class IsOwner(permissions.BasePermission):

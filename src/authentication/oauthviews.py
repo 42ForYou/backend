@@ -49,10 +49,10 @@ class OAuthView(APIView):
             if created:
                 token.save()
             # login(request, user)
-            response = Response(
-                self.joinUserData(user, token.key), status=status.HTTP_200_OK
+            response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
+            response.set_cookie(
+                "kimyeonhkimbabo_token", token.key, httponly=True, samesite="Strict"
             )
-            response.set_cookie("kimyeonhkimbabo_token", token.key, httponly=True, samesite="Strict")
             return response
         except Exception as e:
             raise CustomError(e)
