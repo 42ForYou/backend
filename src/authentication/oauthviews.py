@@ -51,8 +51,8 @@ class OAuthView(APIView):
             # login(request, user)
             response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
             response.set_cookie(
-                "kimyeonhkimbabo_token", token.key, httponly=True, samesite="Strict"
-            )
+                "kimyeonhkimbabo_token", token.key, httponly=True
+            )  # remove samesite=strict for development
             return response
         except Exception as e:
             raise CustomError(e)
