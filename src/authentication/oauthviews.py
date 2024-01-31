@@ -12,6 +12,7 @@ from accounts.serializers import (
     UserTokenProfileSerializer,
     DataWrapperSerializer,
 )
+from pong.utils import custom_exception_handler, CustomError, wrap_data
 from .models import OAuth
 import requests
 import json
@@ -42,11 +43,7 @@ class OAuthView(APIView):
         try:
             code = request.GET.get("code")
             response = self.request42OAuth(code)
-            if response.status_code != 200:
-                return response
             userData = self.request42UserData(response.json()["access_token"])
-            if userData.status_code != 200:
-                return userData
             user = self.createUserProfileOauth(userData, response)
             token, created = Token.objects.get_or_create(user=user)
             if created:
@@ -56,7 +53,7 @@ class OAuthView(APIView):
                 self.joinUserData(user, token.key), status=status.HTTP_200_OK
             )
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            raise e
 
     def request42OAuth(self, code):
         data = {
@@ -64,15 +61,16 @@ class OAuthView(APIView):
             "client_id": settings.CLIENT_ID,
             "client_secret": settings.CLIENT_SECRET,
             "code": code,
-            "redirect_uri": "http://localhost:8000/oauth/",
+            "redirect_uri": settings.CALLBACK_URL,
         }
         headers = {"Content-Type": "application/json"}
         response = requests.post(
-            "https://api.intra.42.fr/oauth/token",
+            settings.TOKEN_URL,
             data=json.dumps(data),
             headers=headers,
         )
-        response.raise_for_status()
+        if response.status_code != 200:
+            raise CustomError(response.text, response.status_code)
         return response
 
     def request42UserData(self, access_token):
@@ -80,7 +78,8 @@ class OAuthView(APIView):
             "https://api.intra.42.fr/v2/me",
             headers={"Authorization": "Bearer " + access_token},
         )
-        userData.raise_for_status()
+        if userData.status_code != 200:
+            raise CustomError(userData.text, userData.status_code)
         return userData
 
     def createUserProfileOauth(self, userData, response):
@@ -95,8 +94,9 @@ class OAuthView(APIView):
         except User.DoesNotExist:
             pass
 
-        serializer = UserSerializer(data=data)
-        if serializer.is_valid():
+        try:
+            serializer = UserSerializer(data=data)
+            serializer.is_valid(raise_exception=True)
             user = serializer.save()
             profile = Profile.objects.create(
                 user=user,
@@ -104,14 +104,18 @@ class OAuthView(APIView):
                 email=data["email"],
                 avator="default.jpg",
             )
-            profile.save()
             oauth = OAuth.objects.create(
                 user=user,
                 access_token=response.json()["access_token"],
                 refresh_token=response.json()["refresh_token"],
                 token_type=response.json()["token_type"],
             )
-            oauth.save()
             return user
-        else:
-            raise ValidationError(serializer.errors)
+        except Exception as e:
+            if user:
+                user.delete()
+            if profile:
+                profile.delete()
+            if oauth:
+                oauth.delete()
+            raise CustomError(str(e), status.HTTP_400_BAD_REQUEST)

@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
 from drf_yasg.utils import swagger_auto_schema
+from pong.utils import custom_exception_handler, CustomError, wrap_data
 
 
 class IsOwner(permissions.BasePermission):
@@ -37,18 +38,21 @@ class ProfileViewSet(
         responses={200: WrapDataSwaggerProfileSerializer()},
     )
     def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if request.user.intra_id != kwargs["intra_id"]:
-            serializer = ProfileNotOwnerSerializer(instance)
-        else:
-            serializer = ProfileSerializer(instance)
-        return Response(
-            DataWrapperSerializer(
-                {"user": serializer.data, "match_history": [{}]},
-                inner_serializer=ProfileResponseSerializer,
-            ).data,
-            status=status.HTTP_200_OK,
-        )
+        try:
+            instance = self.get_object()
+            if request.user.intra_id != kwargs["intra_id"]:
+                serializer = ProfileNotOwnerSerializer(instance)
+            else:
+                serializer = ProfileSerializer(instance)
+            return Response(
+                DataWrapperSerializer(
+                    {"user": serializer.data, "match_history": [{}]},
+                    inner_serializer=ProfileResponseSerializer,
+                ).data,
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            raise e
 
     @swagger_auto_schema(
         request_body=WrapDataSwaggerOnlyProfileSerializer(),

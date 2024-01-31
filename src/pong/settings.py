@@ -66,6 +66,11 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+CORS_ORIGIN_ALLOW_ALL = True
+
+# CORS_ORIGIN_WHITELIST = [
+#     "http://localhost:4242",
+# ]
 
 ROOT_URLCONF = "pong.urls"
 
@@ -153,13 +158,16 @@ AUTH_USER_MODEL = "accounts.User"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
-    ]
+        "pong.utils.CookieTokenAuthentication",
+    ],
+    "EXCEPTION_HANDLER": "pong.utils.custom_exception_handler",
 }
 
 CLIENT_ID = os.environ.get("CLIENT_ID")
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
-OAUTH42_URL = os.environ.get("42OAUTH_URL")
+TOKEN_URL = os.environ.get("42TOKEN_URL")
+OAUTH_URL = os.environ.get("42OAUTH_URL")
+CALLBACK_URL = os.environ.get("CALLBACK_URL")
 
 CORS_ORIGIN_ALLOW_ALL = True
 
