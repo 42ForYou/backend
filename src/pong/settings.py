@@ -158,8 +158,11 @@ AUTH_USER_MODEL = "accounts.User"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+        "pong.utils.CookieTokenAuthentication",
     ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 6,
+    "PAGE_SIZE_QUERY_PARAM": "page_size",
     "EXCEPTION_HANDLER": "pong.utils.custom_exception_handler",
 }
 
