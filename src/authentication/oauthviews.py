@@ -35,7 +35,11 @@ class OAuthView(APIView):
                 token, created = Token.objects.get_or_create(user=user)
                 if created:
                     token.save()
-                return Response(self.joinUserData(user), status=status.HTTP_200_OK)
+                response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
+                response.set_cookie(
+                    "kimyeonhkimbabo_token", token.key, httponly=True
+                )  # remove samesite=strict for development
+                return response
             except User.DoesNotExist:
                 pass
         try:
