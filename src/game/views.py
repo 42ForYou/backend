@@ -1,25 +1,20 @@
 from rest_framework import viewsets
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from django.core.exceptions import ObjectDoesNotExist
 
 
 from rest_framework import mixins
 from rest_framework import permissions
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.authtoken.models import Token
 
-from asgiref.sync import sync_to_async
 from rest_framework.response import Response
 
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.exceptions import AuthenticationFailed
 
 
 from .models import Game, GameRoom, GamePlayer, SubGame
 from .serializers import *
-from pong.utils import wrap_data, CustomError
+from pong.utils import CustomError, CookieTokenAuthentication
 
 
 class CustomPageNumberPagination(PageNumberPagination):
@@ -39,7 +34,6 @@ class CustomPageNumberPagination(PageNumberPagination):
             },
             status=status.HTTP_200_OK,
         )
-
 
 
 def get_game_room(id):
@@ -68,8 +62,8 @@ class GameRoomViewSet(
 ):
     queryset = GameRoom.objects.all()
     serializer_class = GameRoomSerializer
+    authentication_classes = [CookieTokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [TokenAuthentication]
     pagination_class = PageNumberPagination
 
     @swagger_auto_schema(
@@ -150,7 +144,7 @@ class PlayerViewSet(
     queryset = GamePlayer.objects.all()
     serializer_class = GamePlayerSerializer
     permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [CookieTokenAuthentication]
 
     @swagger_auto_schema(
         manual_parameters=[
