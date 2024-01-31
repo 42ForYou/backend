@@ -5,7 +5,6 @@ from .models import User, Profile
 
 
 class UserTokenProfileSerializer(serializers.Serializer):
-    token = serializers.CharField()
     user = serializers.JSONField()
     profile = serializers.JSONField()
 

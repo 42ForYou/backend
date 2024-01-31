@@ -19,12 +19,12 @@ import json
 
 
 class OAuthView(APIView):
-    def joinUserData(self, user, token):
+    def joinUserData(self, user):
         profile = Profile.objects.get(user=user)
         userJson = UserSerializer(user).data
         profileJson = ProfileSerializer(profile).data
         return DataWrapperSerializer(
-            {"token": token, "user": userJson, "profile": profileJson},
+            {"user": userJson, "profile": profileJson},
             inner_serializer=UserTokenProfileSerializer,
         ).data
 
@@ -48,10 +48,12 @@ class OAuthView(APIView):
             token, created = Token.objects.get_or_create(user=user)
             if created:
                 token.save()
-            login(request, user)
-            return Response(
+            # login(request, user)
+            response = Response(
                 self.joinUserData(user, token.key), status=status.HTTP_200_OK
             )
+            response.set_cookie("kimyeonhkimbabo_token", token.key, httponly=True, samesite="Strict")
+            return response
         except Exception as e:
             raise e
 
