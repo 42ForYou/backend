@@ -66,7 +66,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-CORS_ORIGIN_ALLOW_ALL = True
+
 
 # CORS_ORIGIN_WHITELIST = [
 #     "http://localhost:4242",
@@ -172,6 +172,9 @@ TOKEN_URL = os.environ.get("42TOKEN_URL")
 OAUTH_URL = os.environ.get("42OAUTH_URL")
 CALLBACK_URL = os.environ.get("CALLBACK_URL")
 
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+
 
 # CORS_ORIGIN_WHITELIST = []
