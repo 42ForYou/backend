@@ -42,6 +42,7 @@ class ProfileViewSet(
         try:
             instance = self.get_object()
             if request.user.intra_id != kwargs["intra_id"]:
+                instance = Profile.objects.get(intra_id=kwargs["intra_id"])
                 serializer = ProfileNotOwnerSerializer(instance)
             else:
                 serializer = ProfileSerializer(instance)
@@ -60,13 +61,16 @@ class ProfileViewSet(
         responses={200: WrapDataSwaggerOnlyProfileSerializer()},
     )
     def update(self, request, *args, **kwargs):
-        if "data" in request.data:
-            request.data = request.data["data"]
-        super().update(request, *args, **kwargs)
-        instance = self.get_object()
-        serializer = ProfileSerializer(instance)
-        return Response(
-            DataWrapperSerializer({"user": serializer.data}),
-            inner_serializer=ProfileResponseSerializer,
-            status=status.HTTP_200_OK,
-        )
+        try:
+            if "data" in request.data:
+                request.data = request.data["data"]
+            super().update(request, *args, **kwargs)
+            instance = self.get_object()
+            serializer = ProfileSerializer(instance)
+            return Response(
+                DataWrapperSerializer({"user": serializer.data}),
+                inner_serializer=ProfileResponseSerializer,
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
