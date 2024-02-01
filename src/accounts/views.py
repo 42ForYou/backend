@@ -46,7 +46,7 @@ class ProfileViewSet(
         try:
             instance = self.get_object()
             if request.user.intra_id != kwargs["intra_id"]:
-                instance = Profile.objects.get(intra_id=kwargs["intra_id"])
+                instance = Profile.objects.get(user=kwargs["intra_id"])
                 serializer = ProfileNotOwnerSerializer(instance)
             else:
                 serializer = ProfileSerializer(instance)

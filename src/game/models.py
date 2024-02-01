@@ -38,15 +38,12 @@ class GamePlayer(models.Model):
         Game, on_delete=models.CASCADE, related_name="game_player"
     )
     nickname = models.CharField(max_length=50, default="anonymous")
-    nickname = models.CharField(max_length=50, default="anonymous")
     rank = models.PositiveIntegerField(default=0)
 
     class Meta:
         unique_together = [["game", "user"]]
-        unique_together = [["game", "user"]]
 
     def __str__(self):
-        return f"GamePlayer {self.nickname}"
         return f"GamePlayer {self.nickname}"
 
 
