@@ -72,14 +72,23 @@ class ProfileViewSet(
                 profile.avator = image_path
                 profile.save()
             else:
-                if "data" in request.data:
-                    request.data = request.data["data"]
-                super().update(request, *args, **kwargs)
+                if "data" not in request.data:
+                    raise CustomError(
+                        exception="Invalid request",
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                    )
+                data = request.data.get("data")
+                instance = self.get_object()
+                serializer = self.get_serializer(instance, data=data, partial=True)
+                serializer.is_valid(raise_exception=True)
+                self.perform_update(serializer)
             instance = self.get_object()
             serializer = ProfileSerializer(instance)
             return Response(
-                DataWrapperSerializer({"user": serializer.data}),
-                inner_serializer=ProfileResponseSerializer,
+                DataWrapperSerializer(
+                    {"user": serializer.data, "match_history": [{}]},
+                    inner_serializer=ProfileResponseSerializer,
+                ).data,
                 status=status.HTTP_200_OK,
             )
         except Exception as e:
