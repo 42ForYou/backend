@@ -134,6 +134,46 @@ class GameRoomViewSet(
             return Response(status=status.HTTP_404_NOT_FOUND)
         return delete_game_room(game_room)
 
+    def create_game(self, request_data):
+        try:
+            serializer = GameSerializer(data=request_data.get("game"))
+            serializer.is_valid(raise_exception=True)
+            game = serializer.save()
+            return game
+        except Exception as e:
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
+
+    def create_room(self, request, request_data, game):
+        try:
+            room_data = request_data.get("room")
+            room_data["game"] = game.game_id
+            user = request.auth.user
+            room_data["host"] = user.intra_id
+            serializer = GameRoomSerializer(data=room_data)
+            serializer.is_valid(raise_exception=True)
+            game_room = serializer.save()
+            return game_room
+        except Exception as e:
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
+
+    def join_host(self, game_room):
+        try:
+            host = game_room.host
+            game = game_room.game
+            player_data = {"user": host, "game": game.game_id}
+            serializer = GamePlayerSerializer(data=player_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            game_room.join_players += 1
+            game_room.save()
+        except Exception as e:
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
+
+    def serialize_game_and_room(self, game, room):
+        game_serializer = GameSerializer(game)
+        room_serializer = GameRoomSerializer(room)
+        return {"game": game_serializer.data, "room": room_serializer.data}
+
 
 class PlayerViewSet(
     mixins.CreateModelMixin,
