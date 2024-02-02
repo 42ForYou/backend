@@ -47,7 +47,6 @@ class GamePlayer(models.Model):
 
     def __str__(self):
         return f"GamePlayer {self.nickname}"
-        return f"GamePlayer {self.nickname}"
 
 
 class SubGame(models.Model):
@@ -72,18 +71,18 @@ class SubGame(models.Model):
         return f"SubGame rank {self.rank}, [{self.idx_in_rank}] in Game {self.game_id}"
 
 
-class GameResult(models.Model):
-    game_id = models.OneToOneField(
-        Game, on_delete=models.CASCADE, related_name="game_result"
-    )
-    players = models.ManyToManyField(GamePlayer, related_name="game_results")
-    # TODO: Design rest of the game results
+# class GameResult(models.Model):
+#     game_id = models.OneToOneField(
+#         Game, on_delete=models.CASCADE, related_name="game_result"
+#     )
+#     players = models.ManyToManyField(GamePlayer, related_name="game_results")
+#     # TODO: Design rest of the game results
 
 
-class GameResultEntry(models.Model):
-    intra_id = models.ForeignKey(
-        User, on_delete=models.DO_NOTHING, default="anonymous", null=False
-    )
-    participated_games = models.ManyToManyField(
-        GameResult, related_name="game_result_entries"
-    )
+# class GameResultEntry(models.Model):
+#     intra_id = models.ForeignKey(
+#         User, on_delete=models.DO_NOTHING, default="anonymous", null=False
+#     )
+#     participated_games = models.ManyToManyField(
+#         GameResult, related_name="game_result_entries"
+#     )

@@ -80,9 +80,16 @@ class GameRoomViewSet(
     def list(self, request):
         try:
             paginator = CustomPageNumberPagination()
-            is_tournament = request.query_params.get("is_tournament", None)
-            if is_tournament:
-                is_tournament = is_tournament == "true"
+            filter = request.query_params.get("filter", None)
+            if filter:
+                if filter not in ["tournament", "dual"]:
+                    raise CustomError(
+                        exception='Invalid filter value. Expected "tournament" or "dual"',
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                    )
+                is_tournament = False
+                if filter == "tournament":
+                    is_tournament = True
                 game_rooms = GameRoom.objects.filter(game__is_tournament=is_tournament)
             else:
                 game_rooms = GameRoom.objects.all()
@@ -94,6 +101,7 @@ class GameRoomViewSet(
                 data.append(
                     {"game": game_serializer.data, "room": game_room_serializer.data}
                 )
+                print(data)
             return paginator.get_paginated_response(data)
         except Exception as e:
             raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
