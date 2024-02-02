@@ -68,7 +68,7 @@ class RoomHostSerializer(serializers.Serializer):
 class RoomSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     title = serializers.CharField()
-    status = serializers.CharField()
+    is_playing = serializers.CharField()
     join_players = serializers.IntegerField()
     host = RoomHostSerializer()
 

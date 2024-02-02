@@ -45,7 +45,7 @@ def get_game_room(id):
 
 def delete_game_room(game_room):
     try:
-        if game_room.status == "waiting":
+        if game_room.status == False:
             game = game_room.game
             game.delete()
         else:
@@ -228,10 +228,7 @@ class PlayerViewSet(
                 raise CustomError(
                     "game_id is required", status_code=status.HTTP_400_BAD_REQUEST
                 )
-            if (
-                game.n_players == game_room.join_players
-                or game_room.status == "playing"
-            ):
+            if game.n_players == game_room.join_players or game_room.status == True:
                 raise CustomError("Can't join", status_code=status.HTTP_400_BAD_REQUEST)
             user = request.auth.user
             request.data["game"] = game_id
@@ -256,7 +253,7 @@ class PlayerViewSet(
             player = GamePlayer.objects.get(pk=player_id)
             game = player.game
             game_room = game.game_room
-            if game_room.status == "waiting":
+            if game_room.status == False:
                 player = GamePlayer.objects.get(game=game, user=user)
                 player.delete()
                 game_room.join_players -= 1
