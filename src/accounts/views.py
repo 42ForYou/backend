@@ -15,8 +15,8 @@ from drf_yasg.utils import swagger_auto_schema
 from pong.utils import CookieTokenAuthentication, CustomError
 import hashlib
 import os
-import shutil
 from django.core.files.storage import default_storage
+from rest_framework.parsers import MultiPartParser, JSONParser
 
 
 class IsOwner(permissions.BasePermission):
@@ -27,6 +27,7 @@ class IsOwner(permissions.BasePermission):
 class ProfileViewSet(
     mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet
 ):
+    parser_classes = [MultiPartParser, JSONParser]
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     lookup_field = "user__intra_id"
@@ -66,17 +67,14 @@ class ProfileViewSet(
     )
     def update(self, request, *args, **kwargs):
         try:
-            if request.content_type.startswith("image/"):
-                profile = request.user.profile
-                image_path = self.save_image(request, request.user.intra_id, profile)
-                profile.avator = image_path
+            user = request.user
+            profile = user.profile
+            if "image" in request.FILES:
+                image_obj = request.FILES["image"]
+                image_name = self.save_image(image_obj, user.intra_id, profile)
+                profile.avatar = image_name
                 profile.save()
-            else:
-                if "data" not in request.data:
-                    raise CustomError(
-                        exception="Invalid request",
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                    )
+            if "data" in request.data:
                 data = request.data.get("data")
                 instance = self.get_object()
                 serializer = self.get_serializer(instance, data=data, partial=True)
@@ -94,16 +92,29 @@ class ProfileViewSet(
         except Exception as e:
             raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
 
-    def save_image(self, request, intra_id, profile):
-        hased_filename = hashlib.sha256(intra_id.encode()).hexdigest()
-        file_path = f"images/avator/{hased_filename}.jpeg"
+    def save_image(self, image_obj, intra_id, profile):
+        extension = self.get_extension(image_obj.content_type)
+        if not extension:
+            raise CustomError(
+                exception="Invalid image type",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+        hashed_filename = hashlib.sha256(intra_id.encode()).hexdigest() + extension
+        file_path = f"images/avatar/{hashed_filename}"
 
-        with open(file_path, "wb") as image_file:
-            image_file.write(request.data)
-
-        if profile.avator and profile.avator != "default.jpg":
-            pre_file_path = os.join("images/avator/", profile.avator)
+        if profile.avatar and profile.avatar != "default.jpg":
+            pre_file_path = os.path.join("images/avatar/", profile.avatar)
             if default_storage.exists(pre_file_path):
                 default_storage.delete(pre_file_path)
 
-        return file_path
+        default_storage.save(file_path, image_obj)
+
+        return hashed_filename
+
+    def get_extension(self, content_type):
+        extensions = {
+            "image/jpeg": ".jpg",
+            "image/png": ".png",
+        }
+
+        return extensions[content_type]

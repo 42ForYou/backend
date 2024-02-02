@@ -14,7 +14,6 @@ class Profile(models.Model):
         User, on_delete=models.CASCADE, primary_key=True, related_name="profile"
     )
     nickname = models.CharField(max_length=32, unique=True)
-    email = models.CharField(max_length=128, unique=True)
-    # FIXME: "profile_pics" may cause directory path issues
-    avator = models.ImageField(default="default.jpg", upload_to="profile_pics")
+    email = models.EmailField(unique=True)
+    avatar = models.CharField(max_length=128, default="default.jpg")
     two_factor_auth = models.BooleanField(default=False)

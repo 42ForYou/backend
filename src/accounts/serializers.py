@@ -45,7 +45,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ("intra_id", "nickname", "email", "avator", "two_factor_auth")
+        fields = ("intra_id", "nickname", "email", "avatar", "two_factor_auth")
         extra_kwargs = {
             "nickname": {
                 "validators": [UniqueValidator(queryset=Profile.objects.all())],
@@ -61,7 +61,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 class ProfileNotOwnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ("nickname", "avator")
+        fields = ("nickname", "avatar")
 
 
 class SwaggerProfileSerializer(serializers.Serializer):
