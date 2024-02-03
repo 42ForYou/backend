@@ -52,11 +52,15 @@ class ProfileSerializer(serializers.ModelSerializer):
     def validate(self, data):
         errors = {}
         if "nickname" in data:
-            if Profile.objects.filter(nickname=data["nickname"]).exists():
-                errors["nickname"] = ["This nickname is already taken."]
+            nickname = data.get("nickname")
+            if not (self.instance and self.instance.nickname == nickname):
+                if Profile.objects.filter(nickname=data["nickname"]).exists():
+                    errors["nickname"] = ["This nickname is already taken."]
         if "email" in data:
-            if Profile.objects.filter(email=data["email"]).exists():
-                errors["email"] = ["This email is already taken."]
+            email = data.get("email")
+            if not (self.instance and self.instance.email == email):
+                if Profile.objects.filter(email=data["email"]).exists():
+                    errors["email"] = ["This email is already taken."]
         if errors:
             raise serializers.ValidationError(errors)
         return data
