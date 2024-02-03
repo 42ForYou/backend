@@ -13,7 +13,10 @@ class Profile(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, primary_key=True, related_name="profile"
     )
-    nickname = models.CharField(max_length=32, unique=True)
+    nickname = models.CharField(
+        max_length=32,
+        unique=True,
+    )
     email = models.EmailField(unique=True)
     avatar = models.CharField(max_length=128, default="default.jpg")
     two_factor_auth = models.BooleanField(default=False)

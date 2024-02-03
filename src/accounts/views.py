@@ -11,12 +11,14 @@ from .serializers import (
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
+from rest_framework import serializers
 from drf_yasg.utils import swagger_auto_schema
 from pong.utils import CookieTokenAuthentication, CustomError
 import hashlib
 import os
 from django.core.files.storage import default_storage
 from rest_framework.parsers import MultiPartParser, JSONParser
+import json
 
 
 class IsOwner(permissions.BasePermission):
@@ -69,15 +71,22 @@ class ProfileViewSet(
         try:
             user = request.user
             profile = user.profile
+            serializer_data = request.data
             if "image" in request.FILES:
                 image_obj = request.FILES["image"]
                 image_name = self.save_image(image_obj, user.intra_id, profile)
                 profile.avatar = image_name
                 profile.save()
             if "data" in request.data:
-                data = request.data.get("data")
+                additional_data = json.loads(request.data.get("data"))
+                serializer_data = {**serializer_data, **additional_data}
+                # data = request.data.get("data")
+                serializer_data.pop("data", None)
                 instance = self.get_object()
-                serializer = self.get_serializer(instance, data=data, partial=True)
+                serializer = self.get_serializer(
+                    instance, data=serializer_data, partial=True
+                )
+                serializer.validate(serializer_data)
                 serializer.is_valid(raise_exception=True)
                 self.perform_update(serializer)
             instance = self.get_object()
@@ -89,6 +98,8 @@ class ProfileViewSet(
                 ).data,
                 status=status.HTTP_200_OK,
             )
+        except serializers.ValidationError as e:
+            raise e
         except Exception as e:
             raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
 

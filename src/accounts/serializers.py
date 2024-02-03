@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+from rest_framework import status
+from pong.utils import CustomError
 
 from .models import User, Profile
 
@@ -46,16 +48,18 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ("intra_id", "nickname", "email", "avatar", "two_factor_auth")
-        extra_kwargs = {
-            "nickname": {
-                "validators": [UniqueValidator(queryset=Profile.objects.all())],
-                "required": False,
-            },
-            "email": {
-                "validators": [UniqueValidator(queryset=Profile.objects.all())],
-                "required": False,
-            },
-        }
+
+    def validate(self, data):
+        errors = {}
+        if "nickname" in data:
+            if Profile.objects.filter(nickname=data["nickname"]).exists():
+                errors["nickname"] = ["This nickname is already taken."]
+        if "email" in data:
+            if Profile.objects.filter(email=data["email"]).exists():
+                errors["email"] = ["This email is already taken."]
+        if errors:
+            raise serializers.ValidationError(errors)
+        return data
 
 
 class ProfileNotOwnerSerializer(serializers.ModelSerializer):
