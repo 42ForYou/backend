@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
+
 from dotenv import load_dotenv
 from pathlib import Path
 import os
@@ -178,6 +179,7 @@ CALLBACK_URL = os.environ.get("CALLBACK_URL")
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4242",
     "http://localhost:8000",
+    "https://localhost",
 ]
 # CORS_ALLOW_ALL_ORIGINS = True
 # CORS_ORIGIN_ALLOW_ALL = True
