@@ -23,7 +23,7 @@ class GameRoom(models.Model):
     )
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=50, null=False)
-    status = models.CharField(max_length=10, default="waiting")
+    is_playing = models.BooleanField(default=False)
     join_players = models.PositiveIntegerField(default=0)
 
     def __str__(self):
@@ -67,3 +67,19 @@ class SubGame(models.Model):
 
     def __str__(self):
         return f"SubGame rank {self.rank}, [{self.idx_in_rank}] in Game {self.game_id}"
+      
+# class GameResult(models.Model):
+#     game_id = models.OneToOneField(
+#         Game, on_delete=models.CASCADE, related_name="game_result"
+#     )
+#     players = models.ManyToManyField(GamePlayer, related_name="game_results")
+#     # TODO: Design rest of the game results
+
+
+# class GameResultEntry(models.Model):
+#     intra_id = models.ForeignKey(
+#         User, on_delete=models.DO_NOTHING, default="anonymous", null=False
+#     )
+#     participated_games = models.ManyToManyField(
+#         GameResult, related_name="game_result_entries"
+#     )

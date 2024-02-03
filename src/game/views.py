@@ -45,7 +45,7 @@ def get_game_room(id):
 
 def delete_game_room(game_room):
     try:
-        if game_room.status == "waiting":
+        if game_room.status == False:
             game = game_room.game
             game.delete()
         else:
@@ -80,9 +80,16 @@ class GameRoomViewSet(
     def list(self, request):
         try:
             paginator = CustomPageNumberPagination()
-            is_tournament = request.query_params.get("is_tournament", None)
-            if is_tournament:
-                is_tournament = is_tournament == "true"
+            filter = request.query_params.get("filter", None)
+            if filter:
+                if filter not in ["tournament", "dual"]:
+                    raise CustomError(
+                        exception='Invalid filter value. Expected "tournament" or "dual"',
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                    )
+                is_tournament = False
+                if filter == "tournament":
+                    is_tournament = True
                 game_rooms = GameRoom.objects.filter(game__is_tournament=is_tournament)
             else:
                 game_rooms = GameRoom.objects.all()
@@ -94,6 +101,7 @@ class GameRoomViewSet(
                 data.append(
                     {"game": game_serializer.data, "room": game_room_serializer.data}
                 )
+                print(data)
             return paginator.get_paginated_response(data)
         except Exception as e:
             raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
@@ -220,10 +228,7 @@ class PlayerViewSet(
                 raise CustomError(
                     "game_id is required", status_code=status.HTTP_400_BAD_REQUEST
                 )
-            if (
-                game.n_players == game_room.join_players
-                or game_room.status == "playing"
-            ):
+            if game.n_players == game_room.join_players or game_room.status == True:
                 raise CustomError("Can't join", status_code=status.HTTP_400_BAD_REQUEST)
             user = request.auth.user
             request.data["game"] = game_id
@@ -248,7 +253,7 @@ class PlayerViewSet(
             player = GamePlayer.objects.get(pk=player_id)
             game = player.game
             game_room = game.game_room
-            if game_room.status == "waiting":
+            if game_room.status == False:
                 player = GamePlayer.objects.get(game=game, user=user)
                 player.delete()
                 game_room.join_players -= 1
