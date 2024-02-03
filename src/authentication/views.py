@@ -12,6 +12,7 @@ from pong.utils import (
     wrap_data,
     CookieTokenAuthentication,
 )
+from accounts.serializers import UserSerializer, ProfileSerializer
 
 
 class LoginView(APIView):
@@ -45,4 +46,7 @@ class TokenValidationView(APIView):
     def get(self, request):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-        return Response(wrap_data(is_valid=True), status=status.HTTP_200_OK)
+        user = UserSerializer(request.user).data
+        profile = ProfileSerializer(request.user.profile).data
+        user.update(profile)
+        return Response(wrap_data(user=user), status=status.HTTP_200_OK)
