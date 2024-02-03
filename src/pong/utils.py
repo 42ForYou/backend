@@ -4,28 +4,37 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.authtoken.models import Token
+import json
 
 
 class CustomError(Exception):
     def __init__(self, exception, model_name=None, status_code=None):
-        if isinstance(exception, CustomError):
+
+        if isinstance(exception, dict):
+            self.message = exception
+            self.status = status_code if status_code else status.HTTP_400_BAD_REQUEST
+
+        elif isinstance(exception, CustomError):
             self.message = exception.message
             self.status = exception.status
+
         elif isinstance(exception, ObjectDoesNotExist):
-            self.message = (
-                f"{model_name} does not exist"
-                if model_name
-                else "Object does not exist"
-            )
+            self.message = {
+                "error": (
+                    f"{model_name} does not exist"
+                    if model_name
+                    else "Object does not exist"
+                )
+            }
             self.status = status.HTTP_404_NOT_FOUND
         else:
-            self.message = str(exception)
-            self.status = (
-                status_code if status_code else status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            self.message = {"error": str(exception)}
+        self.status = (
+            status_code if status_code else status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
     def __str__(self):
-        return self.message
+        return str(self.message)
 
 
 def custom_exception_handler(exc, context):
@@ -34,10 +43,11 @@ def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
 
     if isinstance(exc, CustomError):
-        return Response({"error": exc.message}, status=exc.status)
+        return Response(exc.message, status=exc.status)
 
     if response is not None:
-        response.data["error"] = str(exc)
+        response.data = {"error": response.data}
+
     return response
 
 
