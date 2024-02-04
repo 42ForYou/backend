@@ -49,6 +49,6 @@ urlpatterns = [
     ),
     # path("accounts/", include("accounts.urls")),
     path("", include("authentication.urls")),
-    path("accounts/", include("accounts.urls")),
-    path("game/", include("game.urls")),
+    path("api/accounts/", include("accounts.urls")),
+    path("api/game/", include("game.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
