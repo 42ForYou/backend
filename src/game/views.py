@@ -114,6 +114,8 @@ class GameRoomViewSet(
             room_id = kwargs["pk"]
             game_room = GameRoom.objects.get(id=room_id)
             data = self.serialize_game_and_room(game_room.game, game_room)
+            players = game_room.game.game_player.all()
+            data.update({"players": GamePlayerSerializer(players, many=True).data})
             return Response({"data": data}, status=status.HTTP_200_OK)
         except Exception as e:
             raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
