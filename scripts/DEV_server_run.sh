@@ -5,5 +5,6 @@ cd src
 python manage.py makemigrations
 python manage.py migrate
 python create_superuser.py
+python create_dummy_data.py
 # django dev server 실행
 python manage.py runserver 0.0.0.0:8000
