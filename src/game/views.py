@@ -62,8 +62,8 @@ class GameRoomViewSet(
 ):
     queryset = GameRoom.objects.all()
     serializer_class = GameRoomSerializer
-    # authentication_classes = [CookieTokenAuthentication]
-    # permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CookieTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
     pagination_class = PageNumberPagination
 
     @swagger_auto_schema(
