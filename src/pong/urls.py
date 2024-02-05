@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
@@ -47,7 +48,6 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
-    # path("accounts/", include("accounts.urls")),
     path("", include("authentication.urls")),
     path("api/accounts/", include("accounts.urls")),
     path("api/game/", include("game.urls")),
