@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
+
 from dotenv import load_dotenv
 from pathlib import Path
 import os
@@ -26,6 +27,8 @@ SECRET_KEY = "django-insecure--tx=7@tvtt)n%fb-l*l-mp-xf(60x9o)&09z2lu%@@5#e-0ys0
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
+APPEND_SLASH = True
 
 ALLOWED_HOSTS = []
 
@@ -176,6 +179,7 @@ CALLBACK_URL = os.environ.get("CALLBACK_URL")
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4242",
     "http://localhost:8000",
+    "https://localhost",
 ]
 # CORS_ALLOW_ALL_ORIGINS = True
 # CORS_ORIGIN_ALLOW_ALL = True

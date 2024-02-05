@@ -15,4 +15,5 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 COPY . .
 
 # Django 애플리케이션 실행 명령
-CMD ["./scripts/ASGI_server_run.sh"]
+
+CMD ["./scripts/DEV_server_run.sh"]

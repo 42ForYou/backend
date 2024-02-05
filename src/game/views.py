@@ -45,7 +45,7 @@ def get_game_room(id):
 
 def delete_game_room(game_room):
     try:
-        if game_room.status == "waiting":
+        if game_room.status == False:
             game = game_room.game
             game.delete()
         else:
@@ -80,9 +80,16 @@ class GameRoomViewSet(
     def list(self, request):
         try:
             paginator = CustomPageNumberPagination()
-            is_tournament = request.query_params.get("is_tournament", None)
-            if is_tournament:
-                is_tournament = is_tournament == "true"
+            filter = request.query_params.get("filter", None)
+            if filter:
+                if filter not in ["tournament", "dual"]:
+                    raise CustomError(
+                        exception='Invalid filter value. Expected "tournament" or "dual"',
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                    )
+                is_tournament = False
+                if filter == "tournament":
+                    is_tournament = True
                 game_rooms = GameRoom.objects.filter(game__is_tournament=is_tournament)
             else:
                 game_rooms = GameRoom.objects.all()
@@ -94,6 +101,7 @@ class GameRoomViewSet(
                 data.append(
                     {"game": game_serializer.data, "room": game_room_serializer.data}
                 )
+                print(data)
             return paginator.get_paginated_response(data)
         except Exception as e:
             raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
@@ -133,6 +141,46 @@ class GameRoomViewSet(
         if not game_room:
             return Response(status=status.HTTP_404_NOT_FOUND)
         return delete_game_room(game_room)
+
+    def create_game(self, request_data):
+        try:
+            serializer = GameSerializer(data=request_data.get("game"))
+            serializer.is_valid(raise_exception=True)
+            game = serializer.save()
+            return game
+        except Exception as e:
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
+
+    def create_room(self, request, request_data, game):
+        try:
+            room_data = request_data.get("room")
+            room_data["game"] = game.game_id
+            user = request.auth.user
+            room_data["host"] = user.intra_id
+            serializer = GameRoomSerializer(data=room_data)
+            serializer.is_valid(raise_exception=True)
+            game_room = serializer.save()
+            return game_room
+        except Exception as e:
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
+
+    def join_host(self, game_room):
+        try:
+            host = game_room.host
+            game = game_room.game
+            player_data = {"user": host, "game": game.game_id}
+            serializer = GamePlayerSerializer(data=player_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            game_room.join_players += 1
+            game_room.save()
+        except Exception as e:
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
+
+    def serialize_game_and_room(self, game, room):
+        game_serializer = GameSerializer(game)
+        room_serializer = GameRoomSerializer(room)
+        return {"game": game_serializer.data, "room": room_serializer.data}
 
 
 class PlayerViewSet(
@@ -180,10 +228,7 @@ class PlayerViewSet(
                 raise CustomError(
                     "game_id is required", status_code=status.HTTP_400_BAD_REQUEST
                 )
-            if (
-                game.n_players == game_room.join_players
-                or game_room.status == "playing"
-            ):
+            if game.n_players == game_room.join_players or game_room.status == True:
                 raise CustomError("Can't join", status_code=status.HTTP_400_BAD_REQUEST)
             user = request.auth.user
             request.data["game"] = game_id
@@ -208,7 +253,7 @@ class PlayerViewSet(
             player = GamePlayer.objects.get(pk=player_id)
             game = player.game
             game_room = game.game_room
-            if game_room.status == "waiting":
+            if game_room.status == False:
                 player = GamePlayer.objects.get(game=game, user=user)
                 player.delete()
                 game_room.join_players -= 1

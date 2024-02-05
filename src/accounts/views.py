@@ -11,8 +11,14 @@ from .serializers import (
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
+from rest_framework import serializers
 from drf_yasg.utils import swagger_auto_schema
 from pong.utils import CookieTokenAuthentication, CustomError
+import hashlib
+import os
+from django.core.files.storage import default_storage
+from rest_framework.parsers import MultiPartParser, JSONParser
+import json
 
 
 class IsOwner(permissions.BasePermission):
@@ -23,6 +29,7 @@ class IsOwner(permissions.BasePermission):
 class ProfileViewSet(
     mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet
 ):
+    parser_classes = [MultiPartParser, JSONParser]
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     lookup_field = "user__intra_id"
@@ -42,6 +49,7 @@ class ProfileViewSet(
         try:
             instance = self.get_object()
             if request.user.intra_id != kwargs["intra_id"]:
+                instance = Profile.objects.get(user=kwargs["intra_id"])
                 serializer = ProfileNotOwnerSerializer(instance)
             else:
                 serializer = ProfileSerializer(instance)
@@ -60,13 +68,64 @@ class ProfileViewSet(
         responses={200: WrapDataSwaggerOnlyProfileSerializer()},
     )
     def update(self, request, *args, **kwargs):
-        if "data" in request.data:
-            request.data = request.data["data"]
-        super().update(request, *args, **kwargs)
-        instance = self.get_object()
-        serializer = ProfileSerializer(instance)
-        return Response(
-            DataWrapperSerializer({"user": serializer.data}),
-            inner_serializer=ProfileResponseSerializer,
-            status=status.HTTP_200_OK,
-        )
+        try:
+            user = request.user
+            profile = user.profile
+            serializer_data = request.data
+            if "image" in request.FILES:
+                image_obj = request.FILES["image"]
+                image_name = self.save_image(image_obj, user.intra_id, profile)
+                profile.avatar = image_name
+                profile.save()
+            if "data" in request.data:
+                additional_data = json.loads(request.data.get("data"))
+                serializer_data = {**serializer_data, **additional_data}
+                # data = request.data.get("data")
+                serializer_data.pop("data", None)
+                instance = self.get_object()
+                serializer = self.get_serializer(
+                    instance, data=serializer_data, partial=True
+                )
+                serializer.validate(serializer_data)
+                serializer.is_valid(raise_exception=True)
+                self.perform_update(serializer)
+            instance = self.get_object()
+            serializer = ProfileSerializer(instance)
+            return Response(
+                DataWrapperSerializer(
+                    {"user": serializer.data, "match_history": [{}]},
+                    inner_serializer=ProfileResponseSerializer,
+                ).data,
+                status=status.HTTP_200_OK,
+            )
+        except serializers.ValidationError as e:
+            raise Response(e.detail, status=status.HTTP_409_CONFLICT)
+        except Exception as e:
+            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
+
+    def save_image(self, image_obj, intra_id, profile):
+        extension = self.get_extension(image_obj.content_type)
+        if not extension:
+            raise CustomError(
+                exception="Invalid image type",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+        hashed_filename = hashlib.sha256(intra_id.encode()).hexdigest() + extension
+        file_path = f"images/avatar/{hashed_filename}"
+
+        if profile.avatar and profile.avatar != "default.jpg":
+            pre_file_path = os.path.join("images/avatar/", profile.avatar)
+            if default_storage.exists(pre_file_path):
+                default_storage.delete(pre_file_path)
+
+        default_storage.save(file_path, image_obj)
+
+        return hashed_filename
+
+    def get_extension(self, content_type):
+        extensions = {
+            "image/jpeg": ".jpg",
+            "image/png": ".png",
+        }
+
+        return extensions[content_type]
