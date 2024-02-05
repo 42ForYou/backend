@@ -174,6 +174,7 @@ CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
 TOKEN_URL = os.environ.get("42TOKEN_URL")
 OAUTH_URL = os.environ.get("42OAUTH_URL")
 CALLBACK_URL = os.environ.get("CALLBACK_URL")
+AVATAR_LOCATION = os.environ.get("AVATAR_LOCATION")
 
 
 CORS_ALLOWED_ORIGINS = [
