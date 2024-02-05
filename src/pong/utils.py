@@ -29,9 +29,9 @@ class CustomError(Exception):
             self.status = status.HTTP_404_NOT_FOUND
         else:
             self.message = {"error": str(exception)}
-        self.status = (
-            status_code if status_code else status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+            self.status = (
+                status_code if status_code else status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def __str__(self):
         return str(self.message)
