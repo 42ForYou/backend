@@ -19,6 +19,7 @@ import os
 from django.core.files.storage import default_storage
 from rest_framework.parsers import MultiPartParser, JSONParser
 import json
+import pong.settings as settings
 
 
 class IsOwner(permissions.BasePermission):
@@ -80,7 +81,6 @@ class ProfileViewSet(
             if "data" in request.data:
                 additional_data = json.loads(request.data.get("data"))
                 serializer_data = {**serializer_data, **additional_data}
-                # data = request.data.get("data")
                 serializer_data.pop("data", None)
                 instance = self.get_object()
                 serializer = self.get_serializer(
@@ -111,10 +111,13 @@ class ProfileViewSet(
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
         hashed_filename = hashlib.sha256(intra_id.encode()).hexdigest() + extension
-        file_path = f"images/avatar/{hashed_filename}"
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        file_path = os.path.join(base_dir, settings.AVATAR_LOCATION, hashed_filename)
 
         if profile.avatar and profile.avatar != "default.jpg":
-            pre_file_path = os.path.join("images/avatar/", profile.avatar)
+            pre_file_path = os.path.join(
+                base_dir, settings.AVATAR_LOCATION, profile.avatar
+            )
             if default_storage.exists(pre_file_path):
                 default_storage.delete(pre_file_path)
 
