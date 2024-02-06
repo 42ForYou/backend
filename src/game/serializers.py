@@ -47,6 +47,9 @@ class GamePlayerSerializer(serializers.ModelSerializer):
     class Meta:
         model = GamePlayer
         fields = ["id", "user", "avatar", "game", "nickname", "rank"]
+        extra_kwargs = {
+            "user": {"write_only": True},
+        }
 
     def get_avatar(self, obj):
         return obj.user.profile.avatar
