@@ -125,8 +125,9 @@ class GameRoomViewSet(
             request_data = request.data.get("data")
             game = self.create_game(request_data)
             game_room = self.create_room(request, request_data, game)
-            self.join_host(game_room)
+            player = self.join_host(game_room)
             data = self.serialize_game_and_room(game, game_room)
+            data.update({"player": GamePlayerSerializer(player).data})
             return Response(
                 {"data": data},
                 status=status.HTTP_201_CREATED,
@@ -173,9 +174,10 @@ class GameRoomViewSet(
             player_data = {"user": host, "game": game.game_id}
             serializer = GamePlayerSerializer(data=player_data)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            player = serializer.save()
             game_room.join_players += 1
             game_room.save()
+            return player
         except Exception as e:
             raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
 

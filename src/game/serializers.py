@@ -42,9 +42,14 @@ class GameRoomSerializer(serializers.ModelSerializer):
 
 
 class GamePlayerSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = GamePlayer
-        fields = ["id", "user", "game", "nickname", "rank"]
+        fields = ["id", "user", "avatar", "game", "nickname", "rank"]
+
+    def get_avatar(self, obj):
+        return obj.user.profile.avatar
 
     def create(self, validated_data):
         user = User.objects.get(intra_id=validated_data["user"])
