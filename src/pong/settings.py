@@ -148,6 +148,8 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
+print(STATIC_ROOT)
+print(STATIC_URL)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -178,6 +180,11 @@ AVATAR_LOCATION = os.environ.get("AVATAR_LOCATION")
 
 
 CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4242",
+    "http://localhost:8000",
+    "https://localhost",
+]
+CSRF_TRUSTED_ORIGINS = [
     "http://localhost:4242",
     "http://localhost:8000",
     "https://localhost",
