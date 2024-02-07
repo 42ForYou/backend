@@ -7,6 +7,7 @@ django.setup()
 
 from accounts.models import User, Profile
 from game.models import Game, GameRoom, GamePlayer
+from friends.models import Friend
 
 # 정해진 첫 번째 이름의 리스트를 정의합니다.
 first_names = [
@@ -30,6 +31,26 @@ first_names = [
     "Evelyn",
     "Matthew",
     "Harper",
+    "Benjamin",
+    "Liam",
+    "Samuel",
+    "Lucas",
+    "Henry",
+    "Owen",
+    "Dylan",
+    "Gabriel",
+    "Aaron",
+    "Elijah",
+    "Nora",
+    "Scarlett",
+    "Zoe",
+    "Lily",
+    "Grace",
+    "Victoria",
+    "Riley",
+    "Madison",
+    "Leah",
+    "Hazel",
 ]
 
 
@@ -57,6 +78,25 @@ def create_dummy_users(num_users=10):
             avatar=f"default.jpg",
             two_factor_auth=False,  # 예시를 단순화하기 위해 항상 False로 설정
         )
+
+
+def create_friends():
+    users = User.objects.all()
+
+    for i in range(len(users)):
+        if users[i].username == "admin":
+            continue
+        for j in range(i + 1, len(users)):
+            if users[j].username == "admin":
+                continue
+            status = "pending"
+            if (j + i) % 2 == 0:
+                status = "friend"
+            friend = Friend.objects.create(
+                requester=users[i],
+                receiver=users[j],
+                status=status,
+            )
 
 
 def create_game_room(num_games=10):
@@ -95,8 +135,9 @@ def create_game_room(num_games=10):
 
 if __name__ == "__main__":
     print("Creating dummy users and profiles...")
-    create_dummy_users(20)  # 사용자와 프로필 생성을 위한 수를 조정할 수 있습니다.
-    create_game_room(20)
+    create_dummy_users(40)  # 사용자와 프로필 생성을 위한 수를 조정할 수 있습니다.
+    create_friends()
+    create_game_room(40)
     for i, user in enumerate(User.objects.all().order_by("intra_id")):
         print(f"{i}. {user.username}")
     print("Dummy users and profiles created successfully!")
