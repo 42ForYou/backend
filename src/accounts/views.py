@@ -123,8 +123,9 @@ class ProfileViewSet(
                 exception="Invalid image type",
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
+        current_time = datetime.now().isoformat()
         hashed_filename = (
-            hashlib.sha256(intra_id + datetime.now().isoformat).hexdigest() + extension
+            hashlib.sha256(intra_id + current_time).hexdigest() + extension
         )
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         file_path = os.path.join(base_dir, settings.AVATAR_LOCATION, hashed_filename)
