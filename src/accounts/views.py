@@ -22,6 +22,7 @@ from django.core.files.storage import default_storage
 from rest_framework.parsers import MultiPartParser, JSONParser
 import json
 import pong.settings as settings
+from datetime import datetime
 
 
 class IsOwner(permissions.BasePermission):
@@ -122,7 +123,9 @@ class ProfileViewSet(
                 exception="Invalid image type",
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
-        hashed_filename = hashlib.sha256(intra_id.encode()).hexdigest() + extension
+        hashed_filename = (
+            hashlib.sha256(intra_id + datetime.now().isoformat).hexdigest() + extension
+        )
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         file_path = os.path.join(base_dir, settings.AVATAR_LOCATION, hashed_filename)
 
