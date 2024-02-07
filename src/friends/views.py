@@ -59,7 +59,9 @@ class FriendViewSet(
                     "Invalid filter", status_code=status.HTTP_400_BAD_REQUEST
                 )
             context = paginator.paginate_queryset(queryset, request)
-            friends = FriendSerializer(context, many=True, context={"request": request})
+            friends = FriendSerializer(
+                context, many=True, context={"request": request, "filter": filter}
+            )
             return paginator.get_paginated_response(friends.data)
         except Exception as e:
             raise CustomError(e, "Friend", status_code=status.HTTP_400_BAD_REQUEST)
@@ -74,7 +76,9 @@ class FriendViewSet(
                 )
             friend_instance.status = "friend"
             friend_instance.save()
-            serializer = FriendSerializer(friend_instance, context={"request": request})
+            serializer = FriendSerializer(
+                friend_instance, context={"request": request, "filter": "friend"}
+            )
             return Response({"data": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
             raise CustomError(e, "Friend", status_code=status.HTTP_400_BAD_REQUEST)
