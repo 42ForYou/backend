@@ -1,5 +1,7 @@
 from rest_framework import mixins, viewsets
 from .models import Profile
+from friends.models import Friend
+from django.db.models import Q
 from .serializers import (
     ProfileSerializer,
     ProfileNotOwnerSerializer,
@@ -13,7 +15,7 @@ from rest_framework import status
 from rest_framework import permissions
 from rest_framework import serializers
 from drf_yasg.utils import swagger_auto_schema
-from pong.utils import CookieTokenAuthentication, CustomError
+from pong.utils import CookieTokenAuthentication, CustomError, wrap_data
 import hashlib
 import os
 from django.core.files.storage import default_storage
@@ -52,13 +54,23 @@ class ProfileViewSet(
             if request.user.intra_id != kwargs["intra_id"]:
                 instance = Profile.objects.get(user=kwargs["intra_id"])
                 serializer = ProfileNotOwnerSerializer(instance)
+                friend_relation = Friend.objects.filter(
+                    (
+                        Q(requester=request.user, receiver=instance.user)
+                        | Q(requester=instance.user, receiver=request.user)
+                    ),
+                    status__in=[
+                        "pending",
+                        "friend",
+                    ],
+                ).first()
+                friend_status = friend_relation.status if friend_relation else "None"
+                response_data = serializer.data
+                response_data["friend_status"] = friend_status
             else:
-                serializer = ProfileSerializer(instance)
+                response_data = ProfileSerializer(instance).data
             return Response(
-                DataWrapperSerializer(
-                    {"user": serializer.data, "match_history": [{}]},
-                    inner_serializer=ProfileResponseSerializer,
-                ).data,
+                wrap_data(user=response_data, match_history=[{}]),
                 status=status.HTTP_200_OK,
             )
         except Exception as e:
