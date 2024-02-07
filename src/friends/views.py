@@ -50,9 +50,15 @@ class FriendViewSet(
             user = request.user
             filter = request.query_params.get("filter", None)
             if filter in ["pending", "friend"]:
-                queryset = self.get_queryset().filter(
-                    Q(requester=request.user) | Q(receiver=request.user), status=filter
-                )
+                if filter == "pending":
+                    queryset = self.get_queryset().filter(
+                        receiver=user, status="pending"
+                    )
+                elif filter == "friend":
+                    queryset = self.get_queryset().filter(
+                        Q(requester=request.user) | Q(receiver=request.user),
+                        status=filter,
+                    )
             else:
                 raise CustomError(
                     "Invalid filter", status_code=status.HTTP_400_BAD_REQUEST
