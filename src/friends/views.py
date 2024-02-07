@@ -17,26 +17,30 @@ class FriendViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
 ):
     queryset = Friend.objects.all()
     serializer_class = FriendSerializer
-    authentication_classes = [CookieTokenAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    # authentication_classes = [CookieTokenAuthentication]
+    # permission_classes = [permissions.IsAuthenticated]
 
     # 친구 신청
     def create(self, request, *args, **kwargs):
         try:
             data = request.data.get("data")
-            if request.user.intra_id != data.get("requester"):
-                raise CustomError("Invalid requester", status.HTTP_400_BAD_REQUEST)
-            recevier = Profile.objects.get(intra_id=data.get("receiver")).user
+            data["requester"] = request.user.intra_id
+            recevier = Profile.objects.get(nickname=data.get("receiver")).user
             data["receiver"] = recevier.intra_id
+            if data["receiver"] == data["requester"]:
+                raise CustomError(
+                    "You can't send friend request to yourself",
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                )
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
             instance = serializer.save()
-            return Response(
-                wrap_data(friend=serializer.data), status=status.HTTP_201_CREATED
-            )
+            serializer = FriendSerializer(instance, context={"request": request})
+            return Response({"data": serializer.data}, status=status.HTTP_201_CREATED)
         except Exception as e:
             raise CustomError(e, status.HTTP_400_BAD_REQUEST)
 
@@ -45,14 +49,50 @@ class FriendViewSet(
         try:
             paginator = CustomPageNumberPagination()
             user = request.user
-            status = request.query_params.get("filter", None)
-            if status in ["pending", "friend"]:
+            filter = request.query_params.get("filter", None)
+            if filter in ["pending", "friend"]:
                 queryset = self.get_queryset().filter(
-                    Q(requester=request.user) | Q(receiver=request.user), status=status
+                    Q(requester=request.user) | Q(receiver=request.user), status=filter
                 )
             else:
-                raise CustomError("Invalid filter", status.HTTP_400_BAD_REQUEST)
+                raise CustomError(
+                    "Invalid filter", status_code=status.HTTP_400_BAD_REQUEST
+                )
             context = paginator.paginate_queryset(queryset, request)
-            return paginator.get_paginated_response(context)
+            friends = FriendSerializer(context, many=True, context={"request": request})
+            return paginator.get_paginated_response(friends.data)
         except Exception as e:
-            raise CustomError(e, "Friend", status.HTTP_400_BAD_REQUEST)
+            raise CustomError(e, "Friend", status_code=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        try:
+            friend_instance = self.get_object()
+            if request.user != friend_instance.receiver:
+                return Response(
+                    {"error": "You are not the receiver of this friend request"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            friend_instance.status = "friend"
+            friend_instance.save()
+            serializer = FriendSerializer(friend_instance, context={"request": request})
+            return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            raise CustomError(e, "Friend", status_code=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            friend_instance = self.get_object()
+            if request.user not in [
+                friend_instance.requester,
+                friend_instance.receiver,
+            ]:
+                return Response(
+                    {
+                        "error": "You are not the requster or receiver of this friend request"
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            friend_instance.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            raise CustomError(e, "Friend", status_code=status.HTTP_400_BAD_REQUEST)
