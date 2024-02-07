@@ -3,12 +3,11 @@ from rest_framework import mixins
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.pagination import PageNumberPagination
 
 from .models import Friend
 from .serializers import *
 
-from pong.utils import CustomError, CookieTokenAuthentication, wrap_data
+from pong.utils import CustomError, CookieTokenAuthentication
 from django.db.models import Q
 from game.views import CustomPageNumberPagination
 
@@ -21,8 +20,8 @@ class FriendViewSet(
 ):
     queryset = Friend.objects.all()
     serializer_class = FriendSerializer
-    # authentication_classes = [CookieTokenAuthentication]
-    # permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CookieTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
 
     # 친구 신청
     def create(self, request, *args, **kwargs):
