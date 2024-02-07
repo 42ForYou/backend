@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "socketcontrol",
     "livechat",
     "livegame",
+    "friends",
 ]
 
 MIDDLEWARE = [

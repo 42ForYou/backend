@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
     intra_id = models.CharField(primary_key=True, max_length=32)
+    is_online = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username or self.intra_id
