@@ -23,6 +23,7 @@ from rest_framework.parsers import MultiPartParser, JSONParser
 import json
 import pong.settings as settings
 from datetime import datetime
+from game.views import CustomPageNumberPagination
 
 
 class IsOwner(permissions.BasePermission):
@@ -149,3 +150,25 @@ class ProfileViewSet(
         }
 
         return extensions[content_type]
+
+
+class UserSearchViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileNotOwnerSerializer
+    authentication_classes = [CookieTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        try:
+            paginator = CustomPageNumberPagination()
+            query = request.query_params.get("search")
+            if not query:
+                empty_queryset = self.queryset.none()
+                page = paginator.paginate_queryset(empty_queryset, request)
+                return paginator.get_paginated_response(page)
+            filtered_queryset = self.queryset.filter(nickname__icontains=query)
+            page = paginator.paginate_queryset(filtered_queryset, request)
+            serializer = self.get_serializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        except Exception as e:
+            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
