@@ -121,7 +121,9 @@ class GameRoomViewSet(
             game_room = GameRoom.objects.get(id=room_id)
             self.check_object_permissions(request, game_room)
             data = self.serialize_game_and_room(game_room.game, game_room)
-            players = game_room.game.game_player.all()
+            players = game_room.game.game_player.all().order_by("id")
+            my_player_id = players.get(user=request.auth.user).id
+            data.update({"my_player_id": my_player_id})
             data.update({"players": GamePlayerSerializer(players, many=True).data})
             return Response({"data": data}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -151,7 +153,8 @@ class GameRoomViewSet(
         game_room = get_game_room(kwargs["pk"])
         if not game_room:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        return delete_game_room(game_room)
+        delete_game_room(game_room)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def create_game(self, request_data):
         try:
@@ -300,6 +303,11 @@ class PlayerViewSet(
                     "player_id is required", status_code=status.HTTP_400_BAD_REQUEST
                 )
             player = GamePlayer.objects.get(pk=player_id)
+            if player.user != user:
+                raise CustomError(
+                    "You are not the user of the player",
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                )
             game = player.game
             game_room = game.game_room
             if game_room.host == player.user:
