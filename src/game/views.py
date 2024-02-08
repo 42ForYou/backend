@@ -45,7 +45,7 @@ def get_game_room(id):
 
 def delete_game_room(game_room):
     try:
-        if game_room.status == False:
+        if game_room.is_playing == False:
             game = game_room.game
             game.delete()
         else:
@@ -308,7 +308,7 @@ class PlayerViewSet(
                     {"message": "The host left the game room"},
                     status=status.HTTP_204_NO_CONTENT,
                 )
-            if game_room.status == False:
+            if game_room.is_playing == False:
                 player = GamePlayer.objects.get(game=game, user=user)
                 player.delete()
                 game_room.join_players -= 1
@@ -317,6 +317,11 @@ class PlayerViewSet(
                     return Response(status=status.HTTP_204_NO_CONTENT)
                 game_room.save()
                 return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                raise CustomError(
+                    "The game is already started",
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                )
         except Exception as e:
             raise CustomError(e, "game room", status_code=status.HTTP_400_BAD_REQUEST)
 
