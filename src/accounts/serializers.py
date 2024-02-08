@@ -67,9 +67,11 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class ProfileNotOwnerSerializer(serializers.ModelSerializer):
+    intra_id = serializers.CharField(source="user.intra_id", read_only=True)
+
     class Meta:
         model = Profile
-        fields = ("nickname", "avatar")
+        fields = ("intra_id", "nickname", "avatar")
 
 
 class SwaggerProfileSerializer(serializers.Serializer):
