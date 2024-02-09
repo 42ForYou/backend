@@ -1,6 +1,6 @@
 import time
 import math
-from typing import List
+from typing import List, Tuple
 
 
 class PaddleStatus:
@@ -42,7 +42,7 @@ class BallTrackSegment:
         self.y_end = y_end
         self.dx = dx
         self.dy = dy
-        self.len: float = 0.0
+        self.len = math.hypot(self.x_end - self.x_start, self.y_end - self.y_start)
 
     @property
     def start_from_center(self) -> bool:
@@ -121,13 +121,12 @@ class BallTrackSegment:
         return True
 
     @property
-    def len(self) -> float:
-        if self.len != 0.0:
-            return self.len
-        width = self.x_end - self.x_start
-        height = self.y_end - self.y_start
-        self.len = math.sqrt(width**2 + height**2)
-        return self.len
+    def next_dx_dy(self) -> Tuple[float, float]:
+        if self.end_at_walls:  # vertical reflection
+            return (self.dx, -self.dy)
+        if self.end_at_paddles:  # horizontal reflection
+            return (-self.dx, self.dy)
+        raise ValueError("BallTrackSegment doesn't end at either walls or paddles")
 
 
 def get_ball_track_segment_to_wall(
