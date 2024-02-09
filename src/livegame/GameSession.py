@@ -9,6 +9,9 @@ class PaddleStatus:
         self.dy: float = 0.0
         self.len = len
 
+    def __str__(self) -> str:
+        return f"Paddle(len={self.len}) at y={self.y}, dy={self.dy}"
+
 
 class GameField:
     def __init__(
@@ -43,6 +46,9 @@ class BallTrackSegment:
         self.dx = dx
         self.dy = dy
         self.len = math.hypot(self.x_end - self.x_start, self.y_end - self.y_start)
+
+    def __str__(self) -> str:
+        return f"BallTrackSegment s=({self.x_start}, {self.y_start}) -> e=({self.x_end}, {self.y_end}), v=({self.dx}, {self.dy}), l={self.len}"
 
     @property
     def start_from_center(self) -> bool:
@@ -224,6 +230,12 @@ class BallTrack:
         self.t_duration = len_total / v  # v * t = d, t = d / v
         self.t_end = self.t_start + self.t_duration
 
+    def __str__(self) -> str:
+        pts = [f"({seg.x_start}, {seg.y_start})" for seg in self.segments]
+        pts.append(f"({self.segments[-1].x_end}, {self.segments[-1].y_end})")
+        pts_str = " > ".join(pts)
+        return f"BallTrack {self.heading}, v={self.v}, {pts_str}"
+
 
 class GameSession:
     def __init__(
@@ -255,3 +267,6 @@ class GameSession:
 
     def update(self) -> None:
         pass
+
+    def __str__(self) -> str:
+        return f"GameSession t_start={self.t_start}, t_last_update={self.t_last_update}"
