@@ -220,10 +220,12 @@ class GameSession:
         for paddle in [self.paddle_a, self.paddle_b]:
             new_y = paddle.y + paddle.dy * time_period
 
-            if new_y > self.height / 2:
-                new_y = self.height / 2
-            if new_y < -self.height / 2:
-                new_y = -self.height / 2
+            if new_y > self.field.y_max:
+                new_y = self.field.y_max
+            if new_y < self.field.y_min:
+                new_y = self.field.y_min
+
+            paddle.y = new_y
 
     def update(self) -> None:
         pass
