@@ -177,26 +177,52 @@ class BallTrack:
         field: GameField,
         x_start: float,
         y_start: float,
-        dx: float,
-        dy: float,
+        dx_start: float,
+        dy_start: float,
         t_start: float,
     ) -> None:
         self.field = field
+        self.t_start = t_start
         # below: variables should be calculated with calculate_segments()
-        self.is_calculated = False
         self.segments: List[BallTrackSegment] = []
         self.y_impact: float = 0.0
-        self.t_impact: float = 0.0
-        self.t_start = t_start
+        self.t_duration: float = 0.0
         self.t_end: float = 0.0
-        self.calculate_segments(x_start, y_start, dx, dy)
+        self.calculate_segments(x_start, y_start, dx_start, dy_start)
 
     # Calculates the all ball track segments based on initial (x, y) and (dx, dy)
     # until the ball gets out of the game
     def calculate_segments(
         self, x_start: float, y_start: float, dx: float, dy: float
     ) -> None:
-        pass
+        v = math.hypot(dx, dy)
+
+        while True:
+            next_track = get_ball_track_segment_to_wall(
+                self.field, x_start, y_start, dx, dy
+            )
+            if next_track.is_valid:
+                self.segments.append(next_track)
+                x_start = next_track.x_end
+                y_start = next_track.y_end
+                dx, dy = next_track.next_dx_dy
+                continue
+
+            # ball doesn't hit the wall, thus must hit paddle side
+            next_track = get_ball_track_segment_to_paddle(
+                self.field, x_start, y_start, dx, dy
+            )
+            if next_track.is_valid:
+                self.segments.append(next_track)
+                break
+
+            # ball doesn't hit walls neither paddles?
+            raise ValueError("Error while calculating ball's movement")
+
+        self.y_impact = self.segments[-1].y_end
+        len_total = sum([seg.len for seg in self.segments])
+        self.t_duration = len_total / v  # v * t = d, t = d / v
+        self.t_end = self.t_start + self.t_duration
 
 
 class GameSession:
