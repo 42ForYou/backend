@@ -8,6 +8,10 @@ class PaddleStatus:
         self.y: float = 0.0
         self.dy: float = 0.0
         self.len = len
+        self.score = 0
+
+    def hit(self, y_ball: float) -> bool:
+        return self.y - self.len / 2 <= y_ball <= self.y + self.len
 
     def __str__(self) -> str:
         return f"Paddle(len={self.len}) at y={self.y}, dy={self.dy}"
@@ -134,6 +138,10 @@ class BallTrackSegment:
             return (-self.dx, self.dy)
         raise ValueError("BallTrackSegment doesn't end at either walls or paddles")
 
+    @property
+    def next_xy_start(self) -> Tuple[float, float]:
+        return (self.x_end, self.y_end)
+
 
 def get_ball_track_segment_to_wall(
     field: GameField,
@@ -178,6 +186,9 @@ def get_ball_track_segment_to_paddle(
 
 
 class BallTrack:
+    HEADING_LEFT = "LEFT"
+    HEADING_RIGHT = "RIGHT"
+
     def __init__(
         self,
         field: GameField,
@@ -187,8 +198,12 @@ class BallTrack:
         dy_start: float,
         t_start: float,
     ) -> None:
+        if dx_start == 0.0:
+            raise ValueError("Cannot construct BallTrack because dx is 0.0")
         self.field = field
         self.t_start = t_start
+        self.v = math.hypot(dx_start, dy_start)
+        self.heading = self.HEADING_LEFT if dx_start < 0 else self.HEADING_RIGHT
         # below: variables should be calculated with calculate_segments()
         self.segments: List[BallTrackSegment] = []
         self.y_impact: float = 0.0
@@ -201,8 +216,6 @@ class BallTrack:
     def calculate_segments(
         self, x_start: float, y_start: float, dx: float, dy: float
     ) -> None:
-        v = math.hypot(dx, dy)
-
         while True:
             next_track = get_ball_track_segment_to_wall(
                 self.field, x_start, y_start, dx, dy
@@ -227,8 +240,16 @@ class BallTrack:
 
         self.y_impact = self.segments[-1].y_end
         len_total = sum([seg.len for seg in self.segments])
-        self.t_duration = len_total / v  # v * t = d, t = d / v
+        self.t_duration = len_total / self.v  # v * t = d, t = d / v
         self.t_end = self.t_start + self.t_duration
+
+    @property
+    def next_dx_dy(self) -> Tuple[float, float]:
+        return self.segments[-1].next_dx_dy
+
+    @property
+    def next_xy_start(self) -> Tuple[float, float]:
+        return self.segments[-1].next_xy_start
 
     def __str__(self) -> str:
         pts = [f"({seg.x_start}, {seg.y_start})" for seg in self.segments]
@@ -247,11 +268,12 @@ class GameSession:
         ball_init_dy: float,
     ) -> None:
         self.field = GameField(width, height)
-        self.paddle_a = PaddleStatus(paddle_len)
-        self.paddle_b = PaddleStatus(paddle_len)
-        self.last_update_time = time.time()
+        self.paddle_a = PaddleStatus(paddle_len)  # LEFT
+        self.paddle_b = PaddleStatus(paddle_len)  # RIGHT
+        self.t_start = time.time()
+        self.t_last_update = self.t_start
         self.balltrack = BallTrack(
-            self.field, 0, 0, ball_init_dx, ball_init_dy, self.last_update_time
+            self.field, 0, 0, ball_init_dx, ball_init_dy, self.t_last_update
         )
 
     def update_paddles(self, time_period: float) -> None:
@@ -265,8 +287,36 @@ class GameSession:
 
             paddle.y = new_y
 
+    def update_ball(self, time_now: float) -> None:
+        if self.balltrack.t_end < time_now:
+            return
+
+        if self.balltrack.heading == BallTrack.HEADING_LEFT:
+            paddle_defense = self.paddle_a
+            paddle_offence = self.paddle_b
+        else:
+            paddle_defense = self.paddle_b
+            paddle_offence = self.paddle_a
+
+        if paddle_defense.hit(self.balltrack.y_impact):
+            # create reflection
+            new_x_start, new_y_start = self.balltrack.next_xy_start
+            new_dx, new_dy = self.balltrack.next_dx_dy
+            self.balltrack = BallTrack(
+                self.field, new_x_start, new_y_start, new_dx, new_dy, time_now
+            )
+        else:
+            # scoring, reset
+            paddle_offence.score += 1
+            new_dx, new_dy = self.balltrack.next_dx_dy
+            self.balltrack = BallTrack(self.field, 0, 0, new_dx, new_dy, time_now)
+
     def update(self) -> None:
-        pass
+        time_now = time.time()
+        time_elapsed = time_now - self.t_last_update
+        self.update_paddles(time_elapsed)
+        self.update_ball(time_now)
+        self.t_last_update = time_now
 
     def __str__(self) -> str:
         return f"GameSession t_start={self.t_start}, t_last_update={self.t_last_update}"
