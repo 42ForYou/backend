@@ -106,13 +106,15 @@ def create_game_room(num_games=10):
         if users[i].username == "admin":
             continue
         is_tournament = True
+        n_players = 4
         if i % 2 == 0:
             is_tournament = False
+            n_players = 2
         game = Game.objects.create(
             is_tournament=is_tournament,
             game_point=5,
             time_limit=180,
-            n_players=4,
+            n_players=n_players,
         )
 
         game_room = GameRoom.objects.create(
