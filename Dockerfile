@@ -11,8 +11,9 @@ COPY requirements.txt /tmp/requirements.txt
 COPY ./scripts/ /scripts/
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-# 프로젝트 파일 복사
+# 프로젝트 파일 복사 및 실행 권한 부여
 COPY . .
+RUN chmod +x ./scripts/*.sh
 
 # Django 애플리케이션 실행 명령
 CMD ["./scripts/ASGI_server_run.sh"]
