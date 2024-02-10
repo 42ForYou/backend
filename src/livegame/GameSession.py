@@ -40,7 +40,7 @@ class GameSession:
         if self.balltrack.t_end < time_now:
             return
 
-        if self.balltrack.heading == BallTrack.HEADING_LEFT:
+        if self.balltrack.heading == BallTrack.Heading.LEFT:
             paddle_defense = self.paddle_a
             paddle_offence = self.paddle_b
         else:

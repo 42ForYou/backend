@@ -1,5 +1,6 @@
 import math
 from typing import List, Tuple
+from enum import Enum
 
 from GameConfig import GameConfig
 from BallTrackSegment import (
@@ -10,8 +11,9 @@ from BallTrackSegment import (
 
 
 class BallTrack:
-    HEADING_LEFT = "LEFT"
-    HEADING_RIGHT = "RIGHT"
+    class Heading(Enum):
+        LEFT = 1
+        RIGHT = 2
 
     def __init__(
         self,
@@ -27,7 +29,9 @@ class BallTrack:
         self.config = config
         self.t_start = t_start
         self.v = math.hypot(dx_start, dy_start)
-        self.heading = self.HEADING_LEFT if dx_start < 0 else self.HEADING_RIGHT
+        self.heading = (
+            BallTrack.Heading.LEFT if dx_start < 0 else BallTrack.Heading.RIGHT
+        )
         # below: variables should be calculated with calculate_segments()
         self.segments: List[BallTrackSegment] = []
         self.y_impact: float = 0.0
