@@ -176,7 +176,7 @@ def get_ball_track_segment_to_wall(
     if config.flt_eq(dy, 0.0):
         raise ValueError("Ball cannot reach the walls (dy == 0.0)")
 
-    y_wall = config.y_max
+    y_wall = config.y_max if dy > 0 else config.y_min
     # Calculate time to reach the wall (y = y_wall | -y_wall)
     t_impact = (y_wall - y_start) / dy
     # Calculate the x-coordinate of the impact point
@@ -197,7 +197,7 @@ def get_ball_track_segment_to_paddle(
     if config.flt_eq(dx, 0.0):
         raise ValueError("Ball cannot reach the paddles (dx == 0.0)")
 
-    x_paddle = config.x_max
+    x_paddle = config.x_max if dx > 0 else config.x_min
     # Calculate time to reach the paddles (x = x_paddle | -x_paddle)
     t_impact = (x_paddle - x_start) / dx
     # Calculate the y-coordinate of the impact point
