@@ -17,11 +17,12 @@ class PaddleStatus:
         return f"Paddle(len={self.len}) at y={self.y}, dy={self.dy}"
 
 
-class GameField:
+class GameConfig:
     def __init__(
         self,
         width: float,
         height: float,
+        v_paddle: float,
     ) -> None:
         self.width = width
         self.height = height
@@ -29,12 +30,13 @@ class GameField:
         self.x_min = -width / 2
         self.y_max = height / 2
         self.y_min = -height / 2
+        self.v_paddle = v_paddle
 
 
 class BallTrackSegment:
     def __init__(
         self,
-        field: GameField,
+        config: GameConfig,
         x_start: float,
         y_start: float,
         x_end: float,
@@ -42,7 +44,7 @@ class BallTrackSegment:
         dx: float,
         dy: float,
     ) -> None:
-        self.field = field
+        self.config = config
         self.x_start = x_start
         self.y_start = y_start
         self.x_end = x_end
@@ -78,44 +80,44 @@ class BallTrackSegment:
     def start_from_walls(self) -> bool:
         return self.is_inside_line(
             self.y_start,
-            self.field.y_min,
-            self.field.y_max,
+            self.config.y_min,
+            self.config.y_max,
             self.x_start,
-            self.field.x_max,
-            self.field.x_min,
+            self.config.x_max,
+            self.config.x_min,
         )
 
     @property
     def end_at_walls(self) -> bool:
         return self.is_inside_line(
             self.y_end,
-            self.field.y_min,
-            self.field.y_max,
+            self.config.y_min,
+            self.config.y_max,
             self.x_end,
-            self.field.x_max,
-            self.field.x_min,
+            self.config.x_max,
+            self.config.x_min,
         )
 
     @property
     def start_from_paddles(self) -> bool:
         return self.is_inside_line(
             self.x_start,
-            self.field.x_min,
-            self.field.x_max,
+            self.config.x_min,
+            self.config.x_max,
             self.y_start,
-            self.field.y_max,
-            self.field.y_min,
+            self.config.y_max,
+            self.config.y_min,
         )
 
     @property
     def end_at_paddles(self) -> bool:
         return self.is_inside_line(
             self.x_end,
-            self.field.x_min,
-            self.field.x_max,
+            self.config.x_min,
+            self.config.x_max,
             self.y_end,
-            self.field.y_max,
-            self.field.y_min,
+            self.config.y_max,
+            self.config.y_min,
         )
 
     @property
@@ -144,7 +146,7 @@ class BallTrackSegment:
 
 
 def get_ball_track_segment_to_wall(
-    field: GameField,
+    config: GameConfig,
     x_start: float,
     y_start: float,
     dx: float,
@@ -153,7 +155,7 @@ def get_ball_track_segment_to_wall(
     if dy == 0.0:
         raise ValueError("Ball cannot reach the walls (dy == 0.0)")
 
-    y_wall = field.y_max
+    y_wall = config.y_max
     # Calculate time to reach the wall (y = y_wall | -y_wall)
     t_impact = (y_wall - y_start) / dy
     # Calculate the x-coordinate of the impact point
@@ -161,11 +163,11 @@ def get_ball_track_segment_to_wall(
     # Determine which wall is hit
     y_impact = y_wall if dy > 0 else -y_wall
 
-    return BallTrackSegment(field, x_start, y_start, x_impact, y_impact, dx, dy)
+    return BallTrackSegment(config, x_start, y_start, x_impact, y_impact, dx, dy)
 
 
 def get_ball_track_segment_to_paddle(
-    field: GameField,
+    config: GameConfig,
     x_start: float,
     y_start: float,
     dx: float,
@@ -174,7 +176,7 @@ def get_ball_track_segment_to_paddle(
     if dx == 0.0:
         raise ValueError("Ball cannot reach the paddles (dx == 0.0)")
 
-    x_paddle = field.x_max
+    x_paddle = config.x_max
     # Calculate time to reach the paddles (x = x_paddle | -x_paddle)
     t_impact = (x_paddle - x_start) / dx
     # Calculate the y-coordinate of the impact point
@@ -182,7 +184,7 @@ def get_ball_track_segment_to_paddle(
     # Determine which paddle is hit
     x_impact = x_paddle if dx > 0 else -x_paddle
 
-    return BallTrackSegment(field, x_start, y_start, x_impact, y_impact, dx, dy)
+    return BallTrackSegment(config, x_start, y_start, x_impact, y_impact, dx, dy)
 
 
 class BallTrack:
@@ -191,7 +193,7 @@ class BallTrack:
 
     def __init__(
         self,
-        field: GameField,
+        config: GameConfig,
         x_start: float,
         y_start: float,
         dx_start: float,
@@ -200,7 +202,7 @@ class BallTrack:
     ) -> None:
         if dx_start == 0.0:
             raise ValueError("Cannot construct BallTrack because dx is 0.0")
-        self.field = field
+        self.config = config
         self.t_start = t_start
         self.v = math.hypot(dx_start, dy_start)
         self.heading = self.HEADING_LEFT if dx_start < 0 else self.HEADING_RIGHT
@@ -218,7 +220,7 @@ class BallTrack:
     ) -> None:
         while True:
             next_track = get_ball_track_segment_to_wall(
-                self.field, x_start, y_start, dx, dy
+                self.config, x_start, y_start, dx, dy
             )
             if next_track.is_valid:
                 self.segments.append(next_track)
@@ -229,7 +231,7 @@ class BallTrack:
 
             # ball doesn't hit the wall, thus must hit paddle side
             next_track = get_ball_track_segment_to_paddle(
-                self.field, x_start, y_start, dx, dy
+                self.config, x_start, y_start, dx, dy
             )
             if next_track.is_valid:
                 self.segments.append(next_track)
@@ -264,26 +266,27 @@ class GameSession:
         width: float,
         height: float,
         paddle_len: float,
+        paddle_speed: float,
         ball_init_dx: float,
         ball_init_dy: float,
     ) -> None:
-        self.field = GameField(width, height)
+        self.config = GameConfig(width, height, paddle_speed)
         self.paddle_a = PaddleStatus(paddle_len)  # LEFT
         self.paddle_b = PaddleStatus(paddle_len)  # RIGHT
         self.t_start = time.time()
         self.t_last_update = self.t_start
         self.balltrack = BallTrack(
-            self.field, 0, 0, ball_init_dx, ball_init_dy, self.t_last_update
+            self.config, 0, 0, ball_init_dx, ball_init_dy, self.t_last_update
         )
 
     def update_paddles(self, time_period: float) -> None:
         for paddle in [self.paddle_a, self.paddle_b]:
             new_y = paddle.y + paddle.dy * time_period
 
-            if new_y > self.field.y_max:
-                new_y = self.field.y_max
-            if new_y < self.field.y_min:
-                new_y = self.field.y_min
+            if new_y > self.config.y_max:
+                new_y = self.config.y_max
+            if new_y < self.config.y_min:
+                new_y = self.config.y_min
 
             paddle.y = new_y
 
@@ -303,13 +306,13 @@ class GameSession:
             new_x_start, new_y_start = self.balltrack.next_xy_start
             new_dx, new_dy = self.balltrack.next_dx_dy
             self.balltrack = BallTrack(
-                self.field, new_x_start, new_y_start, new_dx, new_dy, time_now
+                self.config, new_x_start, new_y_start, new_dx, new_dy, time_now
             )
         else:
             # scoring, reset
             paddle_offence.score += 1
             new_dx, new_dy = self.balltrack.next_dx_dy
-            self.balltrack = BallTrack(self.field, 0, 0, new_dx, new_dy, time_now)
+            self.balltrack = BallTrack(self.config, 0, 0, new_dx, new_dy, time_now)
 
     def update(self) -> None:
         time_now = time.time()
