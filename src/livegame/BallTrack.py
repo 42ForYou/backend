@@ -22,7 +22,7 @@ class BallTrack:
         dy_start: float,
         t_start: float,
     ) -> None:
-        if dx_start == 0.0:
+        if config.flt_eq(dx_start, 0.0):
             raise ValueError("Cannot construct BallTrack because dx is 0.0")
         self.config = config
         self.t_start = t_start

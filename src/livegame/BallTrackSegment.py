@@ -29,7 +29,9 @@ class BallTrackSegment:
 
     @property
     def start_from_center(self) -> bool:
-        return self.x_start == 0.0 and self.y_start == 0.0
+        return self.config.flt_eq(self.x_start, 0.0) and self.config.flt_eq(
+            self.y_start, 0.0
+        )
 
     def is_inside_line(
         self,
@@ -40,7 +42,10 @@ class BallTrackSegment:
         l_range_min: float,
         l_range_max: float,
     ) -> bool:
-        if not (p_coord_constr == l_constr_min or p_coord_constr == l_constr_max):
+        if not (
+            self.config.flt_eq(p_coord_constr, l_constr_min)
+            or self.config.flt_eq(p_coord_constr, l_constr_max)
+        ):
             return False
         if not (l_range_min <= p_coord_range <= l_range_max):
             return False
@@ -122,7 +127,7 @@ def get_ball_track_segment_to_wall(
     dx: float,
     dy: float,
 ) -> BallTrackSegment:
-    if dy == 0.0:
+    if config.flt_eq(dy, 0.0):
         raise ValueError("Ball cannot reach the walls (dy == 0.0)")
 
     y_wall = config.y_max
@@ -143,7 +148,7 @@ def get_ball_track_segment_to_paddle(
     dx: float,
     dy: float,
 ) -> BallTrackSegment:
-    if dx == 0.0:
+    if config.flt_eq(dx, 0.0):
         raise ValueError("Ball cannot reach the paddles (dx == 0.0)")
 
     x_paddle = config.x_max

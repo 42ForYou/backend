@@ -10,12 +10,13 @@ class GameSession:
         self,
         width: float,
         height: float,
+        epsilon: float,
         paddle_len: float,
         paddle_speed: float,
         ball_init_dx: float,
         ball_init_dy: float,
     ) -> None:
-        self.config = GameConfig(width, height, paddle_speed)
+        self.config = GameConfig(width, height, paddle_speed, epsilon)
         self.paddle_a = PaddleStatus(paddle_len)  # LEFT
         self.paddle_b = PaddleStatus(paddle_len)  # RIGHT
         self.t_start = time.time()
