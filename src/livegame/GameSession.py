@@ -43,7 +43,7 @@ class GameSession:
             paddle.y = new_y
 
     def update_ball(self, time_now: float) -> None:
-        if self.balltrack.t_end < time_now:
+        if time_now < self.balltrack.t_end:
             return
 
         if self.balltrack.heading == BallTrack.Heading.LEFT:
