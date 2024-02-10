@@ -58,8 +58,8 @@ class BallTrackSegment:
             self.config.y_min,
             self.config.y_max,
             self.x_start,
-            self.config.x_max,
             self.config.x_min,
+            self.config.x_max,
         )
 
     @property
@@ -69,8 +69,8 @@ class BallTrackSegment:
             self.config.y_min,
             self.config.y_max,
             self.x_end,
-            self.config.x_max,
             self.config.x_min,
+            self.config.x_max,
         )
 
     @property
@@ -80,8 +80,8 @@ class BallTrackSegment:
             self.config.x_min,
             self.config.x_max,
             self.y_start,
-            self.config.y_max,
             self.config.y_min,
+            self.config.y_max,
         )
 
     @property
@@ -91,8 +91,8 @@ class BallTrackSegment:
             self.config.x_min,
             self.config.x_max,
             self.y_end,
-            self.config.y_max,
             self.config.y_min,
+            self.config.y_max,
         )
 
     @property
