@@ -60,7 +60,6 @@ class BallTrackSegment:
     def start_from_center(self) -> bool:
         return self.x_start == 0.0 and self.y_start == 0.0
 
-    @property
     def is_inside_line(
         self,
         p_coord_constr: float,
