@@ -113,7 +113,7 @@ class ProfileViewSet(
                 status=status.HTTP_200_OK,
             )
         except serializers.ValidationError as e:
-            raise Response(e.detail, status=status.HTTP_409_CONFLICT)
+            raise CustomError(e.detail, status_code=status.HTTP_409_CONFLICT)
         except Exception as e:
             raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
 
