@@ -32,7 +32,7 @@ class GameSession:
         self.paddles[player].update(key_input)
 
     def update_paddles(self, time_period: float) -> None:
-        for paddle in [self.paddle_a, self.paddle_b]:
+        for _, paddle in self.paddles.items():
             new_y = paddle.y + paddle.dy * time_period
 
             if new_y > self.config.y_max:
