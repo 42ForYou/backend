@@ -1,10 +1,19 @@
 import math
 from typing import Tuple
+from enum import Enum
 
 from GameConfig import GameConfig
 
 
 class BallTrackSegment:
+    class PointCategory(Enum):
+        INVALID = 0
+        CENTER = 1
+        WALL_TOP = 2
+        WALL_BOTTOM = 3
+        PADDLE_LEFT = 4
+        PADDLE_RIGHT = 5
+
     def __init__(
         self,
         config: GameConfig,
@@ -23,15 +32,22 @@ class BallTrackSegment:
         self.dx = dx
         self.dy = dy
         self.len = math.hypot(self.x_end - self.x_start, self.y_end - self.y_start)
+        self.p_start = BallTrackSegment.PointCategory.INVALID
+        self.p_end = BallTrackSegment.PointCategory.INVALID
+        self.is_valid = False
+        self.calculate_validity()
 
     def __str__(self) -> str:
-        return f"BallTrackSegment s=({self.x_start}, {self.y_start}) -> e=({self.x_end}, {self.y_end}), v=({self.dx}, {self.dy}), l={self.len}"
+        return f"BallTrackSegment s=({self.x_start}, {self.y_start}) [{self.p_start}] -> e=({self.x_end}, {self.y_end}) [{self.p_end}], v=({self.dx}, {self.dy}), l={self.len}"
 
     @property
     def start_from_center(self) -> bool:
-        return self.config.flt_eq(self.x_start, 0.0) and self.config.flt_eq(
+        result = self.config.flt_eq(self.x_start, 0.0) and self.config.flt_eq(
             self.y_start, 0.0
         )
+        if result:
+            self.p_start = BallTrackSegment.PointCategory.CENTER
+        return result
 
     def is_inside_line(
         self,
@@ -53,7 +69,7 @@ class BallTrackSegment:
 
     @property
     def start_from_walls(self) -> bool:
-        return self.is_inside_line(
+        result = self.is_inside_line(
             self.y_start,
             self.config.y_min,
             self.config.y_max,
@@ -61,10 +77,16 @@ class BallTrackSegment:
             self.config.x_min,
             self.config.x_max,
         )
+        if result:
+            if self.y_start > 0:
+                self.p_start = BallTrackSegment.PointCategory.WALL_TOP
+            else:
+                self.p_start = BallTrackSegment.PointCategory.WALL_BOTTOM
+        return result
 
     @property
     def end_at_walls(self) -> bool:
-        return self.is_inside_line(
+        result = self.is_inside_line(
             self.y_end,
             self.config.y_min,
             self.config.y_max,
@@ -72,10 +94,16 @@ class BallTrackSegment:
             self.config.x_min,
             self.config.x_max,
         )
+        if result:
+            if self.y_end > 0:
+                self.p_end = BallTrackSegment.PointCategory.WALL_TOP
+            else:
+                self.p_end = BallTrackSegment.PointCategory.WALL_BOTTOM
+        return result
 
     @property
     def start_from_paddles(self) -> bool:
-        return self.is_inside_line(
+        result = self.is_inside_line(
             self.x_start,
             self.config.x_min,
             self.config.x_max,
@@ -83,10 +111,16 @@ class BallTrackSegment:
             self.config.y_min,
             self.config.y_max,
         )
+        if result:
+            if self.x_start > 0:
+                self.p_start = BallTrackSegment.PointCategory.PADDLE_RIGHT
+            else:
+                self.p_start = BallTrackSegment.PointCategory.PADDLE_LEFT
+        return result
 
     @property
     def end_at_paddles(self) -> bool:
-        return self.is_inside_line(
+        result = self.is_inside_line(
             self.x_end,
             self.config.x_min,
             self.config.x_max,
@@ -94,18 +128,12 @@ class BallTrackSegment:
             self.config.y_min,
             self.config.y_max,
         )
-
-    @property
-    def is_valid(self) -> bool:
-        # start point can be either (0, 0) | on walls | on paddles
-        if not (
-            self.start_from_center or self.start_from_walls or self.start_from_paddles
-        ):
-            return False
-        # end point can be either on walls | on paddles
-        if not (self.end_at_walls or self.end_at_paddles):
-            return False
-        return True
+        if result:
+            if self.x_end > 0:
+                self.p_end = BallTrackSegment.PointCategory.PADDLE_RIGHT
+            else:
+                self.p_end = BallTrackSegment.PointCategory.PADDLE_LEFT
+        return result
 
     @property
     def next_dx_dy(self) -> Tuple[float, float]:
@@ -118,6 +146,24 @@ class BallTrackSegment:
     @property
     def next_xy_start(self) -> Tuple[float, float]:
         return (self.x_end, self.y_end)
+
+    def calculate_validity(self) -> None:
+        self.is_valid = False
+        # start point can be either (0, 0) | on walls | on paddles
+        if not (
+            self.start_from_center or self.start_from_walls or self.start_from_paddles
+        ):
+            return
+        # end point can be either on walls | on paddles
+        if not (self.end_at_walls or self.end_at_paddles):
+            return
+
+        if (
+            self.p_start == BallTrackSegment.PointCategory.INVALID
+            or self.p_end == BallTrackSegment.PointCategory.INVALID
+        ):
+            raise ValueError(f"p_start or p_end is invalid")
+        self.is_valid = True
 
 
 def get_ball_track_segment_to_wall(
