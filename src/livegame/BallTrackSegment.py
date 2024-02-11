@@ -176,13 +176,12 @@ def get_ball_track_segment_to_wall(
     if config.flt_eq(dy, 0.0):
         raise ValueError("Ball cannot reach the walls (dy == 0.0)")
 
-    y_wall = config.y_max if dy > 0 else config.y_min
-    # Calculate time to reach the wall (y = y_wall | -y_wall)
-    t_impact = (y_wall - y_start) / dy
+    y_impact = config.y_max if dy > 0 else config.y_min
+    # Calculate time to reach the wall (y = y_impact | -y_impact)
+    t_impact = (y_impact - y_start) / dy
     # Calculate the x-coordinate of the impact point
     x_impact = x_start + dx * t_impact
     # Determine which wall is hit
-    y_impact = y_wall if dy > 0 else -y_wall
 
     return BallTrackSegment(config, x_start, y_start, x_impact, y_impact, dx, dy)
 
@@ -197,12 +196,11 @@ def get_ball_track_segment_to_paddle(
     if config.flt_eq(dx, 0.0):
         raise ValueError("Ball cannot reach the paddles (dx == 0.0)")
 
-    x_paddle = config.x_max if dx > 0 else config.x_min
-    # Calculate time to reach the paddles (x = x_paddle | -x_paddle)
-    t_impact = (x_paddle - x_start) / dx
+    x_impact = config.x_max if dx > 0 else config.x_min
+    # Calculate time to reach the paddles (x = x_impact | -x_impact)
+    t_impact = (x_impact - x_start) / dx
     # Calculate the y-coordinate of the impact point
     y_impact = y_start + dy * t_impact
     # Determine which paddle is hit
-    x_impact = x_paddle if dx > 0 else -x_paddle
 
     return BallTrackSegment(config, x_start, y_start, x_impact, y_impact, dx, dy)
