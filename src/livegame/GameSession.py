@@ -27,6 +27,7 @@ class GameSession:
         self.balltrack = BallTrack(
             self.config, 0, 0, ball_init_dx, ball_init_dy, self.t_last_update
         )
+        self.update_turns()
 
     def update_key(self, player: Player, key_input: KeyInput) -> None:
         self.paddles[player].update(key_input)
@@ -42,18 +43,21 @@ class GameSession:
 
             paddle.y = new_y
 
+    def update_turns(self) -> None:
+        if self.balltrack.heading == BallTrack.Heading.LEFT:
+            self.player_defense = Player.A
+            self.player_offense = Player.B
+        else:
+            self.player_defense = Player.B
+            self.player_offense = Player.A
+        self.paddle_offense = self.paddles[self.player_offense]
+        self.paddle_defense = self.paddles[self.player_defense]
+
     def update_ball(self, time_now: float) -> None:
         if time_now < self.balltrack.t_end:
             return
 
-        if self.balltrack.heading == BallTrack.Heading.LEFT:
-            paddle_defense = self.paddles[Player.A]
-            paddle_offence = self.paddles[Player.B]
-        else:
-            paddle_defense = self.paddles[Player.B]
-            paddle_offence = self.paddles[Player.A]
-
-        if paddle_defense.hit(self.balltrack.y_impact):
+        if self.paddle_defense.hit(self.balltrack.y_impact):
             # create reflection
             new_x_start, new_y_start = self.balltrack.next_xy_start
             new_dx, new_dy = self.balltrack.next_dx_dy
@@ -62,9 +66,11 @@ class GameSession:
             )
         else:
             # scoring, reset
-            paddle_offence.score += 1
+            self.paddle_offense.score += 1
             new_dx, new_dy = self.balltrack.next_dx_dy
             self.balltrack = BallTrack(self.config, 0, 0, new_dx, new_dy, time_now)
+
+        self.update_turns()
 
     def update(self) -> None:
         time_now = time.time()
