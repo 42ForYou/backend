@@ -36,12 +36,15 @@ class GameSession:
 
     def update_key(self, player: Player, key_input: KeyInput) -> None:
         self.paddles[player].update(key_input)
+        print(f"{id(self)}: Update player {player.name} key to {key_input}")
         self.update_paddles(time.time())
+        print(f"{id(self)}: Player {player.name} paddle update to ", end="")
+        print(f"y={self.paddles[player].y} dy={self.paddles[player].dy}")
 
     def update_paddles(self, time_now: float) -> None:
         time_elapsed = time_now - self.t_paddle_last
 
-        for player, paddle in self.paddles.items():
+        for _, paddle in self.paddles.items():
             new_y = paddle.y + paddle.dy * time_elapsed
 
             if new_y > self.config.y_max:
@@ -50,9 +53,6 @@ class GameSession:
                 new_y = self.config.y_min
 
             paddle.y = new_y
-
-            if paddle.dy != 0.0:
-                print(f"{id(self)}: Player {player.name} paddle update to {paddle.y}")
 
         self.t_paddle_last = time_now
 
