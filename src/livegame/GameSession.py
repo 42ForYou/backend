@@ -6,6 +6,7 @@ from PaddleStatus import PaddleStatus, KeyInput, Player
 from BallTrack import BallTrack
 
 
+# TODO: update print() statements to proper logging
 class GameSession:
     def __init__(
         self,
@@ -25,18 +26,23 @@ class GameSession:
             Player.B: PaddleStatus(self.config, paddle_len),  # RIGHT
         }
         self.t_start = time.time()
-        self.t_last_update = self.t_start
+        self.t_paddle_last = self.t_start
         self.balltrack = BallTrack(
-            self.config, 0, 0, ball_init_dx, ball_init_dy, self.t_last_update
+            self.config, 0, 0, ball_init_dx, ball_init_dy, self.t_start
         )
         self.update_turns()
+        print(f"{id(self)}: Created GameSession with {self.config}")
+        print(f"{id(self)}: new {self.balltrack}")
 
     def update_key(self, player: Player, key_input: KeyInput) -> None:
         self.paddles[player].update(key_input)
+        self.update_paddles(time.time())
 
-    def update_paddles(self, time_period: float) -> None:
-        for _, paddle in self.paddles.items():
-            new_y = paddle.y + paddle.dy * time_period
+    def update_paddles(self, time_now: float) -> None:
+        time_elapsed = time_now - self.t_paddle_last
+
+        for player, paddle in self.paddles.items():
+            new_y = paddle.y + paddle.dy * time_elapsed
 
             if new_y > self.config.y_max:
                 new_y = self.config.y_max
@@ -44,6 +50,11 @@ class GameSession:
                 new_y = self.config.y_min
 
             paddle.y = new_y
+
+            if paddle.dy != 0.0:
+                print(f"{id(self)}: Player {player.name} paddle update to {paddle.y}")
+
+        self.t_paddle_last = time_now
 
     def update_turns(self) -> None:
         if self.balltrack.heading == BallTrack.Heading.LEFT:
@@ -54,32 +65,47 @@ class GameSession:
             self.player_offense = Player.A
         self.paddle_offense = self.paddles[self.player_offense]
         self.paddle_defense = self.paddles[self.player_defense]
+        print(
+            f"{id(self)}: Attack: {self.player_offense.name} -> {self.player_defense.name}"
+        )
 
     def update_ball(self, time_now: float) -> None:
         if time_now < self.balltrack.t_end:
             return
 
+        print(f"{id(self)}: Ball hit the paddle side at {self.balltrack.t_end}")
+        new_t = self.balltrack.t_end
+
+        # TODO: resolve error from difference between actual impact time and paddle position
         if self.paddle_defense.hit(self.balltrack.y_impact):
             # create reflection
+            print(f"{id(self)}: Player {self.player_defense.name} reflects the ball")
             new_x_start, new_y_start = self.balltrack.next_xy_start
             new_dx, new_dy = self.balltrack.next_dx_dy
             self.balltrack = BallTrack(
-                self.config, new_x_start, new_y_start, new_dx, new_dy, time_now
+                self.config,
+                new_x_start,
+                new_y_start,
+                new_dx,
+                new_dy,
+                new_t,
             )
         else:
             # scoring, reset
             self.paddle_offense.score += 1
+            print(
+                f"{id(self)}: Player {self.player_offense.name} scores to {self.paddle_offense.score}"
+            )
             new_dx, new_dy = self.balltrack.next_dx_dy
-            self.balltrack = BallTrack(self.config, 0, 0, new_dx, new_dy, time_now)
+            self.balltrack = BallTrack(self.config, 0, 0, new_dx, new_dy, new_t)
 
+        print(f"{id(self)}: new {self.balltrack}")
         self.update_turns()
 
     def update(self) -> None:
         time_now = time.time()
-        time_elapsed = time_now - self.t_last_update
-        self.update_paddles(time_elapsed)
+        self.update_paddles(time_now)
         self.update_ball(time_now)
-        self.t_last_update = time_now
 
     def __str__(self) -> str:
-        return f"GameSession t_start={self.t_start}, t_last_update={self.t_last_update}"
+        return f"GameSession t_start={self.t_start}"

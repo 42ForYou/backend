@@ -17,7 +17,6 @@ class GameConfig:
         self.y_min = -height / 2
         self.v_paddle = v_paddle
         self.e = abs(epsilon)
-        print(f"Created {self}")
 
     def __str__(self) -> str:
         return f"GameConfig {self.width} * {self.height} (e={self.e}), v_paddle={self.v_paddle}, {self.x_min} <= x <= {self.x_max}, {self.y_min} <= y <= {self.y_max}"
