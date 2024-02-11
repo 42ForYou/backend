@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Wait for the Postgres container to be ready
-./scripts/wait-for-postgres.sh postgres
+./wait-for-postgres.sh postgres
 
 # Change directory to the source code
 cd src
