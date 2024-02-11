@@ -1,8 +1,5 @@
 FROM python:3
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
 # 작업 디렉토리 설정
 WORKDIR /app
 
@@ -11,7 +8,6 @@ RUN apt-get update && apt-get install -y postgresql-client
 
 # 의존성 파일 복사 및 설치
 COPY requirements.txt /tmp/requirements.txt
-COPY ./scripts/ /scripts/
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 # 프로젝트 파일 복사 및 실행 권한 부여
