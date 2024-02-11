@@ -38,7 +38,11 @@ class BallTrackSegment:
         self.calculate_validity()
 
     def __str__(self) -> str:
-        return f"BallTrackSegment s=({self.x_start}, {self.y_start}) [{self.p_start}] -> e=({self.x_end}, {self.y_end}) [{self.p_end}], v=({self.dx}, {self.dy}), l={self.len}"
+        result = f"{self.__class__.__name__} "
+        result += f"s=({self.x_start}, {self.y_start}) [{self.p_start.name}] -> "
+        result += f"e=({self.x_end}, {self.y_end}) [{self.p_end.name}], "
+        result += f"v=({self.dx}, {self.dy}), l={self.len}"
+        return result
 
     @property
     def start_from_center(self) -> bool:
