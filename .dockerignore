@@ -6,3 +6,5 @@ docker-compose.yml
 .gitignore
 
 .env
+.env.prod
+.env.dev
