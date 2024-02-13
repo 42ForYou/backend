@@ -135,7 +135,7 @@ class ProfileViewSet(
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         file_path = os.path.join(base_dir, settings.AVATAR_LOCATION, hashed_filename)
 
-        if profile.avatar and profile.avatar != settings.DEFAULT_AVATAR:
+        if profile.avatar and profile.avatar != "":
             pre_file_path = os.path.join(
                 base_dir, settings.AVATAR_LOCATION, profile.avatar
             )

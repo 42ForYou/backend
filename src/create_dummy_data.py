@@ -7,7 +7,6 @@ django.setup()
 from accounts.models import User, Profile
 from game.models import Game, GameRoom, GamePlayer
 from friends.models import Friend
-from pong.settings import DEFAULT_AVATAR
 
 
 def create_dummy_users(num_users=100):
@@ -27,7 +26,7 @@ def create_dummy_users(num_users=100):
             user=user,
             nickname=nickname,
             email=email,
-            avatar=DEFAULT_AVATAR,
+            avatar="",
             two_factor_auth=False,
         )
 

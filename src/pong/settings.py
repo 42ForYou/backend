@@ -176,7 +176,6 @@ TOKEN_URL = os.environ.get("42TOKEN_URL")
 OAUTH_URL = os.environ.get("42OAUTH_URL")
 CALLBACK_URL = os.environ.get("CALLBACK_URL")
 AVATAR_LOCATION = os.environ.get("AVATAR_LOCATION")
-DEFAULT_AVATAR = os.environ.get("DEFAULT_AVATAR")
 
 
 CORS_ALLOWED_ORIGINS = [

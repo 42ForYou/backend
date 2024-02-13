@@ -101,7 +101,7 @@ class OAuthView(APIView):
                 user=user,
                 nickname=data["intra_id"],
                 email=data["email"],
-                avatar=settings.DEFAULT_AVATAR,
+                avatar="",
             )
             oauth = OAuth.objects.create(
                 user=user,
