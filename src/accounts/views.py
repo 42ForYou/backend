@@ -67,7 +67,10 @@ class ProfileViewSet(
                 ).first()
                 friend_status = friend_relation.status if friend_relation else "None"
                 response_data = serializer.data
-                response_data["friend_status"] = friend_status
+                response_data.update(
+                    {"friend_id": friend_relation.id if friend_relation else None}
+                )
+                response_data.update({"friend_status": friend_status})
             else:
                 instance = self.get_object()
                 response_data = ProfileSerializer(instance).data
