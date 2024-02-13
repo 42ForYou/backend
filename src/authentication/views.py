@@ -7,7 +7,6 @@ from rest_framework import status
 from django.contrib.auth import logout
 from urllib.parse import quote
 from pong.utils import (
-    custom_exception_handler,
     CustomError,
     wrap_data,
     CookieTokenAuthentication,
@@ -16,9 +15,10 @@ from accounts.serializers import UserSerializer, ProfileSerializer
 
 
 class LoginView(APIView):
+    authentication_classes = ()
+    permission_classes = ()
+
     def get(self, request):
-        if request.user.is_authenticated:
-            return redirect("http://localhost:8000/oauth/")
         redirect_url = quote(settings.CALLBACK_URL)
         url = f"{settings.OAUTH_URL}?client_id={settings.CLIENT_ID}&redirect_uri={redirect_url}&response_type=code"
         return Response(wrap_data(url=url), status=status.HTTP_200_OK)

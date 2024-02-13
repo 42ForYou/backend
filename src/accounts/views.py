@@ -52,7 +52,6 @@ class ProfileViewSet(
     )
     def retrieve(self, request, *args, **kwargs):
         try:
-            instance = self.get_object()
             if request.user.intra_id != kwargs["intra_id"]:
                 instance = Profile.objects.get(user=kwargs["intra_id"])
                 serializer = ProfileNotOwnerSerializer(instance)
@@ -70,6 +69,7 @@ class ProfileViewSet(
                 response_data = serializer.data
                 response_data["friend_status"] = friend_status
             else:
+                instance = self.get_object()
                 response_data = ProfileSerializer(instance).data
             return Response(
                 wrap_data(user=response_data, match_history=[{}]),
