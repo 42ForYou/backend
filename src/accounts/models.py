@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from pong.settings import DEFAULT_AVATAR
 
 
 class User(AbstractUser):
@@ -19,5 +20,5 @@ class Profile(models.Model):
         unique=True,
     )
     email = models.EmailField(unique=True)
-    avatar = models.CharField(max_length=128, default="default.jpg")
+    avatar = models.CharField(max_length=128, default=DEFAULT_AVATAR)
     two_factor_auth = models.BooleanField(default=False)

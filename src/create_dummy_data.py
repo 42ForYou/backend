@@ -8,6 +8,7 @@ django.setup()
 from accounts.models import User, Profile
 from game.models import Game, GameRoom, GamePlayer
 from friends.models import Friend
+from pong.settings import DEFAULT_AVATAR
 
 # 정해진 첫 번째 이름의 리스트를 정의합니다.
 first_names = [
@@ -75,7 +76,7 @@ def create_dummy_users(num_users=10):
             user=user,
             nickname=nickname,
             email=email,
-            avatar=f"default.jpg",
+            avatar=DEFAULT_AVATAR,
             two_factor_auth=False,  # 예시를 단순화하기 위해 항상 False로 설정
         )
 
