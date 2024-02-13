@@ -39,7 +39,6 @@ class FriendSerializer(serializers.ModelSerializer):
             # 결과 데이터를 "me"와 "friend"로 구성합니다.
             ret["me"] = me
             ret["friend"] = friend
-            print(filter)
             if filter == "friend" and instance.status == "friend":
                 ret["friend"].update(
                     {

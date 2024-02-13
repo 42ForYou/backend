@@ -59,11 +59,13 @@ class CookieTokenAuthentication(BaseAuthentication):
     def authenticate(self, request):
         token_key = request.COOKIES.get("kimyeonhkimbabo_token")
         if not token_key:
-            return None
+            raise CustomError(
+                "Token not provided", status_code=status.HTTP_403_FORBIDDEN
+            )
 
         try:
             token = Token.objects.get(key=token_key)
         except Token.DoesNotExist:
-            raise AuthenticationFailed("Invalid token")
+            raise CustomError("Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
 
         return (token.user, token)

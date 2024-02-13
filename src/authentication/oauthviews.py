@@ -9,8 +9,6 @@ from accounts.models import User, Profile
 from accounts.serializers import (
     UserSerializer,
     ProfileSerializer,
-    UserTokenProfileSerializer,
-    DataWrapperSerializer,
 )
 from pong.utils import custom_exception_handler, CustomError, wrap_data
 from .models import OAuth
@@ -23,10 +21,7 @@ class OAuthView(APIView):
         profile = Profile.objects.get(user=user)
         userJson = UserSerializer(user).data
         profileJson = ProfileSerializer(profile).data
-        return DataWrapperSerializer(
-            {"user": userJson, "profile": profileJson},
-            inner_serializer=UserTokenProfileSerializer,
-        ).data
+        return wrap_data(user=userJson, profile=profileJson)
 
     def get(self, request):
         if request.user.is_authenticated:
