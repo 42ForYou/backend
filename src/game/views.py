@@ -105,8 +105,14 @@ class GameRoomViewSet(
             for game_room in context:
                 game_room_serializer = GameRoomSerializer(game_room)
                 game_serializer = GameSerializer(game_room.game)
+                players = game_room.game.game_player.all().order_by("id")
+                players_serializer = GamePlayerSerializer(players, many=True)
                 data.append(
-                    {"game": game_serializer.data, "room": game_room_serializer.data}
+                    {
+                        "game": game_serializer.data,
+                        "room": game_room_serializer.data,
+                        "players": players_serializer.data,
+                    }
                 )
             return paginator.get_paginated_response(data)
         except Exception as e:
