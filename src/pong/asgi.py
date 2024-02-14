@@ -10,7 +10,12 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pong.settings")
 django.setup()
 
 django_asgi_app = get_asgi_application()
-sio = socketio.AsyncServer(async_mode="asgi")
+sio = socketio.AsyncServer(
+    async_mode="asgi",
+    cors_allowed_origins=["https://localhost", "https://localhost:8000"],
+    logger=True,
+    engineio_logger=True,
+)
 
 register_sio_control(sio)
 register_sio_chat(sio)
