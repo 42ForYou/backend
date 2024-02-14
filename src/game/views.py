@@ -14,26 +14,13 @@ from rest_framework.pagination import PageNumberPagination
 
 from .models import Game, GameRoom, GamePlayer, SubGame
 from .serializers import *
-from pong.utils import CustomError, CookieTokenAuthentication, wrap_data
-
-
-class CustomPageNumberPagination(PageNumberPagination):
-    page_size_query_param = "page_size"
-
-    def get_paginated_response(self, data):
-        return Response(
-            {
-                "data": data,
-                "pages": {
-                    "total_pages": self.page.paginator.num_pages,
-                    "count": self.page.paginator.count,
-                    "current_page": self.page.number,
-                    "previous_page": self.get_previous_link(),
-                    "next_page": self.get_next_link(),
-                },
-            },
-            status=status.HTTP_200_OK,
-        )
+from pong.utils import (
+    CustomError,
+    CookieTokenAuthentication,
+    wrap_data,
+    CustomPageNumberPagination,
+)
+from .databaseio import get_single_game_room, create_game
 
 
 def get_game_room(id):
@@ -69,7 +56,7 @@ class GameRoomViewSet(
     serializer_class = GameRoomSerializer
     authentication_classes = [CookieTokenAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsPlayerInGameRoom]
-    pagination_class = PageNumberPagination
+    pagination_class = CustomPageNumberPagination
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -126,12 +113,10 @@ class GameRoomViewSet(
             room_id = kwargs["pk"]
             game_room = GameRoom.objects.get(id=room_id)
             self.check_object_permissions(request, game_room)
-            data = self.serialize_game_and_room(game_room.game, game_room)
-            players = game_room.game.game_player.all().order_by("id")
-            my_player_id = players.get(user=request.auth.user).id
-            data.update({"my_player_id": my_player_id})
-            data.update({"players": GamePlayerSerializer(players, many=True).data})
-            return Response({"data": data}, status=status.HTTP_200_OK)
+            data = get_single_game_room(room_id)
+            my_player_id = game_room.game.game_player.get(user=request.auth.user).id
+            data["data"]["my_player_id"] = my_player_id
+            return Response(data, status=status.HTTP_200_OK)
         except Exception as e:
             raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -139,7 +124,7 @@ class GameRoomViewSet(
         game = None
         try:
             request_data = request.data.get("data")
-            game = self.create_game(request_data)
+            game = create_game(request_data.get("game"))
             game_room = self.create_room(request, request_data, game)
             player = self.join_host(game_room)
             data = self.serialize_game_and_room(game, game_room)
@@ -161,15 +146,6 @@ class GameRoomViewSet(
             return Response(status=status.HTTP_404_NOT_FOUND)
         delete_game_room(game_room)
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def create_game(self, request_data):
-        try:
-            serializer = GameSerializer(data=request_data.get("game"))
-            serializer.is_valid(raise_exception=True)
-            game = serializer.save()
-            return game
-        except Exception as e:
-            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
 
     def create_room(self, request, request_data, game):
         try:
