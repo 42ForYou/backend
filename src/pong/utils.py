@@ -1,10 +1,9 @@
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.authentication import BaseAuthentication
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.authtoken.models import Token
-import json
+from rest_framework.pagination import PageNumberPagination
 
 
 class CustomError(Exception):
@@ -69,3 +68,22 @@ class CookieTokenAuthentication(BaseAuthentication):
             raise CustomError("Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
 
         return (token.user, token)
+
+
+class CustomPageNumberPagination(PageNumberPagination):
+    page_size_query_param = "page_size"
+
+    def get_paginated_response(self, data):
+        return Response(
+            {
+                "data": data,
+                "pages": {
+                    "total_pages": self.page.paginator.num_pages,
+                    "count": self.page.paginator.count,
+                    "current_page": self.page.number,
+                    "previous_page": self.get_previous_link(),
+                    "next_page": self.get_next_link(),
+                },
+            },
+            status=status.HTTP_200_OK,
+        )

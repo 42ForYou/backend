@@ -23,7 +23,7 @@ from rest_framework.parsers import MultiPartParser, JSONParser
 import json
 import pong.settings as settings
 from datetime import datetime
-from game.views import CustomPageNumberPagination
+from pong.utils import CustomPageNumberPagination
 
 
 class IsOwner(permissions.BasePermission):
