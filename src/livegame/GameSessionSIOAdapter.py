@@ -58,12 +58,15 @@ class GameSessionSIOAdapter:
         self.paddle_a = ValueUpdateManager()
         self.paddle_b = ValueUpdateManager()
 
+        self.ended = False
+
     def update(self) -> None:
         self.session.update()
 
         # TODO: implement ending in GameSession and activate
         # if self.session.ended():
         #     self.emit_ended()
+        #     self.ended = True
         #     return
 
         if self.time_left.update(self.session.get_time_left()):

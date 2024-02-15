@@ -1,5 +1,5 @@
 import time
-from typing import Dict
+from typing import Dict, Tuple, List
 
 from pong.asgi import sio
 from GameSession import GameSession
@@ -66,6 +66,20 @@ class GameSessionRegistry:
     def destroy(room_id: int, rank: int, idx_in_rank: int) -> None:
         del GameSessionRegistry.registry[room_id][rank][idx_in_rank]
         print(f"Destroyed GameSession in room {room_id} rank {rank} idx {idx_in_rank}")
+
+    @staticmethod
+    def update() -> None:
+        ended_indices: List[Tuple[int, int, int]] = []
+
+        for room_id, room_reg in GameSessionRegistry.registry.items():
+            for rank, rank_reg in room_reg.items():
+                for idx, adapter in rank_reg.items():
+                    adapter.update()
+                    if adapter.ended:
+                        ended_indices.append((room_id, rank, idx))
+
+        for ended_idx in ended_indices:
+            del GameSessionRegistry.registry[ended_idx[0]][ended_idx[1]][ended_idx[2]]
 
 
 def emit_start(room_id: int, rank: int, idx_in_rank: int):
