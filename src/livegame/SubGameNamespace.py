@@ -4,6 +4,8 @@ from typing import Dict
 
 from pong.asgi import sio
 from GameSession import GameSession
+from BallTrack import BallTrack
+from BallTrackSegment import BallTrackSegment
 from PaddleStatus import PaddleStatus, KeyInput, Player
 
 # TODO: Replace print() statements with proper logging module
@@ -124,12 +126,38 @@ def emit_ended(room_id: int, rank: int, idx_in_rank: int, winner: str):
     print(f"Emit event {event} data {data} to namespace {ns}")
 
 
-def emit_update_scores():
+def emit_update_scores(
+    room_id: int, rank: int, idx_in_rank: int, score_a: int, score_b: int
+):
+    event = "update_scores"
+    data = {"t_event": time.time(), "score_a": score_a, "score_b": score_b}
+    ns = SubGameNamespace.generate_namespace(room_id, rank, idx_in_rank)
+    sio.emit(event, data=data, namespace=ns)
+    print(f"Emit event {event} data {data} to namespace {ns}")
+
+
+def serialize_balltracksegment(seg: BallTrackSegment):
     pass
 
 
-def emit_update_track_ball():
+def serialize_balltrack(balltrack: BallTrack):
     pass
+
+
+def emit_update_track_ball(
+    room_id: int, rank: int, idx_in_rank: int, balltrack: BallTrack
+):
+    event = "update_track_ball"
+    data = {
+        "t_event": balltrack.t_start,
+        "t_end": balltrack.t_end,
+        "heading": balltrack.heading.name,
+        "velocity": balltrack.v,
+        "segments": serialize_balltrack(balltrack),
+    }
+    ns = SubGameNamespace.generate_namespace(room_id, rank, idx_in_rank)
+    sio.emit(event, data=data, namespace=ns)
+    print(f"Emit event {event} data {data} to namespace {ns}")
 
 
 def emit_update_track_paddle():
