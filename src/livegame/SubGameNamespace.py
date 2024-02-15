@@ -112,6 +112,7 @@ def emit_update_time_left(room_id: int, rank: int, idx_in_rank: int):
     event = "update_time_left"
     data = {"t_event": time.time(), "time_left": gs.get_time_left()}
     ns = SubGameNamespace.generate_namespace(room_id, rank, idx_in_rank)
+    sio.emit(event, data=data, namespace=ns)
     print(f"Emit event {event} data {data} to namespace {ns}")
 
 
