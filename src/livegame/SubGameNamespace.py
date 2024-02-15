@@ -137,11 +137,18 @@ def emit_update_scores(
 
 
 def serialize_balltracksegment(seg: BallTrackSegment):
-    pass
+    return {
+        "x_s": seg.x_start,
+        "y_s": seg.x_start,
+        "x_e": seg.x_end,
+        "y_e": seg.y_end,
+        "dx": seg.dx,
+        "dy": seg.dy,
+    }
 
 
 def serialize_balltrack(balltrack: BallTrack):
-    pass
+    return [serialize_balltracksegment(seg) for seg in balltrack.segments]
 
 
 def emit_update_track_ball(
