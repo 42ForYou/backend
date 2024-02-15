@@ -10,6 +10,7 @@ class GameConfig:
         epsilon: float,  # expected floating point error
         dx_ball: float,
         dy_ball: float,
+        time_limit: float,
     ) -> None:
         self.width = width
         self.height = height
@@ -22,6 +23,7 @@ class GameConfig:
         self.dx_ball = dx_ball
         self.dy_ball = dy_ball
         self.v_ball = math.hypot(dx_ball, dy_ball)
+        self.t_limit = time_limit
 
     def __str__(self) -> str:
         return f"GameConfig {self.width} * {self.height} (e={self.e}), v_paddle={self.v_paddle}, {self.x_min} <= x <= {self.x_max}, {self.y_min} <= y <= {self.y_max}"

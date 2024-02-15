@@ -18,6 +18,7 @@ class DummyGameSessionInitValue:
     paddle_speed = 200
     ball_init_dx = 100
     ball_init_dy = 100
+    time_limit = 60
 
 
 class GameSessionRegistry:
@@ -47,6 +48,7 @@ class GameSessionRegistry:
             DummyGameSessionInitValue.paddle_speed,
             DummyGameSessionInitValue.ball_init_dx,
             DummyGameSessionInitValue.ball_init_dy,
+            DummyGameSessionInitValue.time_limit,
         )
         print(f"Registered GameSession in room {room_id} rank {rank} idx {idx_in_rank}")
         return rank_reg[idx_in_rank]
