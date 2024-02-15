@@ -167,5 +167,16 @@ def emit_update_track_ball(
     print(f"Emit event {event} data {data} to namespace {ns}")
 
 
-def emit_update_track_paddle():
-    pass
+def emit_update_track_paddle(
+    room_id: int, rank: int, idx_in_rank: int, paddle: PaddleStatus
+):
+    event = "update_track_paddle"
+    data = {
+        "t_event": paddle.t_last_updated,
+        "player": paddle.player.name,
+        "y": paddle.y,
+        "dy": paddle.dy,
+    }
+    ns = SubGameNamespace.generate_namespace(room_id, rank, idx_in_rank)
+    sio.emit(event, data=data, namespace=ns)
+    print(f"Emit event {event} data {data} to namespace {ns}")
