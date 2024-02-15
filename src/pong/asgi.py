@@ -1,13 +1,18 @@
 import os
-import django
-from django.core.asgi import get_asgi_application
 import socketio
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pong.settings")
+
+import django
+
+django.setup()
+
+from django.core.asgi import get_asgi_application
+
 from socketcontrol.events import register_sio_control
 from livechat.events import register_sio_chat
 from livegame.events import register_sio_game
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pong.settings")
-django.setup()
 
 django_asgi_app = get_asgi_application()
 sio = socketio.AsyncServer(
