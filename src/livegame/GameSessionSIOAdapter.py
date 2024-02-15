@@ -1,6 +1,6 @@
 import time
 
-from pong.asgi import sio
+from socketcontrol.events import sio
 from livegame.GameSession import GameSession
 from livegame.PaddleStatus import Player, PaddleStatus
 from livegame.BallTrack import BallTrack
