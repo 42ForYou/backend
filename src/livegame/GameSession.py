@@ -18,9 +18,10 @@ class GameSession:
         paddle_speed: float,
         ball_init_dx: float,
         ball_init_dy: float,
+        time_limit: float,
     ) -> None:
         self.config = GameConfig(
-            width, height, paddle_speed, epsilon, ball_init_dx, ball_init_dy
+            width, height, paddle_speed, epsilon, ball_init_dx, ball_init_dy, time_limit
         )
         if self.config.flt_eq(ball_init_dx, 0.0):
             raise ValueError(f"GameSession got invalid dx {ball_init_dx}")
