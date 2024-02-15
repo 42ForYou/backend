@@ -1,12 +1,11 @@
 import socketio
-from .models import SocketSession
+from asgiref.sync import sync_to_async
+from django.db.models import Q
 from rest_framework.authtoken.models import Token
-from accounts.models import User, Profile
+from pong.utils import wrap_data
+from .models import SocketSession
 from friends.serializers import FriendUserSerializer
 from friends.models import Friend
-from django.db.models import Q
-from asgiref.sync import sync_to_async
-from pong.utils import wrap_data
 
 
 """
@@ -72,13 +71,41 @@ def async_frienduserserializer(user):
 
 @sio.on("connect")
 async def connect(sid: str, environ: dict) -> None:
-    cookies = environ.get("HTTP_COOKIE", "")
-    cookie_dict = dict(item.split("=") for item in cookies.split("; ") if "=" in item)
-    token = cookie_dict.get("kimyeonhkimbabo_token", None)
-    if token:
-        user = await get_user_by_token(token)
-        session = await get_session(user, sid)
-        user.is_online = True
+    try:
+        cookies = environ.get("HTTP_COOKIE", "")
+        cookie_dict = dict(
+            item.split("=") for item in cookies.split("; ") if "=" in item
+        )
+        token = cookie_dict.get("kimyeonhkimbabo_token", None)
+        if token:
+            user = await get_user_by_token(token)
+            session = await get_session(user, sid)
+            user.is_online = True
+            await sync_to_async(user.save)()
+            friends_users = await get_friends(user)
+            online_friends_sids = await filter_online_friends(friends_users)
+            user_info = await async_frienduserserializer(user)
+            user_info.update({"is_online": user.is_online})
+            for online_friend_sid in online_friends_sids:
+                await sio.emit(
+                    "update_friends",
+                    {"friend": user_info},
+                    room=online_friend_sid,
+                    namespace="/online_status",
+                )
+            print("Client connected", sid)
+        else:
+            await sio.disconnect(sid)
+    except Exception as e:
+        await sio.disconnect(sid)
+
+
+@sio.on("disconnect")
+async def disconnect(sid):
+    print(sid)
+    try:
+        user = await get_user_by_sid(sid)
+        user.is_online = False
         await sync_to_async(user.save)()
         friends_users = await get_friends(user)
         online_friends_sids = await filter_online_friends(friends_users)
@@ -86,22 +113,11 @@ async def connect(sid: str, environ: dict) -> None:
         user_info.update({"is_online": user.is_online})
         for online_friend_sid in online_friends_sids:
             await sio.emit(
-                "info_friends", wrap_data(friend=user_info), room=online_friend_sid
+                "update_friends",
+                {"friend": user_info},
+                room=online_friend_sid,
+                namespace="/online_status",
             )
-    else:
-        disconnect(sid)
-    print("Client connected", sid)
-
-
-@sio.on("disconnect")
-async def disconnect(sid):
-    user = await get_user_by_sid(sid)
-    user.is_online = False
-    await sync_to_async(user.save)()
-    friends_users = await get_friends(user)
-    online_friends_sids = await filter_online_friends(friends_users)
-    user_info = await async_frienduserserializer(user)
-    user_info.update({"is_online": user.is_online})
-    for online_friend_sid in online_friends_sids:
-        await sio.emit("info_friends", {"data": user_info}, room=online_friend_sid)
-    print("Client disconnected", sid)
+        print("Client disconnected", sid)
+    except Exception as e:
+        print(e)

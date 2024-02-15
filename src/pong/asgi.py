@@ -16,8 +16,11 @@ from livegame.events import register_sio_game
 
 django_asgi_app = get_asgi_application()
 
-socketio_app = socketio.ASGIApp(
-    sio, django_asgi_app, on_startup=update_game_session_registry_forever()
-)
+
+async def on_startup():
+    asyncio.create_task(update_game_session_registry_forever())
+
+
+socketio_app = socketio.ASGIApp(sio, django_asgi_app, on_startup=on_startup)
 
 application = socketio_app
