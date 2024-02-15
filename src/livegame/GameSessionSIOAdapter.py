@@ -1,11 +1,11 @@
 import time
 
 from pong.asgi import sio
-from GameSession import GameSession
-from PaddleStatus import Player, PaddleStatus
-from BallTrack import BallTrack
-from BallTrackSegment import BallTrackSegment
-from SubGameNamespace import SubGameNamespace
+from livegame.GameSession import GameSession
+from livegame.PaddleStatus import Player, PaddleStatus
+from livegame.BallTrack import BallTrack
+from livegame.BallTrackSegment import BallTrackSegment
+from livegame.SubGameNamespace import SubGameNamespace
 
 
 def serialize_balltracksegment(seg: BallTrackSegment):

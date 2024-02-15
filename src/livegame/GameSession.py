@@ -2,9 +2,9 @@ import time
 import math
 from typing import Dict
 
-from GameConfig import GameConfig
-from PaddleStatus import PaddleStatus, KeyInput, Player
-from BallTrack import BallTrack
+from livegame.GameConfig import GameConfig
+from livegame.PaddleStatus import PaddleStatus, KeyInput, Player
+from livegame.BallTrack import BallTrack
 
 
 # TODO: update print() statements to proper logging

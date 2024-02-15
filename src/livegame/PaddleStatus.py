@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict
 
-from GameConfig import GameConfig
+from livegame.GameConfig import GameConfig
 
 
 class Player(Enum):
