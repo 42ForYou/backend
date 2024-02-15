@@ -23,8 +23,13 @@ class DummyGameSessionInitValue:
     time_limit = 60
 
 
+class GameSessionSIOAdapter:
+    def __init__(self, session: GameSession) -> None:
+        self.session = session
+
+
 class GameSessionRegistry:
-    registry: Dict[int, Dict[int, Dict[int, GameSession]]] = {}
+    registry: Dict[int, Dict[int, Dict[int, GameSessionSIOAdapter]]] = {}
 
     @staticmethod
     def register(room_id: int, rank: int, idx_in_rank: int) -> GameSession:
@@ -42,7 +47,7 @@ class GameSessionRegistry:
                 f"GameSession for room {room_id} rank {rank} idx {idx_in_rank} already exists"
             )
 
-        rank_reg[idx_in_rank] = GameSession(
+        session = GameSession(
             DummyGameSessionInitValue.width,
             DummyGameSessionInitValue.height,
             DummyGameSessionInitValue.epsilon,
@@ -52,12 +57,13 @@ class GameSessionRegistry:
             DummyGameSessionInitValue.ball_init_dy,
             DummyGameSessionInitValue.time_limit,
         )
+        rank_reg[idx_in_rank] = GameSessionSIOAdapter(session)
         print(f"Registered GameSession in room {room_id} rank {rank} idx {idx_in_rank}")
-        return rank_reg[idx_in_rank]
+        return rank_reg[idx_in_rank].session
 
     @staticmethod
     def get(room_id: int, rank: int, idx_in_rank: int) -> GameSession:
-        return GameSessionRegistry.registry[room_id][rank][idx_in_rank]
+        return GameSessionRegistry.registry[room_id][rank][idx_in_rank].session
 
     @staticmethod
     def destroy(room_id: int, rank: int, idx_in_rank: int) -> None:
