@@ -7,6 +7,7 @@ from GameSession import GameSession
 from BallTrack import BallTrack
 from BallTrackSegment import BallTrackSegment
 from PaddleStatus import PaddleStatus, KeyInput, Player
+from GameSessionSIOAdapter import GameSessionSIOAdapter
 
 # TODO: Replace print() statements with proper logging module
 
@@ -21,11 +22,6 @@ class DummyGameSessionInitValue:
     ball_init_dx = 100
     ball_init_dy = 100
     time_limit = 60
-
-
-class GameSessionSIOAdapter:
-    def __init__(self, session: GameSession) -> None:
-        self.session = session
 
 
 class GameSessionRegistry:
