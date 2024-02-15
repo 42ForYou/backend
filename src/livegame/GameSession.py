@@ -1,4 +1,5 @@
 import time
+import math
 from typing import Dict
 
 from GameConfig import GameConfig
@@ -100,9 +101,9 @@ class GameSession:
         self.update_paddles(time_now)
         self.update_ball(time_now)
 
-    def get_time_left(self) -> float:
+    def get_time_left(self) -> int:
         time_now = time.time()
-        return time_now - self.t_start
+        return math.ceil(time_now - self.t_start)
 
     def __str__(self) -> str:
         return f"GameSession t_start={self.t_start}"
