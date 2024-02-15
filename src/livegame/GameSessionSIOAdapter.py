@@ -60,49 +60,49 @@ class GameSessionSIOAdapter:
 
         self.ended = False
 
-    def update(self) -> None:
+    async def update(self) -> None:
         self.session.update()
 
         # TODO: implement ending in GameSession and activate
         # if self.session.ended():
-        #     self.emit_ended()
+        #     await self.emit_ended()
         #     self.ended = True
         #     return
 
         if self.time_left.update(self.session.get_time_left()):
-            self.emit_update_time_left()
+            await self.emit_update_time_left()
 
         if self.scores.update(
             (self.session.paddles[Player.A].score, self.session.paddles[Player.B].score)
         ):
-            self.emit_update_scores()
+            await self.emit_update_scores()
 
         if self.paddle_a.update(self.session.paddles[Player.A]):
-            self.emit_update_track_paddle(self.paddle_a.val)
+            await self.emit_update_track_paddle(self.paddle_a.val)
 
         if self.paddle_a.update(self.session.paddles[Player.B]):
-            self.emit_update_track_paddle(self.paddle_b.val)
+            await self.emit_update_track_paddle(self.paddle_b.val)
 
-    def emit_update_time_left(self) -> None:
+    async def emit_update_time_left(self) -> None:
         event = "update_time_left"
         data = {
             "t_event": self.time_left.t_last_updated,
             "time_left": self.time_left.val,
         }
-        sio.emit(event, data=data, namespace=self.sio_ns.namespace)
+        await sio.emit(event, data=data, namespace=self.sio_ns.namespace)
         print(f"Emit event {event} data {data} to namespace {self.sio_ns.namespace}")
 
-    def emit_update_scores(self):
+    async def emit_update_scores(self):
         event = "update_scores"
         data = {
             "t_event": self.scores.t_last_updated,
             "score_a": self.scores.val[0],
             "score_b": self.scores.val[1],
         }
-        sio.emit(event, data=data, namespace=self.sio_ns.namespace)
+        await sio.emit(event, data=data, namespace=self.sio_ns.namespace)
         print(f"Emit event {event} data {data} to namespace {self.sio_ns.namespace}")
 
-    def emit_update_track_ball(self):
+    async def emit_update_track_ball(self):
         event = "update_track_ball"
         balltrack: BallTrack = self.balltrack.val
         data = {
@@ -112,10 +112,10 @@ class GameSessionSIOAdapter:
             "velocity": balltrack.v,
             "segments": serialize_balltrack(balltrack),
         }
-        sio.emit(event, data=data, namespace=self.sio_ns.namespace)
+        await sio.emit(event, data=data, namespace=self.sio_ns.namespace)
         print(f"Emit event {event} data {data} to namespace {self.sio_ns.namespace}")
 
-    def emit_update_track_paddle(self, paddle: PaddleStatus):
+    async def emit_update_track_paddle(self, paddle: PaddleStatus):
         event = "update_track_paddle"
         data = {
             "t_event": paddle.t_last_updated,
@@ -123,13 +123,13 @@ class GameSessionSIOAdapter:
             "y": paddle.y,
             "dy": paddle.dy,
         }
-        sio.emit(event, data=data, namespace=self.sio_ns.namespace)
+        await sio.emit(event, data=data, namespace=self.sio_ns.namespace)
         print(f"Emit event {event} data {data} to namespace {self.sio_ns.namespace}")
 
-    def emit_ended(self):
+    async def emit_ended(self):
         event = "ended"
         # TODO: when get_winner() gets implemented delete below
         data = {"t_event": time.time(), "winner": "A"}
         # data = {"t_event": time.time(), "winner": self.session.get_winner()}
-        sio.emit(event, data=data, namespace=self.sio_ns.namespace)
+        await sio.emit(event, data=data, namespace=self.sio_ns.namespace)
         print(f"Emit event {event} data {data} to namespace {self.sio_ns.namespace}")
