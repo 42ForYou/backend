@@ -19,9 +19,14 @@ class ValueUpdateManager:
 
 
 class GameSessionSIOAdapter:
-    def __init__(self, session: GameSession) -> None:
+    def __init__(
+        self, session: GameSession, room_id: int, rank: int, idx_in_rank: int
+    ) -> None:
         self.session = session
         self.time_left = ValueUpdateManager()
+        self.room_id = room_id
+        self.rank = rank
+        self.idx_in_rank = idx_in_rank
 
     def update(self) -> None:
         self.session.update()

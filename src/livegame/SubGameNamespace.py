@@ -53,7 +53,9 @@ class GameSessionRegistry:
             DummyGameSessionInitValue.ball_init_dy,
             DummyGameSessionInitValue.time_limit,
         )
-        rank_reg[idx_in_rank] = GameSessionSIOAdapter(session)
+        rank_reg[idx_in_rank] = GameSessionSIOAdapter(
+            session, room_id, rank, idx_in_rank
+        )
         print(f"Registered GameSession in room {room_id} rank {rank} idx {idx_in_rank}")
         return rank_reg[idx_in_rank].session
 
