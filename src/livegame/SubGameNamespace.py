@@ -6,7 +6,10 @@ from pong.asgi import sio
 from GameSession import GameSession
 from PaddleStatus import PaddleStatus, KeyInput, Player
 
+# TODO: Replace print() statements with proper logging module
 
+
+# TODO: Replace with setting values from DB
 class DummyGameSessionInitValue:
     width = 800
     height = 600

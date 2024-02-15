@@ -7,6 +7,7 @@ from BallTrack import BallTrack
 
 
 # TODO: update print() statements to proper logging
+# TODO: don't start simulation when __init__ and add starting method
 class GameSession:
     def __init__(
         self,
