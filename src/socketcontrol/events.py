@@ -15,6 +15,13 @@ connect, disconnect 에 액세스할 수 없음 에러는 문제없다.
 connect, disconnect 는 socketio 라이브러리에서 자동으로 등록된다.
 """
 
+sio = socketio.AsyncServer(
+    async_mode="asgi",
+    cors_allowed_origins=["https://localhost", "https://localhost:8000"],
+    logger=True,
+    engineio_logger=True,
+)
+
 
 @sync_to_async
 def get_friends(user):
@@ -63,40 +70,38 @@ def async_frienduserserializer(user):
     return FriendUserSerializer(user).data
 
 
-def register_sio_control(sio):
-    @sio.on("connect")
-    async def connect(sid: str, environ: dict) -> None:
-        cookies = environ.get("HTTP_COOKIE", "")
-        cookie_dict = dict(
-            item.split("=") for item in cookies.split("; ") if "=" in item
-        )
-        token = cookie_dict.get("kimyeonhkimbabo_token", None)
-        if token:
-            user = await get_user_by_token(token)
-            session = await get_session(user, sid)
-            user.is_online = True
-            await sync_to_async(user.save)()
-            friends_users = await get_friends(user)
-            online_friends_sids = await filter_online_friends(friends_users)
-            user_info = await async_frienduserserializer(user)
-            user_info.update({"is_online": user.is_online})
-            for online_friend_sid in online_friends_sids:
-                await sio.emit(
-                    "info_friends", wrap_data(friend=user_info), room=online_friend_sid
-                )
-        else:
-            disconnect(sid)
-        print("Client connected", sid)
-
-    @sio.on("disconnect")
-    async def disconnect(sid):
-        user = await get_user_by_sid(sid)
-        user.is_online = False
+@sio.on("connect")
+async def connect(sid: str, environ: dict) -> None:
+    cookies = environ.get("HTTP_COOKIE", "")
+    cookie_dict = dict(item.split("=") for item in cookies.split("; ") if "=" in item)
+    token = cookie_dict.get("kimyeonhkimbabo_token", None)
+    if token:
+        user = await get_user_by_token(token)
+        session = await get_session(user, sid)
+        user.is_online = True
         await sync_to_async(user.save)()
         friends_users = await get_friends(user)
         online_friends_sids = await filter_online_friends(friends_users)
         user_info = await async_frienduserserializer(user)
         user_info.update({"is_online": user.is_online})
         for online_friend_sid in online_friends_sids:
-            await sio.emit("info_friends", {"data": user_info}, room=online_friend_sid)
-        print("Client disconnected", sid)
+            await sio.emit(
+                "info_friends", wrap_data(friend=user_info), room=online_friend_sid
+            )
+    else:
+        disconnect(sid)
+    print("Client connected", sid)
+
+
+@sio.on("disconnect")
+async def disconnect(sid):
+    user = await get_user_by_sid(sid)
+    user.is_online = False
+    await sync_to_async(user.save)()
+    friends_users = await get_friends(user)
+    online_friends_sids = await filter_online_friends(friends_users)
+    user_info = await async_frienduserserializer(user)
+    user_info.update({"is_online": user.is_online})
+    for online_friend_sid in online_friends_sids:
+        await sio.emit("info_friends", {"data": user_info}, room=online_friend_sid)
+    print("Client disconnected", sid)
