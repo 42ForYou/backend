@@ -111,5 +111,9 @@ class GameSession:
         self.update_paddles(time_now)
         self.update_ball(time_now)
 
+    def get_time_left(self) -> float:
+        time_now = time.time()
+        return time_now - self.t_start
+
     def __str__(self) -> str:
         return f"GameSession t_start={self.t_start}"
