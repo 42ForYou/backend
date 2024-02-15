@@ -25,7 +25,7 @@ class KeyInput:
 
 
 class PaddleStatus:
-    def __init__(self, config: GameConfig, len: float) -> None:
+    def __init__(self, config: GameConfig, len: float, time_now: float) -> None:
         self.config = config
         self.y: float = 0.0
         self.dy: float = 0.0
@@ -35,8 +35,21 @@ class PaddleStatus:
             KeyInput.Key.UP: False,
             KeyInput.Key.DOWN: False,
         }
+        self.t_last_updated = time_now
 
-    def update(self, key_input: KeyInput) -> None:
+    def update(self, time_now: float) -> None:
+        time_elapsed = time_now - self.t_last_updated
+
+        new_y = self.y + self.dy * time_elapsed
+        if new_y > self.config.y_max:
+            new_y = self.config.y_max
+        if new_y < self.config.y_min:
+            new_y = self.config.y_min
+        self.y = new_y
+
+        self.t_last_updated = time_now
+
+    def update_key(self, key_input: KeyInput) -> None:
         if key_input.action == KeyInput.Action.PRESS:
             self.key_pressed[key_input.key] = True
 

@@ -30,7 +30,6 @@ class GameSession:
             Player.B: PaddleStatus(self.config, paddle_len),  # RIGHT
         }
         self.t_start = time.time()
-        self.t_paddle_last = self.t_start
         self.balltrack = BallTrack(
             self.config, 0, 0, ball_init_dx, ball_init_dy, self.t_start
         )
@@ -39,26 +38,15 @@ class GameSession:
         print(f"{id(self)}: new {self.balltrack}")
 
     def update_key(self, player: Player, key_input: KeyInput) -> None:
-        self.paddles[player].update(key_input)
+        self.paddles[player].update_key(key_input)
         print(f"{id(self)}: Update player {player.name} key to {key_input}")
-        self.update_paddles(time.time())
+        self.paddles[player].update(time.time())
         print(f"{id(self)}: Player {player.name} paddle update to ", end="")
         print(f"y={self.paddles[player].y} dy={self.paddles[player].dy}")
 
     def update_paddles(self, time_now: float) -> None:
-        time_elapsed = time_now - self.t_paddle_last
-
         for _, paddle in self.paddles.items():
-            new_y = paddle.y + paddle.dy * time_elapsed
-
-            if new_y > self.config.y_max:
-                new_y = self.config.y_max
-            if new_y < self.config.y_min:
-                new_y = self.config.y_min
-
-            paddle.y = new_y
-
-        self.t_paddle_last = time_now
+            paddle.update(time_now)
 
     def update_turns(self) -> None:
         if self.balltrack.heading == BallTrack.Heading.LEFT:
