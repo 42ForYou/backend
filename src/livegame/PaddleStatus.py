@@ -25,8 +25,11 @@ class KeyInput:
 
 
 class PaddleStatus:
-    def __init__(self, config: GameConfig, len: float, time_now: float) -> None:
+    def __init__(
+        self, config: GameConfig, player: Player, len: float, time_now: float
+    ) -> None:
         self.config = config
+        self.player = player
         self.y: float = 0.0
         self.dy: float = 0.0
         self.len = len
