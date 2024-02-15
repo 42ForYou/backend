@@ -2,7 +2,7 @@ import math
 from typing import Tuple
 from enum import Enum
 
-from GameConfig import GameConfig
+from livegame.GameConfig import GameConfig
 
 
 class BallTrackSegment:

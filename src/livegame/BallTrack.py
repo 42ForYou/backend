@@ -2,8 +2,8 @@ import math
 from typing import List, Tuple
 from enum import Enum
 
-from GameConfig import GameConfig
-from BallTrackSegment import (
+from livegame.GameConfig import GameConfig
+from livegame.BallTrackSegment import (
     BallTrackSegment,
     get_ball_track_segment_to_wall,
     get_ball_track_segment_to_paddle,

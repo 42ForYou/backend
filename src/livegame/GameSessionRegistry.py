@@ -2,9 +2,9 @@ import time
 from typing import Dict, Tuple, List
 
 from pong.asgi import sio
-from GameSession import GameSession
-from PaddleStatus import Player
-from GameSessionSIOAdapter import GameSessionSIOAdapter
+from livegame.GameSession import GameSession
+from livegame.PaddleStatus import Player
+from livegame.GameSessionSIOAdapter import GameSessionSIOAdapter
 
 # TODO: Replace print() statements with proper logging module
 
