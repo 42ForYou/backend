@@ -262,6 +262,7 @@ class PlayerViewSet(
             game_room.join_players += 1
             game_room.save()
             players = game.game_player.all().order_by("id")
+            my_player_id = game.game_player.get(user=user).id
             players_serializer = GamePlayerSerializer(players, many=True)
             game_serializer = GameSerializer(game)
             game_room_serializer = GameRoomSerializer(game_room)
@@ -270,6 +271,7 @@ class PlayerViewSet(
                     game=game_serializer.data,
                     room=game_room_serializer.data,
                     players=players_serializer.data,
+                    my_player_id=my_player_id,
                 ),
                 status=status.HTTP_201_CREATED,
             )
