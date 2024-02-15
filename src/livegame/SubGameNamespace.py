@@ -116,8 +116,12 @@ def emit_update_time_left(room_id: int, rank: int, idx_in_rank: int):
     print(f"Emit event {event} data {data} to namespace {ns}")
 
 
-def emit_ended():
-    pass
+def emit_ended(room_id: int, rank: int, idx_in_rank: int, winner: str):
+    event = "ended"
+    data = {"t_event": time.time(), "winner": winner}
+    ns = SubGameNamespace.generate_namespace(room_id, rank, idx_in_rank)
+    sio.emit(event, data=data, namespace=ns)
+    print(f"Emit event {event} data {data} to namespace {ns}")
 
 
 def emit_update_scores():
