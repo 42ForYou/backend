@@ -115,8 +115,8 @@ class GameRoomViewSet(
             self.check_object_permissions(request, game_room)
             data = get_single_game_room(room_id)
             my_player_id = game_room.game.game_player.get(user=request.auth.user).id
-            data["data"]["my_player_id"] = my_player_id
-            return Response(data, status=status.HTTP_200_OK)
+            data["my_player_id"] = my_player_id
+            return Response({"data": data}, status=status.HTTP_200_OK)
         except Exception as e:
             raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
 
