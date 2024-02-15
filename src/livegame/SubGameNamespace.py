@@ -106,8 +106,13 @@ def emit_start(room_id: int, rank: int, idx_in_rank: int):
     print(f"Emit event {event} data {data} to namespace {ns}")
 
 
-def emit_update_time_left():
-    pass
+def emit_update_time_left(room_id: int, rank: int, idx_in_rank: int):
+    gs = GameSessionRegistry.get(room_id, rank, idx_in_rank)
+
+    event = "update_time_left"
+    data = {"t_event": time.time(), "time_left": gs.get_time_left()}
+    ns = SubGameNamespace.generate_namespace(room_id, rank, idx_in_rank)
+    print(f"Emit event {event} data {data} to namespace {ns}")
 
 
 def emit_ended():
