@@ -26,8 +26,8 @@ class GameSession:
         if self.config.flt_eq(ball_init_dx, 0.0):
             raise ValueError(f"GameSession got invalid dx {ball_init_dx}")
         self.paddles: Dict[Player, PaddleStatus] = {
-            Player.A: PaddleStatus(self.config, paddle_len),  # LEFT
-            Player.B: PaddleStatus(self.config, paddle_len),  # RIGHT
+            Player.A: PaddleStatus(self.config, Player.A, paddle_len),  # LEFT
+            Player.B: PaddleStatus(self.config, Player.B, paddle_len),  # RIGHT
         }
         self.t_start = time.time()
         self.balltrack = BallTrack(
@@ -50,15 +50,14 @@ class GameSession:
 
     def update_turns(self) -> None:
         if self.balltrack.heading == BallTrack.Heading.LEFT:
-            self.player_defense = Player.A
-            self.player_offense = Player.B
+            self.paddle_offense = self.paddles[Player.A]
+            self.paddle_defense = self.paddles[Player.B]
         else:
-            self.player_defense = Player.B
-            self.player_offense = Player.A
-        self.paddle_offense = self.paddles[self.player_offense]
-        self.paddle_defense = self.paddles[self.player_defense]
+            self.paddle_offense = self.paddles[Player.B]
+            self.paddle_defense = self.paddles[Player.A]
+
         print(
-            f"{id(self)}: Attack: {self.player_offense.name} -> {self.player_defense.name}"
+            f"{id(self)}: Attack: {self.paddle_offense.player.name} -> {self.paddle_offense.player.name}"
         )
 
     def update_ball(self, time_now: float) -> None:
@@ -71,7 +70,9 @@ class GameSession:
         # TODO: resolve error from difference between actual impact time and paddle position
         if self.paddle_defense.hit(self.balltrack.y_impact):
             # create reflection
-            print(f"{id(self)}: Player {self.player_defense.name} reflects the ball")
+            print(
+                f"{id(self)}: Player {self.paddle_defense.player.name} reflects the ball"
+            )
             new_x_start, new_y_start = self.balltrack.next_xy_start
             new_dx, new_dy = self.balltrack.next_dx_dy
             self.balltrack = BallTrack(
@@ -86,7 +87,7 @@ class GameSession:
             # scoring, reset
             self.paddle_offense.score += 1
             print(
-                f"{id(self)}: Player {self.player_offense.name} scores to {self.paddle_offense.score}"
+                f"{id(self)}: Player {self.paddle_offense.player.name} scores to {self.paddle_offense.score}"
             )
             new_dx, new_dy = self.balltrack.next_dx_dy
             self.balltrack = BallTrack(self.config, 0, 0, new_dx, new_dy, new_t)
