@@ -9,7 +9,7 @@ from .serializers import *
 
 from pong.utils import CustomError, CookieTokenAuthentication
 from django.db.models import Q
-from game.views import CustomPageNumberPagination
+from pong.utils import CustomPageNumberPagination
 
 
 class FriendViewSet(
