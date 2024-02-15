@@ -57,7 +57,7 @@ def create_game_room(num_games=50):
             n_players=n_players,
         )
 
-        GameRoom.objects.create(
+        game_room = GameRoom.objects.create(
             host=user,
             game=game,
             title=f"GameRoom {i + 1}",

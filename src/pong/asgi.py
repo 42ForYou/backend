@@ -1,17 +1,25 @@
 import os
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pong.settings")
+
 import django
-from django.core.asgi import get_asgi_application
+
+django.setup()
+
 import socketio
+import asyncio
+from django.core.asgi import get_asgi_application
 from socketcontrol.events import sio
 from livegame.GameSessionRegistry import update_game_session_registry_forever
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pong.settings")
-django.setup()
 
 django_asgi_app = get_asgi_application()
 
-socketio_app = socketio.ASGIApp(
-    sio, django_asgi_app, on_startup=update_game_session_registry_forever()
-)
+
+async def on_startup():
+    asyncio.create_task(update_game_session_registry_forever())
+
+
+socketio_app = socketio.ASGIApp(sio, django_asgi_app, on_startup=on_startup)
 
 application = socketio_app
