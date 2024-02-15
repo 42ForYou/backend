@@ -1,4 +1,5 @@
 import time
+import asyncio
 from typing import Dict, Tuple, List
 
 from socketcontrol.events import sio
@@ -104,5 +105,11 @@ def emit_start(room_id: int, rank: int, idx_in_rank: int):
 
 
 async def update_game_session_registry_forever():
+    # TODO: remove i
+    i = 0
     while True:
+        i += 1
+        print(f"update_game_session_registry_forever {i}th times")
         await GameSessionRegistry.update()
+        # TODO: adjust minimum sleep time by Literals
+        await asyncio.sleep(1)
