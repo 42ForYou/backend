@@ -10,10 +10,10 @@ class SubGameNamespace(socketio.AsyncNamespace):
         print(f"Ns={self.namespace}, {sid} disconnected")
         # TODO: 나간 유저가 대진표에서 어디에 있는지 파악 등,,,
 
-    def on_leave(self, sid, data):
+    async def on_leave(self, sid, data):
         print(f"Ns={self.namespace}, {sid} event: leave, data={data}")
         # TODO: Impl
 
-    def on_keyboard_input(self, sid, data):
+    async def on_keyboard_input(self, sid, data):
         print(f"Ns={self.namespace}, {sid} event: keyboard_input, data={data}")
         # TODO: Impl

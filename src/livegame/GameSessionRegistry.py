@@ -68,13 +68,13 @@ class GameSessionRegistry:
         print(f"Destroyed GameSession in room {room_id} rank {rank} idx {idx_in_rank}")
 
     @staticmethod
-    def update() -> None:
+    async def update() -> None:
         ended_indices: List[Tuple[int, int, int]] = []
 
         for room_id, room_reg in GameSessionRegistry.registry.items():
             for rank, rank_reg in room_reg.items():
                 for idx, adapter in rank_reg.items():
-                    adapter.update()
+                    await adapter.update()
                     if adapter.ended:
                         ended_indices.append((room_id, rank, idx))
 
@@ -101,3 +101,8 @@ def emit_start(room_id: int, rank: int, idx_in_rank: int):
     }
     sio.emit(event, data=data, namespace=adapter.sio_ns.namespace)
     print(f"Emit event {event} data {data} to namespace {adapter.sio_ns.namespace}")
+
+
+async def update_game_session_registry_forever():
+    while True:
+        await GameSessionRegistry.update()
