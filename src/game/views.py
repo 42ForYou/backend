@@ -132,6 +132,9 @@ class GameRoomViewSet(
             data = self.serialize_game_and_room(game, game_room)
             data.update({"players": [GamePlayerSerializer(player).data]})
             data.update({"my_player_id": player.id})
+            sio.register_namespace(
+                GameRoomNamespace(f"game/room/{game_room.id}", game_room.id)
+            )
             return Response(
                 {"data": data},
                 status=status.HTTP_201_CREATED,

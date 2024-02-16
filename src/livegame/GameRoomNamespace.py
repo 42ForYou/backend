@@ -26,6 +26,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         super().__init__(namespace=namespace)
         self.game_room_id = game_room_id
         self.match_dict = {}
+        print(f"game room namespace ##{self.game_room_id}## created")
 
     def on_connect(self, sid, environ):
         print(f"gamer room {self.game_room_id} connected")
