@@ -128,7 +128,8 @@ class GameRoomViewSet(
             game_room = self.create_room(request, request_data, game)
             player = self.join_host(game_room)
             data = self.serialize_game_and_room(game, game_room)
-            data.update({"player": GamePlayerSerializer(player).data})
+            data.update({"players": [GamePlayerSerializer(player).data]})
+            data.update({"my_player_id": player.id})
             return Response(
                 {"data": data},
                 status=status.HTTP_201_CREATED,
