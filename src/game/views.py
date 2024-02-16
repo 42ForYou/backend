@@ -276,7 +276,9 @@ class PlayerViewSet(
             game_room_serializer = GameRoomSerializer(game_room)
             my_player_id = game.game_player.get(user=user).id
             player_id_list = [player.id for player in players]
-            sid_list = [player.user.socket_session.session_id for player in players]
+            sid_list = [
+                player.user.socket_session.game_room_session_id for player in players
+            ]
             asyncio.run(
                 emit_update_room(
                     data={

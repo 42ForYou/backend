@@ -25,10 +25,10 @@ def left_game_room(game_room_id, player_id):
         "players": players_serializer.data,
     }
     player_id_list = [player.id for player in players]
-    sid_list = [player.user.socket_session.session_id for player in players]
+    sid_list = [player.user.socket_session.game_room_session_id for player in players]
     if game_room.is_playing == False:
         player_id_list.remove(player.id)
-        sid_list.remove(player.socket_session.session_id)
+        sid_list.remove(player.socket_session.game_room_session_id)
         player.delete()
         game_room.join_players -= 1
         game_room.save()
