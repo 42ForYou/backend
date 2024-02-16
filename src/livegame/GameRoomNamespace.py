@@ -7,12 +7,13 @@ from asgiref.sync import sync_to_async
 
 
 async def emit_update_room(data, game_room_id, player_id_list, sid_list):
-    for sid in sid_list:
-        copy_data = data.copy()
-        copy_data["my_player_id"] = player_id_list[sid_list.index(sid)]
-        await sio.emit(
-            "update_room", copy_data, room=sid, namespace=f"/game/room/{game_room_id}"
-        )
+    # for sid in sid_list:
+    #     copy_data = data.copy()
+    #     copy_data["my_player_id"] = player_id_list[sid_list.index(sid)]
+    #     print(f"emit_update_room: {copy_data}")
+    #     print(f"emit_update_room: {sid}")
+    print(f"namespace: /game/room/{game_room_id}")
+    await sio.emit("update_room", data, namespace=f"/game/room/{game_room_id}")
 
 
 async def emit_destroyed(data, game_room_id):
@@ -26,6 +27,7 @@ async def emit_update_tournament(data, game_room_id):
 @sync_to_async
 def update_game_room_sid(user, sid):
     user.socket_session.game_room_session_sid = sid
+    print(f"game room namespace ##{user.socket_session.game_room_session_sid}##")
     user.socket_session.save()
 
 
@@ -46,6 +48,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             if token:
                 user = await get_user_by_token(token)
                 await update_game_room_sid(user, sid)
+                user = await get_user_by_token(token)
             else:
                 print("No token")
                 await self.disconnect(sid)
