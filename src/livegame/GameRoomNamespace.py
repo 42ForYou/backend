@@ -28,12 +28,6 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         self.match_dict = {}
         print(f"game room namespace ##{self.game_room_id}## created")
 
-    def on_connect(self, sid, environ):
-        print(f"gamer room {self.game_room_id} connected")
-
-    def on_disconnect(self, sid):
-        print(f"gamer room {self.game_room_id} disconnected")
-
     async def on_exited(self, sid, data):
         # self.emit("my_response", data)
         player_id = data["my_player_id"]
