@@ -86,13 +86,12 @@ async def connect(sid: str, environ: dict) -> None:
             online_friends_sids = await filter_online_friends(friends_users)
             user_info = await async_frienduserserializer(user)
             user_info.update({"is_online": user.is_online})
-            for online_friend_sid in online_friends_sids:
-                await sio.emit(
-                    "update_friends",
-                    {"friend": user_info},
-                    room=online_friend_sid,
-                    namespace="/online_status",
-                )
+            # for online_friend_sid in online_friends_sids:
+            await sio.emit(
+                "update_friends",
+                {"friend": user_info},
+                namespace="/online_status",
+            )
             print("##############Client connected##############", sid)
         else:
             print(f"@@@@@@@@@@@@@@Token not found: {sid}@@@@@@@@@@@@@@@@@@@@@@@@")
@@ -104,7 +103,6 @@ async def connect(sid: str, environ: dict) -> None:
 
 @sio.on("disconnect")
 async def disconnect(sid):
-    print(sid)
     try:
         user = await get_user_by_sid(sid)
         user.is_online = False
@@ -113,13 +111,12 @@ async def disconnect(sid):
         online_friends_sids = await filter_online_friends(friends_users)
         user_info = await async_frienduserserializer(user)
         user_info.update({"is_online": user.is_online})
-        for online_friend_sid in online_friends_sids:
-            await sio.emit(
-                "update_friends",
-                {"friend": user_info},
-                room=online_friend_sid,
-                namespace="/online_status",
-            )
+        # for online_friend_sid in online_friends_sids:
+        await sio.emit(
+            "update_friends",
+            {"friend": user_info},
+            namespace="/online_status",
+        )
         print("################Client disconnected############", sid)
     except Exception as e:
         print(f"@@@@@@@@@@@@@@Error in disconnect: {e}@@@@@@@@@@@@@@@@@@@@@@@@")
