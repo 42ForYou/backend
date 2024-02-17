@@ -2,12 +2,13 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict
 
-from livegame.GameConfig import GameConfig
+from livegame.SubGameConfig import SubGameConfig
 
 
 class Player(Enum):
-    A = 0  # LEFT
-    B = 1  # RIGHT
+    NOBODY = 0
+    A = 1  # LEFT
+    B = 2  # RIGHT
 
 
 @dataclass
@@ -26,7 +27,7 @@ class KeyInput:
 
 class PaddleStatus:
     def __init__(
-        self, config: GameConfig, player: Player, len: float, time_now: float
+        self, config: SubGameConfig, player: Player, len: float, time_now: float
     ) -> None:
         self.config = config
         self.player = player

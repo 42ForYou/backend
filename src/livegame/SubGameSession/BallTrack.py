@@ -2,7 +2,7 @@ import math
 from typing import List, Tuple
 from enum import Enum
 
-from livegame.GameConfig import GameConfig
+from livegame.SubGameConfig import SubGameConfig
 from livegame.SubGameSession.BallTrackSegment import (
     BallTrackSegment,
     get_ball_track_segment_to_wall,
@@ -17,7 +17,7 @@ class BallTrack:
 
     def __init__(
         self,
-        config: GameConfig,
+        config: SubGameConfig,
         x_start: float,
         y_start: float,
         dx_start: float,
