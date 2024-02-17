@@ -99,18 +99,25 @@ class SubGameSession(socketio.AsyncNamespace):
     # SIO: F>B keyboard_input
     async def on_keyboard_input(self, sid, data):
         print(f"Ns={self.namespace}, {sid} event: keyboard_input, data={data}")
+
         if not self.started:
+            self.log(f"SubGameSession has not started")
             return
 
-        # TODO: activate below logic according to "data"
-        # self.paddles[player].update_key(key_input)
-        # self.paddles[player].update(time.time())
+        if not sid in self.sid_to_player:
+            self.log(f"sid {sid} is not connected player")
+            return
 
-        # self.log(
-        #     f"Update player {player.name} key to {key_input}, y={self.paddles[player].y} dy={self.paddles[player].dy}"
-        # )
-        # self.emit_update_track_paddle(self.paddles[??])
-        pass
+        player: Player = self.sid_to_player[sid]
+        key_input = KeyInput(KeyInput.Key[data["key"]], KeyInput.Action[data["action"]])
+
+        self.paddles[player].update_key(key_input)
+        self.paddles[player].update(time.time())
+        self.log(
+            f"Update player {player.name} key to {key_input}, y={self.paddles[player].y} dy={self.paddles[player].dy}"
+        )
+
+        self.emit_update_track_paddle(self.paddles[player])
 
     def determine_winner(self, turn_result: TurnResult) -> None:
         if self.time_over:  # sudden death
