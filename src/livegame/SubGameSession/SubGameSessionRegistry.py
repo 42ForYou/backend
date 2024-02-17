@@ -3,9 +3,9 @@ import asyncio
 from typing import Dict, Tuple, List
 
 from socketcontrol.events import sio
-from livegame.GameSession import GameSession
-from livegame.PaddleStatus import Player
-from livegame.GameSessionSIOAdapter import GameSessionSIOAdapter
+from livegame.SubGameSession.SubGameSession import SubGameSession
+from livegame.SubGameSession.PaddleStatus import Player
+from livegame.SubGameSession.SubGameSessionSIOAdapter import GameSessionSIOAdapter
 
 # TODO: Replace print() statements with proper logging module
 
@@ -41,7 +41,7 @@ class GameSessionRegistry:
                 f"GameSession for room {room_id} rank {rank} idx {idx_in_rank} already exists"
             )
 
-        session = GameSession(
+        session = SubGameSession(
             DummyGameSessionInitValue.width,
             DummyGameSessionInitValue.height,
             DummyGameSessionInitValue.epsilon,

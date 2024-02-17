@@ -1,10 +1,10 @@
 import time
 
 from socketcontrol.events import sio
-from livegame.GameSession import GameSession
-from livegame.PaddleStatus import Player, PaddleStatus
-from livegame.BallTrack import BallTrack
-from livegame.BallTrackSegment import BallTrackSegment
+from livegame.SubGameSession.SubGameSession import SubGameSession
+from livegame.SubGameSession.PaddleStatus import Player, PaddleStatus
+from livegame.SubGameSession.BallTrack import BallTrack
+from livegame.SubGameSession.BallTrackSegment import BallTrackSegment
 from livegame.SubGameNamespace import SubGameNamespace
 
 
@@ -43,7 +43,7 @@ class ValueUpdateManager:
 
 class GameSessionSIOAdapter:
     def __init__(
-        self, session: GameSession, room_id: int, rank: int, idx_in_rank: int
+        self, session: SubGameSession, room_id: int, rank: int, idx_in_rank: int
     ) -> None:
         self.session = session
         self.room_id = room_id

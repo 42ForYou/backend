@@ -3,13 +3,13 @@ import math
 from typing import Dict
 
 from livegame.GameConfig import GameConfig
-from livegame.PaddleStatus import PaddleStatus, KeyInput, Player
-from livegame.BallTrack import BallTrack
+from livegame.SubGameSession.PaddleStatus import PaddleStatus, KeyInput, Player
+from livegame.SubGameSession.BallTrack import BallTrack
 
 
 # TODO: update print() statements to proper logging
 # TODO: don't start simulation when __init__ and add starting method
-class GameSession:
+class SubGameSession:
     def __init__(
         self,
         width: float,
