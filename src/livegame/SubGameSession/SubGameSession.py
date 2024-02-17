@@ -209,6 +209,13 @@ class SubGameSession(socketio.AsyncNamespace):
             else:
                 return TurnResult.B_SCORED
 
+    async def emit_start(self) -> None:
+        event = "start"
+        data = {"t_event": time.time()}
+        # SIO: B>F start
+        await sio.emit(event, data=data, namespace=self.namespace)
+        print(f"Emit event {event} data {data} to namespace {self.namespace}")
+
     async def emit_update_time_left(self) -> None:
         event = "update_time_left"
         data = {
