@@ -1,5 +1,6 @@
 from livegame.SubGameSession.BallTrack import BallTrack
 from livegame.SubGameSession.BallTrackSegment import BallTrackSegment
+from livegame.SubGameConfig import SubGameConfig
 
 
 def serialize_balltracksegment(seg: BallTrackSegment):
@@ -15,3 +16,18 @@ def serialize_balltracksegment(seg: BallTrackSegment):
 
 def serialize_balltrack(balltrack: BallTrack):
     return [serialize_balltracksegment(seg) for seg in balltrack.segments]
+
+
+def serialize_subgame_config(config: SubGameConfig):
+    return {
+        "match_point": config.match_point,
+        "player_a_init_point": config.player_a_init_point,
+        "player_b_init_point": config.player_b_init_point,
+        "x_max": config.x_max,
+        "y_max": config.y_max,
+        "x_min": config.x_min,
+        "y_min": config.y_min,
+        "v_paddle": config.v_paddle,
+        "len_paddle": config.l_paddle,
+        "v_ball": config.v_ball,
+    }

@@ -12,7 +12,7 @@ from livegame.SubGameSession.PaddleStatus import PaddleStatus, KeyInput, Player
 from livegame.SubGameSession.BallTrack import BallTrack
 from livegame.SubGameSession.SIOAdapter import (
     serialize_balltrack,
-    serialize_balltracksegment,
+    serialize_subgame_config,
 )
 
 
@@ -213,6 +213,13 @@ class SubGameSession(socketio.AsyncNamespace):
         event = "start"
         data = {"t_event": time.time()}
         # SIO: B>F start
+        await sio.emit(event, data=data, namespace=self.namespace)
+        print(f"Emit event {event} data {data} to namespace {self.namespace}")
+
+    async def emit_config(self) -> None:
+        event = "config"
+        data = {"t_event": time.time(), "config": serialize_subgame_config(self.config)}
+        # SIO: B>F config
         await sio.emit(event, data=data, namespace=self.namespace)
         print(f"Emit event {event} data {data} to namespace {self.namespace}")
 
