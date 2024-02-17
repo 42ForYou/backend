@@ -88,7 +88,8 @@ class SubGameSession(socketio.AsyncNamespace):
     # SIO: F>B disconnect
     def on_disconnect(self, sid):
         print(f"Ns={self.namespace}, {sid} disconnected")
-        # TODO: 나간 유저가 대진표에서 어디에 있는지 파악 등,,,
+        if sid in self.sid_to_player:
+            del self.sid_to_player[sid]
 
     # SIO: F>B leave
     async def on_leave(self, sid, data):
