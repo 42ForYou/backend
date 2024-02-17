@@ -101,9 +101,7 @@ async def connect(sid: str, environ: dict) -> None:
                     room=online_friend_sid,
                     namespace="/online_status",
                 )
-            print("##############Client connected##############", sid)
         else:
-            print(f"@@@@@@@@@@@@@@Token not found: {sid}@@@@@@@@@@@@@@@@@@@@@@@@")
             await sio.disconnect(sid)
     except Exception as e:
         print(f"@@@@@@@@@@@@@@Error in connect: {e}@@@@@@@@@@@@@@@@@@@@@@@@")
@@ -130,6 +128,5 @@ async def disconnect(sid):
                 room=online_friend_sid,
                 namespace="/online_status",
             )
-        print("################Client disconnected############", sid)
     except Exception as e:
         print(f"@@@@@@@@@@@@@@Error in disconnect: {e}@@@@@@@@@@@@@@@@@@@@@@@@")
