@@ -133,7 +133,7 @@ class SubGameSession(socketio.AsyncNamespace):
     # start simulation. start accepting key press.
     async def start(self) -> None:
         self.t_start = time.time()
-        self.emit_update_time_left()
+        self.emit_update_time_left_until_end()
         self.started = True
         self.log(f"start simulation of SubGameSession at {self.t_start}")
 
@@ -223,15 +223,26 @@ class SubGameSession(socketio.AsyncNamespace):
         await sio.emit(event, data=data, namespace=self.namespace)
         print(f"Emit event {event} data {data} to namespace {self.namespace}")
 
-    async def emit_update_time_left(self) -> None:
+    async def emit_update_time_left(self) -> int:
         event = "update_time_left"
+        time_left = self.get_time_left()
         data = {
             "t_event": time.time(),
-            "time_left": self.get_time_left(),
+            "time_left": time_left,
         }
         # SIO: B>F update_time_left
         await sio.emit(event, data=data, namespace=self.namespace)
         print(f"Emit event {event} data {data} to namespace {self.namespace}")
+        return time_left
+
+    async def emit_update_time_left_until_end(self) -> None:
+        while await self.emit_update_time_left() != 0:
+            t_emit = time.time()
+            t_next_emit = self.t_start
+            while t_next_emit <= t_emit:
+                t_next_emit += 1.0
+
+            await asyncio.sleep(t_next_emit - t_emit)
 
     async def emit_update_scores(self):
         event = "update_scores"
