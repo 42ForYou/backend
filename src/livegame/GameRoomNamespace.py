@@ -7,13 +7,10 @@ from asgiref.sync import sync_to_async
 
 
 async def emit_update_room(data, game_room_id, player_id_list, sid_list):
-    # for sid in sid_list:
-    #     copy_data = data.copy()
-    #     copy_data["my_player_id"] = player_id_list[sid_list.index(sid)]
-    #     print(f"emit_update_room: {copy_data}")
-    #     print(f"emit_update_room: {sid}")
-    print(f"namespace: /game/room/{game_room_id}")
-    await sio.emit("update_room", data, namespace=f"/game/room/{game_room_id}")
+    for sid in sid_list:
+        copy_data = data.copy()
+        copy_data["my_player_id"] = player_id_list[sid_list.index(sid)]
+        await sio.emit("update_room", data, namespace=f"/game/room/{game_room_id}")
 
 
 async def emit_destroyed(data, game_room_id):
@@ -62,7 +59,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         data, player_id_list, sid_list = await left_game_room(
             self.game_room_id, player_id
         )
-        if data["destroyed_because"]:
+        if data.get("destroyed_because", None):
             await self.emit("destroyed", data)
         else:
             await emit_update_room(
