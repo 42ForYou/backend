@@ -5,7 +5,8 @@ import socketio
 from typing import Dict
 from enum import Enum
 
-from socketcontrol.events import sio
+from accounts.models import User
+from socketcontrol.events import sio, get_user_by_token
 from livegame.SubGameConfig import SubGameConfig
 from livegame.SubGameSession.PaddleStatus import PaddleStatus, KeyInput, Player
 from livegame.SubGameSession.BallTrack import BallTrack
@@ -58,9 +59,31 @@ class SubGameSession(socketio.AsyncNamespace):
         print(f"{id(self)}: {msg}")
 
     # SIO: F>B connect
-    def on_connect(self, sid, environ):
-        print(f"Ns={self.namespace}, {sid} connected")
-        # TODO: 접속한 유저가 대진표에서 어디에 있는지 파악 등,,,
+    async def on_connect(self, sid, environ):
+        self.log(f"Ns={self.namespace}, {sid} connected")
+        try:
+            cookies = environ.get("HTTP_COOKIE", "")
+            cookie_dict = dict(
+                item.split("=") for item in cookies.split("; ") if "=" in item
+            )
+            token = cookie_dict.get("kimyeonhkimbabo_token", None)
+            if not token:
+                self.log("No token")
+                await self.disconnect(sid)
+
+            user: User = await get_user_by_token(token)
+
+            if user == self.user_a:
+                self.sid_to_player[sid] = Player.A
+            elif user == self.user_b:
+                self.sid_to_player[sid] = Player.B
+            else:
+                self.log(f"connected {user.intra_id} is not assigned player")
+                await self.disconnect(sid)
+
+        except Exception as e:
+            self.log(f"Error in connect: {e}")
+            await self.disconnect(sid)
 
     # SIO: F>B disconnect
     def on_disconnect(self, sid):
