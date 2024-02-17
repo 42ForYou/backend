@@ -23,6 +23,7 @@ def serialize_subgame_config(config: SubGameConfig):
         "match_point": config.match_point,
         "player_a_init_point": config.player_a_init_point,
         "player_b_init_point": config.player_b_init_point,
+        "time_limit": config.t_limit,
         "x_max": config.x_max,
         "y_max": config.y_max,
         "x_min": config.x_min,
