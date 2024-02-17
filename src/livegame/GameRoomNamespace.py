@@ -76,6 +76,8 @@ class GameRoomNamespace(socketio.AsyncNamespace):
     # SIO: F>B start
     async def on_start(self, sid, data):
         # self.emit("my_response", data)
+        # TODO: 토너먼트를 아래 단계부터 4강, 결승까지 루프를 돌며
+        # emit_update_tournament -> SubGameSession n개 생성 -> emit_config -> emit_start 수행
         await game_start(self.game_room_id)
         data = await update_or_create_matchs_list(self.match_dict, self.game_room_id)
         await emit_update_tournament(data=data, game_room_id=self.game_room_id)
