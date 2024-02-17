@@ -27,6 +27,8 @@ class SubGameSession(socketio.AsyncNamespace):
         self,
         namespace,
         config: SubGameConfig,
+        user_a: User,
+        user_b: User,
         ball_init_dx: float,
         ball_init_dy: float,
     ):
@@ -40,13 +42,17 @@ class SubGameSession(socketio.AsyncNamespace):
             Player.A: PaddleStatus(self.config, Player.A, config.l_paddle),  # LEFT
             Player.B: PaddleStatus(self.config, Player.B, config.l_paddle),  # RIGHT
         }
+        self.user_a = user_a
+        self.user_b = user_b
         self.ball_init_dx = ball_init_dx
         self.ball_init_dy = ball_init_dy
         self.update_balltrack()
         self.started = False
         self.time_over = False
         self.winner = Player.NOBODY
+        self.sid_to_player = {}
         self.log(f"Created SubGameSession with {self.config}")
+        self.log(f"A: {user_a}, B: {user_b}")
 
     def log(self, msg: str) -> None:
         print(f"{id(self)}: {msg}")
