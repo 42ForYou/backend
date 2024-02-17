@@ -94,6 +94,7 @@ async def connect(sid: str, environ: dict) -> None:
             user_info.update({"is_online": user.is_online})
             for online_friend_sid in online_friends_sids:
                 user = await get_user_by_sid(online_friend_sid)
+                # SIO: emit update_friends
                 await sio.emit(
                     "update_friends",
                     {"friend": user_info},
@@ -109,6 +110,7 @@ async def connect(sid: str, environ: dict) -> None:
         await sio.disconnect(sid)
 
 
+# SIO: F>B disconnect
 @sio.on("disconnect")
 async def disconnect(sid):
     try:
@@ -121,6 +123,7 @@ async def disconnect(sid):
         user_info.update({"is_online": user.is_online})
         for online_friend_sid in online_friends_sids:
             user = await get_user_by_sid(online_friend_sid)
+            # SIO: B>F update_friends
             await sio.emit(
                 "update_friends",
                 {"friend": user_info},

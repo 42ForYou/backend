@@ -100,6 +100,7 @@ def emit_start(room_id: int, rank: int, idx_in_rank: int):
             "v_ball": gs.config.v_ball,
         },
     }
+    # SIO: B>F start
     sio.emit(event, data=data, namespace=adapter.sio_ns.namespace)
     print(f"Emit event {event} data {data} to namespace {adapter.sio_ns.namespace}")
 

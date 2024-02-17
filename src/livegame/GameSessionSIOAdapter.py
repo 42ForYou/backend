@@ -89,6 +89,7 @@ class GameSessionSIOAdapter:
             "t_event": self.time_left.t_last_updated,
             "time_left": self.time_left.val,
         }
+        # SIO: B>F update_time_left
         await sio.emit(event, data=data, namespace=self.sio_ns.namespace)
         print(f"Emit event {event} data {data} to namespace {self.sio_ns.namespace}")
 
@@ -99,6 +100,7 @@ class GameSessionSIOAdapter:
             "score_a": self.scores.val[0],
             "score_b": self.scores.val[1],
         }
+        # SIO: B>F update_scores
         await sio.emit(event, data=data, namespace=self.sio_ns.namespace)
         print(f"Emit event {event} data {data} to namespace {self.sio_ns.namespace}")
 
@@ -112,6 +114,7 @@ class GameSessionSIOAdapter:
             "velocity": balltrack.v,
             "segments": serialize_balltrack(balltrack),
         }
+        # SIO: B>F update_track_ball
         await sio.emit(event, data=data, namespace=self.sio_ns.namespace)
         print(f"Emit event {event} data {data} to namespace {self.sio_ns.namespace}")
 
@@ -123,6 +126,7 @@ class GameSessionSIOAdapter:
             "y": paddle.y,
             "dy": paddle.dy,
         }
+        # SIO: B>F update_track_paddle
         await sio.emit(event, data=data, namespace=self.sio_ns.namespace)
         print(f"Emit event {event} data {data} to namespace {self.sio_ns.namespace}")
 
@@ -131,5 +135,6 @@ class GameSessionSIOAdapter:
         # TODO: when get_winner() gets implemented delete below
         data = {"t_event": time.time(), "winner": "A"}
         # data = {"t_event": time.time(), "winner": self.session.get_winner()}
+        # SIO: B>F ended
         await sio.emit(event, data=data, namespace=self.sio_ns.namespace)
         print(f"Emit event {event} data {data} to namespace {self.sio_ns.namespace}")

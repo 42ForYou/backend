@@ -13,14 +13,17 @@ async def emit_update_room(data, game_room_id, player_id_list, sid_list):
     #     print(f"emit_update_room: {copy_data}")
     #     print(f"emit_update_room: {sid}")
     print(f"namespace: /game/room/{game_room_id}")
+    # SIO: B>F update_room
     await sio.emit("update_room", data, namespace=f"/game/room/{game_room_id}")
 
 
 async def emit_destroyed(data, game_room_id):
+    # SIO: B>F destroyed
     await sio.emit("destroyed", data, namespace=f"/game/room/{game_room_id}")
 
 
 async def emit_update_tournament(data, game_room_id):
+    # SIO: B>F update_tournament
     await sio.emit("update_tournament", data, namespace=f"/game/room/{game_room_id}")
 
 
@@ -38,6 +41,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         self.match_dict = {}
         print(f"game room namespace ##{self.game_room_id}## created")
 
+    # SIO: F>B connect
     async def on_connect(self, sid, environ):
         try:
             cookies = environ.get("HTTP_COOKIE", "")
@@ -56,6 +60,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             print(f"Error in connect: {e}")
             await self.disconnect(sid)
 
+    # SIO: F>B exited
     async def on_exited(self, sid, data):
         # self.emit("my_response", data)
         player_id = data["my_player_id"]
@@ -72,6 +77,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
                 sid_list=sid_list,
             )
 
+    # SIO: F>B start
     async def on_start(self, sid, data):
         # self.emit("my_response", data)
         await game_start(self.game_room_id)
