@@ -45,13 +45,14 @@ class GameRoomNamespace(socketio.AsyncNamespace):
                 item.split("=") for item in cookies.split("; ") if "=" in item
             )
             token = cookie_dict.get("kimyeonhkimbabo_token", None)
-            if token:
-                user = await get_user_by_token(token)
-                await update_game_room_sid(user, sid)
-                user = await get_user_by_token(token)
-            else:
+
+            if not token:
                 print("No token")
                 await self.disconnect(sid)
+
+            user = await get_user_by_token(token)
+            await update_game_room_sid(user, sid)
+
         except Exception as e:
             print(f"Error in connect: {e}")
             await self.disconnect(sid)
