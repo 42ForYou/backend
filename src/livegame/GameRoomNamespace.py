@@ -1,5 +1,8 @@
 import asyncio
 import socketio
+
+from accounts.models import User
+from game.models import GamePlayer, Game, GameRoom
 from .databaseio import left_game_room, game_start, update_or_create_matchs_list
 from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
@@ -34,6 +37,9 @@ class GameRoomNamespace(socketio.AsyncNamespace):
     def __init__(self, namespace, game_room_id):
         super().__init__(namespace=namespace)
         self.game_room_id = game_room_id
+        self.host_user = GameRoom.objects.get(id=game_room_id).host
+        # sid: {{"intra_id": <String>, "nickname": <String>, "avatar": <String>}}
+        self.sid_to_user_data = {}
         self.match_dict = {}
         print(f"game room namespace ##{self.game_room_id}## created")
 
@@ -50,8 +56,14 @@ class GameRoomNamespace(socketio.AsyncNamespace):
                 print("No token")
                 await self.disconnect(sid)
 
-            user = await get_user_by_token(token)
+            user: User = await get_user_by_token(token)
             await update_game_room_sid(user, sid)
+
+            self.sid_to_user_data[sid] = {
+                "intra_id": user.intra_id,
+                "nickname": user.profile.nickname,
+                "avatar": user.profile.avatar,
+            }
 
         except Exception as e:
             print(f"Error in connect: {e}")
@@ -59,7 +71,8 @@ class GameRoomNamespace(socketio.AsyncNamespace):
 
     # SIO: F>B exited
     async def on_exited(self, sid, data):
-        # self.emit("my_response", data)
+        del self.sid_to_user_data[sid]
+
         player_id = data["my_player_id"]
         data, player_id_list, sid_list = await left_game_room(
             self.game_room_id, player_id
