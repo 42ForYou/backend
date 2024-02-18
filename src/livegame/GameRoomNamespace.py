@@ -105,6 +105,12 @@ class GameRoomNamespace(socketio.AsyncNamespace):
 
     # SIO: F>B start
     async def on_start(self, sid, data):
+        if not self.is_host(sid):
+            print(
+                f"Player pressing start button is not host: {sid} ({self.sid_to_user_data[sid]})"
+            )
+            return
+
         await game_start(self.game_room_id)
 
         self.build_tournament_tree()
