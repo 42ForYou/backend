@@ -28,8 +28,11 @@ class SubGameSession(socketio.AsyncNamespace):
         self,
         namespace,
         config: SubGameConfig,
+        gameroom_namespace,
         intra_id_a: str,
         intra_id_b: str,
+        idx_rank: int,
+        idx_in_rank: int,
         ball_init_dx: float,
         ball_init_dy: float,
     ):
@@ -38,6 +41,10 @@ class SubGameSession(socketio.AsyncNamespace):
         self.config = config
         if self.config.flt_eq(ball_init_dx, 0.0):
             raise ValueError(f"SubGameSession got invalid dx {ball_init_dx}")
+
+        self.gameroom = gameroom_namespace
+        self.idx_rank = idx_rank
+        self.idx_in_rank = idx_in_rank
 
         self.paddles: Dict[Player, PaddleStatus] = {
             Player.A: PaddleStatus(self.config, Player.A, config.l_paddle),  # LEFT
@@ -150,6 +157,9 @@ class SubGameSession(socketio.AsyncNamespace):
 
             if self.winner != Player.NOBODY:
                 await self.emit_ended()
+                self.gameroom.report_end_of_subgame(
+                    self.idx_rank, self.idx_in_rank, self.winner
+                )
                 return
 
             # emit balltrack

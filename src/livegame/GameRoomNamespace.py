@@ -13,6 +13,7 @@ from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
 from asgiref.sync import sync_to_async
 from livegame.SubGameSession.SubGameSession import SubGameSession
+from livegame.SubGameSession.PaddleStatus import Player
 from livegame.SubGameResult import SubGameResult
 from livegame.SubGameConfig import SubGameConfig, get_default_subgame_config
 
@@ -106,7 +107,6 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         await self.emit_update_tournament()
 
         while True:
-            # TODO: 현재 rank_ongoing에 대해 n개 SubGameSession 생성
             for idx_in_rank, subgame_item in enumerate(
                 self.tournament_tree[self.rank_ongoing]  # 이번 rank의 SubGameResult들
             ):
@@ -117,18 +117,23 @@ class GameRoomNamespace(socketio.AsyncNamespace):
                     self.config,
                     player_data_a.intra_id,
                     player_data_b.intra_id,
+                    self.rank_ongoing,
+                    idx_in_rank,
                     # TODO: implement random ball direction
                     math.sqrt(2) * self.config.v_ball,
                     math.sqrt(2) * self.config.v_ball,
                 )
+                # SIO: B>F config
+                await subgame_item.session.emit_config()
 
-            # TODO: n초 후 모든 SubGameSession 시작 (start, emit_config)
-            # TODO: 한 SubGameSession이 끝나면 self.tournament_tree 업데이트 및 self.emit_update_tournament()
-            # TODO: 모든 SubGameSession 끝나기 기다림
-            if self.is_current_rank_done():
-                self.rank_ongoing -= 1
-            await self.emit_update_tournament()
-            break
+            await asyncio.sleep(self.config.time_before_start)
+
+            await asyncio.gather(
+                [  # update winner & emit update tournament happens inside subgameresult
+                    subgameresult.session.start()
+                    for subgameresult in self.tournament_tree[self.rank_ongoing]
+                ]
+            )
 
     def is_current_rank_done(self) -> bool:
         winners = [item.winner for item in self.tournament_tree[self.rank_ongoing]]
@@ -185,6 +190,18 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             intra_id_b = players[idx_player_b].user.intra_id
             subgame_result.sid_a = self.get_sid_from_intra_id(intra_id_a)
             subgame_result.sid_b = self.get_sid_from_intra_id(intra_id_b)
+
+    async def report_end_of_subgame(
+        self, idx_rank: int, idx_in_rank: int, winner: Player
+    ):
+        self.tournament_tree[idx_rank][idx_in_rank].winner = winner.name
+        print(f"rank {idx_in_rank} idx {idx_in_rank} winnder is {winner.name}")
+
+        if self.is_current_rank_done():
+            print(f"Current rank {self.rank_ongoing} is finished")
+            self.rank_ongoing -= 1
+
+        await self.emit_update_tournament()
 
     async def emit_update_room(self, data, player_id_list, sid_list):
         for sid in sid_list:
