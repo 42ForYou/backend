@@ -110,9 +110,8 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             break
 
     def is_current_rank_done(self) -> bool:
-        # TODO: implement
-        # self.tournament_tree 순회하며 모든 SubGame의 "winner"값이 정해졌을 시 True
-        pass
+        winners = [item["winner"] for item in self.tournament_tree[self.rank_ongoing]]
+        return all([winner_val is not None for winner_val in winners])
 
     def get_sid_from_intra_id(self, sid) -> str:
         for sid_key, user_data in self.sid_to_user_data.items():
