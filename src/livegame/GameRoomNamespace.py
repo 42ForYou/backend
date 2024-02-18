@@ -118,18 +118,21 @@ class GameRoomNamespace(socketio.AsyncNamespace):
 
         while True:
             # TODO: 현재 rank_ongoing에 대해 n개 SubGameSession 생성
-            # for idx_in_rank, subgame_item in enumerate(
-            #     self.tournament_tree[self.rank_ongoing]
-            # ):
-            #     subgame_item["session"] = SubGameSession(
-            #         f"{self.namespace}/{self.n_ranks - 1}/{idx_in_rank}",
-            #         self.config,
-            #         players[idx_player_a].user,
-            #         players[idx_player_b].user,
-            #         # TODO: implement random ball direction
-            #         math.sqrt(2) * self.config.v_ball,
-            #         math.sqrt(2) * self.config.v_ball,
-            #     )
+            for idx_in_rank, subgame_item in enumerate(
+                self.tournament_tree[self.rank_ongoing]
+            ):
+                player_data_a = self.sid_to_user_data[subgame_item["sid_a"]]
+                player_data_b = self.sid_to_user_data[subgame_item["sid_b"]]
+                subgame_item["session"] = SubGameSession(
+                    f"{self.namespace}/{self.n_ranks - 1}/{idx_in_rank}",
+                    self.config,
+                    player_data_a["intra_id"],
+                    player_data_b["intra_id"],
+                    # TODO: implement random ball direction
+                    math.sqrt(2) * self.config.v_ball,
+                    math.sqrt(2) * self.config.v_ball,
+                )
+
             # TODO: n초 후 모든 SubGameSession 시작 (start, emit_config)
             # TODO: 한 SubGameSession이 끝나면 self.tournament_tree 업데이트 및 self.emit_update_tournament()
             # TODO: 모든 SubGameSession 끝나기 기다림
