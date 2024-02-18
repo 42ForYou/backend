@@ -148,6 +148,13 @@ class GameRoomNamespace(socketio.AsyncNamespace):
                 return user_data["intra_id"]
         raise ValueError(f"{sid} not found in GameRoomNamespace {self.namespace}")
 
+    def is_host(self, sid) -> bool:
+        if sid not in self.sid_to_user_data:
+            return False
+
+        host_intra = self.sid_to_user_data[sid]["intra_id"]
+        return host_intra == self.host_user.intra_id
+
     def build_tournament_tree(self):
         game_room = GameRoom.objects.get(pk=self.game_room_id)
         game = game_room.game
