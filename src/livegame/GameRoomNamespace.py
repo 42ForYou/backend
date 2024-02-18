@@ -79,13 +79,14 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         )
         if data.get("destroyed_because", None):
             await self.emit("destroyed", data)
-        else:
-            await emit_update_room(
-                data=data,
-                game_room_id=self.game_room_id,
-                player_id_list=player_id_list,
-                sid_list=sid_list,
-            )
+            return
+
+        await emit_update_room(
+            data=data,
+            game_room_id=self.game_room_id,
+            player_id_list=player_id_list,
+            sid_list=sid_list,
+        )
 
     # SIO: F>B start
     async def on_start(self, sid, data):
