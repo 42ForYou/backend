@@ -7,7 +7,7 @@ from typing import Dict, List
 import socketio
 
 from accounts.models import User, UserDataCache
-from game.models import GamePlayer, Game, GameRoom
+from game.models import GamePlayer, GameRoom
 from .databaseio import left_game_room, game_start
 from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
@@ -15,7 +15,7 @@ from asgiref.sync import sync_to_async
 from livegame.SubGameSession.SubGameSession import SubGameSession
 from livegame.SubGameSession.PaddleStatus import Player
 from livegame.SubGameResult import SubGameResult
-from livegame.SubGameConfig import SubGameConfig, get_default_subgame_config
+from livegame.SubGameConfig import get_default_subgame_config
 
 
 def is_power_of_two(n: int) -> bool:
