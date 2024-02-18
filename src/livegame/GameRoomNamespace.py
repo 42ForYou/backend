@@ -1,5 +1,6 @@
 import asyncio
 import socketio
+from typing import Dict
 
 from accounts.models import User
 from game.models import GamePlayer, Game, GameRoom
@@ -96,3 +97,6 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         await game_start(self.game_room_id)
         data = await update_or_create_matchs_list(self.match_dict, self.game_room_id)
         await emit_update_tournament(data=data, game_room_id=self.game_room_id)
+
+
+GAMEROOMNAMESPACE_REGISTRY: Dict[int, GameRoomNamespace] = {}
