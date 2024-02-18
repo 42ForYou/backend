@@ -1,17 +1,19 @@
 import random
 import math
 import time
+import asyncio
 from typing import Dict, List
 
 import socketio
 
-from accounts.models import User
+from accounts.models import User, UserDataCache
 from game.models import GamePlayer, Game, GameRoom
 from .databaseio import left_game_room, game_start
 from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
 from asgiref.sync import sync_to_async
 from livegame.SubGameSession.SubGameSession import SubGameSession
+from livegame.SubGameResult import SubGameResult
 from livegame.SubGameConfig import SubGameConfig, get_default_subgame_config
 
 
@@ -38,26 +40,13 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         self.game_room_id = game_room_id
         self.host_user = GameRoom.objects.get(id=game_room_id).host
 
-        # sid: {{"intra_id": <String>, "nickname": <String>, "avatar": <String>}}
-        self.sid_to_user_data = {}
+        self.sid_to_user_data: Dict[str, UserDataCache] = {}
         self.match_dict = {}
 
         self.n_players = -1
         self.n_ranks = -1
         self.rank_ongoing = -1
-        # [
-        #   [
-        #     {
-        #       "session": SubGameSession | None,
-        #       "sid_a": str (sid of player a) | None,
-        #       "sid_b": str (sid of player b) | None,
-        #       "winner": str (A or B) | None
-        #     },
-        #     ...
-        #   ],
-        #   ...
-        # ]
-        self.tournament_tree: List[List[dict]] = []
+        self.tournament_tree: List[List[SubGameResult]] = []
 
         # config value hardcoded for now
         self.config = get_default_subgame_config()
@@ -79,11 +68,11 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             user: User = await get_user_by_token(token)
             await update_game_room_sid(user, sid)
 
-            self.sid_to_user_data[sid] = {
-                "intra_id": user.intra_id,
-                "nickname": user.profile.nickname,
-                "avatar": user.profile.avatar,
-            }
+            self.sid_to_user_data[sid] = UserDataCache(
+                user.intra_id,
+                user.profile.nickname,
+                user.profile.avatar,
+            )
 
         except Exception as e:
             print(f"Error in connect: {e}")
@@ -119,15 +108,15 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         while True:
             # TODO: 현재 rank_ongoing에 대해 n개 SubGameSession 생성
             for idx_in_rank, subgame_item in enumerate(
-                self.tournament_tree[self.rank_ongoing]
+                self.tournament_tree[self.rank_ongoing]  # 이번 rank의 SubGameResult들
             ):
-                player_data_a = self.sid_to_user_data[subgame_item["sid_a"]]
-                player_data_b = self.sid_to_user_data[subgame_item["sid_b"]]
-                subgame_item["session"] = SubGameSession(
+                player_data_a = self.sid_to_user_data[subgame_item.sid_a]
+                player_data_b = self.sid_to_user_data[subgame_item.sid_b]
+                subgame_item.session = SubGameSession(
                     f"{self.namespace}/{self.n_ranks - 1}/{idx_in_rank}",
                     self.config,
-                    player_data_a["intra_id"],
-                    player_data_b["intra_id"],
+                    player_data_a.intra_id,
+                    player_data_b.intra_id,
                     # TODO: implement random ball direction
                     math.sqrt(2) * self.config.v_ball,
                     math.sqrt(2) * self.config.v_ball,
@@ -142,20 +131,20 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             break
 
     def is_current_rank_done(self) -> bool:
-        winners = [item["winner"] for item in self.tournament_tree[self.rank_ongoing]]
+        winners = [item.winner for item in self.tournament_tree[self.rank_ongoing]]
         return all([winner_val is not None for winner_val in winners])
 
     def get_sid_from_intra_id(self, sid) -> str:
         for sid_key, user_data in self.sid_to_user_data.items():
             if sid_key == sid:
-                return user_data["intra_id"]
+                return user_data.intra_id
         raise ValueError(f"{sid} not found in GameRoomNamespace {self.namespace}")
 
     def is_host(self, sid) -> bool:
         if sid not in self.sid_to_user_data:
             return False
 
-        host_intra = self.sid_to_user_data[sid]["intra_id"]
+        host_intra = self.sid_to_user_data[sid].intra_id
         return host_intra == self.host_user.intra_id
 
     def build_tournament_tree(self):
@@ -176,13 +165,9 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         for idx_rank in range(self.n_ranks):  # 0, 1, 2...
             # 0 -> (0..1), 1 -> (0..2)
             for _ in range(int(math.pow(2, idx_rank))):
-                subgame_repr = {
-                    "session": None,
-                    "sid_a": None,
-                    "sid_b": None,
-                    "winner": None,
-                }
-                self.tournament_tree[idx_rank].append(subgame_repr)
+                self.tournament_tree[idx_rank].append(
+                    SubGameResult(None, None, None, None)
+                )
 
         if int(math.pow(2, self.n_ranks - 1)) != self.n_players / 2:
             raise ValueError(
@@ -193,13 +178,13 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         for idx_in_rank in range(self.n_players / 2):
             # idx_in_rank = 0    | 1    | 2    | 3
             # idx player  = 0, 1 | 2, 3 | 4, 5 | 6, 7
-            subgame_item = self.tournament_tree[self.n_ranks - 1][idx_in_rank]
+            subgame_result = self.tournament_tree[self.n_ranks - 1][idx_in_rank]
             idx_player_a = idx_in_rank * 2 + 0
             idx_player_b = idx_in_rank * 2 + 1
             intra_id_a = players[idx_player_a].user.intra_id
             intra_id_b = players[idx_player_b].user.intra_id
-            subgame_item["sid_a"] = self.get_sid_from_intra_id(intra_id_a)
-            subgame_item["sid_b"] = self.get_sid_from_intra_id(intra_id_b)
+            subgame_result.sid_a = self.get_sid_from_intra_id(intra_id_a)
+            subgame_result.sid_b = self.get_sid_from_intra_id(intra_id_b)
 
     async def emit_update_room(self, data, player_id_list, sid_list):
         for sid in sid_list:
@@ -211,29 +196,11 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         # SIO: B>F destroyed
         await sio.emit("destroyed", data, namespace=self.namespace)
 
-    def get_subgame_repr(self, subgame_info_with_sid: dict) -> dict:
-        result = {}
-
-        if subgame_info_with_sid["sid_a"] is None:
-            result["player_a"] = None
-        else:
-            result["player_a"] = self.sid_to_user_data[subgame_info_with_sid["sid_a"]]
-
-        if subgame_info_with_sid["sid_b"] is None:
-            result["player_b"] = None
-        else:
-            result["player_b"] = self.sid_to_user_data[subgame_info_with_sid["sid_b"]]
-
-        result["winner"] = subgame_info_with_sid["winner"]
-
-        return result
-
-    def get_subgames_repr(self) -> List[List[dict]]:
-        result = []
-        for subgame_in_rank in self.tournament_tree:
-            result.append([])
-            for subgame in subgame_in_rank:
-                result.append(self.get_subgame_repr(subgame))
+    def get_subgames_json(self) -> List[List[dict]]:
+        return [
+            [subgame.to_json(self.sid_to_user_data) for subgame in subgame_in_rank]
+            for subgame_in_rank in self.tournament_tree
+        ]
 
     async def emit_update_tournament(self):
         # SIO: B>F update_tournament
@@ -241,7 +208,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             "t_event": time.time(),
             "n_ranks": self.n_ranks,
             "rank_ongoing": self.rank_ongoing,
-            "subgames": self.get_subgames_repr(),
+            "subgames": self.get_subgames_json(),
         }
         await sio.emit("update_tournament", data, namespace=self.namespace)
 
