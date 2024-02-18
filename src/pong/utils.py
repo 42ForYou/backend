@@ -1,7 +1,8 @@
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail, EmailMessage
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.pagination import PageNumberPagination
 
@@ -87,3 +88,13 @@ class CustomPageNumberPagination(PageNumberPagination):
             },
             status=status.HTTP_200_OK,
         )
+
+
+def send_email(subject, message, from_email, recipient_list):
+    email = EmailMessage(
+        subject=subject,
+        body=message,
+        from_email=f"Planet Pong Support <{from_email}>",
+        to=recipient_list,
+    )
+    email.send()
