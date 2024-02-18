@@ -40,3 +40,8 @@ class SubGameConfig:
     # Checks whether two numbers can be considered equal (difference is within epsilon)
     def flt_eq(self, a: float, b: float) -> bool:
         return math.isclose(a, b, abs_tol=self.e)
+
+
+# TODO: move setting value to somewhere else
+def get_default_subgame_config() -> SubGameConfig:
+    return SubGameConfig(800, 600, 10, 0, 0, 50, 100, 1, 0, 0, 200, 60)

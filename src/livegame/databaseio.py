@@ -75,25 +75,3 @@ def game_start(game_room_id):
     game_room = GameRoom.objects.get(pk=game_room_id)
     game_room.is_playing = True
     game_room.save()
-
-
-@sync_to_async
-def update_or_create_matchs_list(match_dict, game_room_id):
-    if not match_dict:
-        game_room = GameRoom.objects.get(pk=game_room_id)
-        game = game_room.game
-        players = game.game_player.all().order_by("id")
-        unix_time = time.time()
-        data = {
-            "t_event": unix_time,
-            "n_ranks": int(len(players) / 2),
-            "rank_ongoing": 1,
-        }
-        players_list = list(players)
-        random.shuffle(players_list)
-        players_serializer = GamePlayerSerializer(players_list, many=True)
-        players_data = [[None, None], [players_data[:2], players_data[2:]]]
-        data.update({"players": players_data})
-        return data
-    else:
-        return match_dict
