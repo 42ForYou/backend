@@ -164,7 +164,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         for sid in sid_list:
             copy_data = data.copy()
             copy_data["my_player_id"] = player_id_list[sid_list.index(sid)]
-            await sio.emit("update_room", data, namespace=self.namespace)
+            await sio.emit("update_room", data, room=sid, namespace=self.namespace)
 
     async def emit_destroyed(self, data):
         # SIO: B>F destroyed
