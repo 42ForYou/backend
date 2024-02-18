@@ -24,7 +24,7 @@ def left_game_room(game_room_id, player_id):
         return None, None, None
 
     game = game_room.game
-    oredred_players = getattr(game, "ordered_players", None)
+    ordered_players = getattr(game, "ordered_players", None)
 
     if game_room.host == player.user:
         game.delete()
@@ -32,19 +32,19 @@ def left_game_room(game_room_id, player_id):
         data = {"t_event": unix_time, "destroyed_because": "host_left"}
         return data, None, None
 
-    data = serialize_game_data(game, game_room, oredred_players)
+    data = serialize_game_data(game, game_room, ordered_players)
 
     if not game_room.is_playing:
         updated_players, sid_list = update_game_room_for_leaving_player(
-            game_room, player, oredred_players
+            game_room, player, ordered_players
         )
         data["players"] = updated_players
     else:
         sid_list = [
             player.user.socket_session.game_room_session_id
-            for player in oredred_players
+            for player in ordered_players
         ]
-    player_id_list = [player.id for player in oredred_players if player.id != player_id]
+    player_id_list = [player.id for player in ordered_players if player.id != player_id]
 
     return data, player_id_list, sid_list
 
