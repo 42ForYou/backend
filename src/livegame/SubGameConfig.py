@@ -16,6 +16,7 @@ class SubGameConfig:
         ball_init_y: float,
         ball_speed: float,
         time_limit: float,
+        time_before_start: float,
     ) -> None:
         self.width = width
         self.height = height
@@ -33,6 +34,7 @@ class SubGameConfig:
         self.y_ball_init = ball_init_y
         self.v_ball = ball_speed
         self.t_limit = time_limit
+        self.time_before_start = time_before_start
 
     def __str__(self) -> str:
         return f"SubGameConfig {self.width} * {self.height} (e={self.e}), v_paddle={self.v_paddle}, l_paddle={self.l_paddle}, {self.x_min} <= x <= {self.x_max}, {self.y_min} <= y <= {self.y_max}"
@@ -44,4 +46,18 @@ class SubGameConfig:
 
 # TODO: move setting value to somewhere else
 def get_default_subgame_config() -> SubGameConfig:
-    return SubGameConfig(800, 600, 10, 0, 0, 50, 100, 1, 0, 0, 200, 60)
+    return SubGameConfig(
+        width=800,
+        height=600,
+        match_point=10,
+        player_a_init_point=0,
+        player_b_init_point=0,
+        paddle_len=50,
+        paddle_speed=100,
+        epsilon=1,
+        ball_init_x=0,
+        ball_init_y=0,
+        ball_speed=200,
+        time_limit=60,
+        time_before_start=5.0,
+    )
