@@ -11,6 +11,7 @@ from .databaseio import left_game_room, game_start
 from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
 from asgiref.sync import sync_to_async
+from livegame.SubGameSession.SubGameSession import SubGameSession
 from livegame.SubGameConfig import SubGameConfig, get_default_subgame_config
 
 
@@ -44,8 +45,18 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         self.n_players = -1
         self.n_ranks = -1
         self.rank_ongoing = -1
-        # [ [ {"sid_a": str | None, "sid_b": str | None, "winner": str | None} ] ]
-        # sid_a, sid_b = sid | None, winner = "A" | "B" | None
+        # [
+        #   [
+        #     {
+        #       "session": SubGameSession | None,
+        #       "sid_a": str (sid of player a) | None,
+        #       "sid_b": str (sid of player b) | None,
+        #       "winner": str (A or B) | None
+        #     },
+        #     ...
+        #   ],
+        #   ...
+        # ]
         self.tournament_tree: List[List[dict]] = []
 
         # config value hardcoded for now
@@ -101,6 +112,18 @@ class GameRoomNamespace(socketio.AsyncNamespace):
 
         while True:
             # TODO: 현재 rank_ongoing에 대해 n개 SubGameSession 생성
+            # for idx_in_rank, subgame_item in enumerate(
+            #     self.tournament_tree[self.rank_ongoing]
+            # ):
+            #     subgame_item["session"] = SubGameSession(
+            #         f"{self.namespace}/{self.n_ranks - 1}/{idx_in_rank}",
+            #         self.config,
+            #         players[idx_player_a].user,
+            #         players[idx_player_b].user,
+            #         # TODO: implement random ball direction
+            #         math.sqrt(2) * self.config.v_ball,
+            #         math.sqrt(2) * self.config.v_ball,
+            #     )
             # TODO: n초 후 모든 SubGameSession 시작 (start, emit_config)
             # TODO: 한 SubGameSession이 끝나면 self.tournament_tree 업데이트 및 self.emit_update_tournament()
             # TODO: 모든 SubGameSession 끝나기 기다림
@@ -133,10 +156,12 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         self.rank_ongoing = self.n_ranks - 1
         self.tournament_tree = [[] for _ in range(self.n_ranks)]
 
+        # fill empty values for all subgames
         for idx_rank in range(self.n_ranks):  # 0, 1, 2...
             # 0 -> (0..1), 1 -> (0..2)
             for _ in range(int(math.pow(2, idx_rank))):
                 subgame_repr = {
+                    "session": None,
                     "sid_a": None,
                     "sid_b": None,
                     "winner": None,
@@ -148,6 +173,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
                 f"Error while building tournament tree: n_players / 2 {self.n_players / 2} != int(math.pow(2, self.n_ranks - 1)) {int(math.pow(2, self.n_ranks - 1))}"
             )
 
+        # fill actual determined values for subgames in the lowest rank
         for idx_in_rank in range(self.n_players / 2):
             # idx_in_rank = 0    | 1    | 2    | 3
             # idx player  = 0, 1 | 2, 3 | 4, 5 | 6, 7
