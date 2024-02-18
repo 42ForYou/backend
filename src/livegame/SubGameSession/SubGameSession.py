@@ -28,8 +28,8 @@ class SubGameSession(socketio.AsyncNamespace):
         self,
         namespace,
         config: SubGameConfig,
-        user_a: User,
-        user_b: User,
+        intra_id_a: str,
+        intra_id_b: str,
         ball_init_dx: float,
         ball_init_dy: float,
     ):
@@ -43,8 +43,8 @@ class SubGameSession(socketio.AsyncNamespace):
             Player.A: PaddleStatus(self.config, Player.A, config.l_paddle),  # LEFT
             Player.B: PaddleStatus(self.config, Player.B, config.l_paddle),  # RIGHT
         }
-        self.user_a = user_a
-        self.user_b = user_b
+        self.intra_id_a = intra_id_a
+        self.intra_id_b = intra_id_b
         self.ball_init_dx = ball_init_dx
         self.ball_init_dy = ball_init_dy
         self.update_balltrack()
@@ -53,7 +53,7 @@ class SubGameSession(socketio.AsyncNamespace):
         self.winner = Player.NOBODY
         self.sid_to_player = {}
         self.log(f"Created SubGameSession with {self.config}")
-        self.log(f"A: {user_a}, B: {user_b}")
+        self.log(f"A: {intra_id_a}, B: {intra_id_b}")
 
     def log(self, msg: str) -> None:
         print(f"{id(self)}: {msg}")
@@ -73,9 +73,9 @@ class SubGameSession(socketio.AsyncNamespace):
 
             user: User = await get_user_by_token(token)
 
-            if user == self.user_a:
+            if user.intra_id == self.intra_id_a:
                 self.sid_to_player[sid] = Player.A
-            elif user == self.user_b:
+            elif user.intra_id == self.intra_id_b:
                 self.sid_to_player[sid] = Player.B
             else:
                 self.log(f"connected {user.intra_id} is not assigned player")
