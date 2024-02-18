@@ -1,3 +1,5 @@
+import requests
+import json
 from django.contrib.auth import login
 from django.conf import settings
 from django.forms import ValidationError
@@ -10,10 +12,8 @@ from accounts.serializers import (
     UserSerializer,
     ProfileSerializer,
 )
-from pong.utils import custom_exception_handler, CustomError, wrap_data
-from .models import OAuth
-import requests
-import json
+from pong.utils import custom_exception_handler, CustomError, wrap_data, send_email
+from .models import OAuth, TwoFactorAuth
 
 
 class OAuthView(APIView):
@@ -27,6 +27,19 @@ class OAuthView(APIView):
         if request.user.is_authenticated:
             try:
                 user = User.objects.get(intra_id=request.user.intra_id)
+                if user.profile.two_factor_auth:
+                    two_factor_auth, created = TwoFactorAuth.objects.get_or_create(
+                        user=user
+                    )
+                    new_code = two_factor_auth.generate_secret_code()
+                    two_factor_auth.save()
+                    send_email(
+                        "PlanetPong 2FA Code",
+                        f"Your Code is {new_code}",
+                        settings.EMAIL_HOST_USER,
+                        [user.profile.email],
+                    )
+                    return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
                 token, created = Token.objects.get_or_create(user=user)
                 if created:
                     token.save()
@@ -42,10 +55,12 @@ class OAuthView(APIView):
             response = self.request42OAuth(code)
             userData = self.request42UserData(response.json()["access_token"])
             user = self.createUserProfileOauth(userData, response)
+            if user.profile.two_factor_auth:
+                self.do_2fa(user)
+                return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
             token, created = Token.objects.get_or_create(user=user)
             if created:
                 token.save()
-            # login(request, user)
             response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
             response.set_cookie(
                 "kimyeonhkimbabo_token", token.key, httponly=True
@@ -53,6 +68,18 @@ class OAuthView(APIView):
             return response
         except Exception as e:
             raise CustomError(e)
+
+    def do_2fa(self, user):
+        two_factor_auth, created = TwoFactorAuth.objects.get_or_create(user=user)
+        new_code = two_factor_auth.generate_secret_code()
+        two_factor_auth.secret_code = new_code
+        two_factor_auth.save()
+        send_email(
+            "PlanetPong 2FA Code",
+            f"Your Code is [ {new_code} ]",
+            settings.EMAIL_HOST_USER,
+            [user.profile.email],
+        )
 
     def request42OAuth(self, code):
         data = {
