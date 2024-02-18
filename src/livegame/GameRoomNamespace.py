@@ -17,8 +17,7 @@ async def emit_update_tournament(data, game_room_id):
 
 @sync_to_async
 def update_game_room_sid(user, sid):
-    user.socket_session.game_room_session_sid = sid
-    print(f"game room namespace ##{user.socket_session.game_room_session_sid}##")
+    user.socket_session.game_room_session_id = sid
     user.socket_session.save()
 
 
