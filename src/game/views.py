@@ -22,8 +22,6 @@ from .databaseio import get_single_game_room, create_game
 from socketcontrol.events import sio
 from livegame.GameRoomNamespace import (
     GameRoomNamespace,
-    emit_update_room,
-    emit_destroyed,
     GAMEROOMNAMESPACE_REGISTRY,
 )
 
@@ -277,22 +275,19 @@ class PlayerViewSet(
             game_serializer = GameSerializer(game)
             game_room_serializer = GameRoomSerializer(game_room)
             my_player_id = game.game_player.get(user=user).id
+
+            game_room_ns = GAMEROOMNAMESPACE_REGISTRY[game_room.id]
+            data = {
+                "game": game_serializer.data,
+                "room": game_room_serializer.data,
+                "players": players_serializer.data,
+            }
             player_id_list = [player.id for player in players]
             sid_list = [
                 player.user.socket_session.game_room_session_id for player in players
             ]
-            asyncio.run(
-                emit_update_room(
-                    data={
-                        "game": game_serializer.data,
-                        "room": game_room_serializer.data,
-                        "players": players_serializer.data,
-                    },
-                    game_room_id=game_room.id,
-                    player_id_list=player_id_list,
-                    sid_list=sid_list,
-                )
-            )
+            asyncio.run(game_room_ns.emit_update_room(data, player_id_list, sid_list))
+
             return Response(
                 wrap_data(
                     game=game_serializer.data,
@@ -328,9 +323,9 @@ class PlayerViewSet(
             game_room = game.game_room
             if game_room.host == player.user:
                 game.delete()
-                unix_time = time.time()
-                data = {"t_event": unix_time, "destroyed_because": "host_left"}
-                asyncio.run(emit_destroyed(data=data, game_room_id=game_room.id))
+                game_room_ns = GAMEROOMNAMESPACE_REGISTRY[game_room.id]
+                data = {"t_event": time.time(), "destroyed_because": "host_left"}
+                asyncio.run(game_room_ns.emit_destroyed(data))
                 return Response(
                     {"message": "The host left the game room"},
                     status=status.HTTP_204_NO_CONTENT,

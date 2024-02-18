@@ -10,18 +10,6 @@ from socketcontrol.events import get_user_by_token
 from asgiref.sync import sync_to_async
 
 
-async def emit_update_room(data, game_room_id, player_id_list, sid_list):
-    for sid in sid_list:
-        copy_data = data.copy()
-        copy_data["my_player_id"] = player_id_list[sid_list.index(sid)]
-        await sio.emit("update_room", data, namespace=f"/game/room/{game_room_id}")
-
-
-async def emit_destroyed(data, game_room_id):
-    # SIO: B>F destroyed
-    await sio.emit("destroyed", data, namespace=f"/game/room/{game_room_id}")
-
-
 async def emit_update_tournament(data, game_room_id):
     # SIO: B>F update_tournament
     await sio.emit("update_tournament", data, namespace=f"/game/room/{game_room_id}")
@@ -82,12 +70,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             await self.emit("destroyed", data)
             return
 
-        await emit_update_room(
-            data=data,
-            game_room_id=self.game_room_id,
-            player_id_list=player_id_list,
-            sid_list=sid_list,
-        )
+        await self.emit_update_room(data, player_id_list, sid_list)
 
     # SIO: F>B start
     async def on_start(self, sid, data):
@@ -96,7 +79,21 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         # emit_update_tournament -> SubGameSession n개 생성 -> emit_config -> emit_start 수행
         await game_start(self.game_room_id)
         data = await update_or_create_matchs_list(self.match_dict, self.game_room_id)
-        await emit_update_tournament(data=data, game_room_id=self.game_room_id)
+        await self.emit_update_tournament(data)
+
+    async def emit_update_room(self, data, player_id_list, sid_list):
+        for sid in sid_list:
+            copy_data = data.copy()
+            copy_data["my_player_id"] = player_id_list[sid_list.index(sid)]
+            await sio.emit("update_room", data, namespace=self.namespace)
+
+    async def emit_destroyed(self, data):
+        # SIO: B>F destroyed
+        await sio.emit("destroyed", data, namespace=self.namespace)
+
+    async def emit_update_tournament(self, data):
+        # SIO: B>F update_tournament
+        await sio.emit("update_tournament", data, namespace=self.namespace)
 
 
 GAMEROOMNAMESPACE_REGISTRY: Dict[int, GameRoomNamespace] = {}
