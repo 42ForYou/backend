@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -8,6 +10,13 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username or self.intra_id
+
+
+@dataclass
+class UserDataCache:
+    intra_id: str
+    nickname: str
+    avatar: str
 
 
 class Profile(models.Model):
