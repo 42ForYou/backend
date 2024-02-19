@@ -2,6 +2,7 @@ import time
 import math
 import asyncio
 import socketio
+import logging
 from typing import Dict
 from enum import Enum
 
@@ -22,7 +23,6 @@ class TurnResult(Enum):
     B_SCORED = 1
 
 
-# TODO: update print() statements to proper logging
 class SubGameSession(socketio.AsyncNamespace):
     def __init__(
         self,
@@ -36,6 +36,10 @@ class SubGameSession(socketio.AsyncNamespace):
         ball_init_dy: float,
     ):
         super().__init__(f"{gameroom_session.namespace}/{idx_rank}/{idx_in_rank}")
+
+        self.logger = logging.getLogger(
+            f"{self.__class__.__name__}.{idx_rank}.{idx_in_rank}"
+        )
 
         self.config = config
         if self.config.flt_eq(ball_init_dx, 0.0):
@@ -58,15 +62,12 @@ class SubGameSession(socketio.AsyncNamespace):
         self.time_over = False
         self.winner = Player.NOBODY
         self.sid_to_player = {}
-        self.log(f"Created SubGameSession with {self.config}")
-        self.log(f"A: {intra_id_a}, B: {intra_id_b}")
-
-    def log(self, msg: str) -> None:
-        print(f"{id(self)}: {msg}")
+        self.logger.info(f"Created SubGameSession with {self.config}")
+        self.logger.debug(f"A: {intra_id_a}, B: {intra_id_b}")
 
     # SIO: F>B connect
     async def on_connect(self, sid, environ):
-        self.log(f"Ns={self.namespace}, {sid} connected")
+        self.logger.debug(f"Ns={self.namespace}, {sid} connected")
         try:
             cookies = environ.get("HTTP_COOKIE", "")
             cookie_dict = dict(
@@ -74,7 +75,7 @@ class SubGameSession(socketio.AsyncNamespace):
             )
             token = cookie_dict.get("pong_token", None)
             if not token:
-                self.log("No token")
+                self.logger.warn("No token")
                 await self.disconnect(sid)
 
             user: User = await get_user_by_token(token)
@@ -84,34 +85,36 @@ class SubGameSession(socketio.AsyncNamespace):
             elif user.intra_id == self.intra_id_b:
                 self.sid_to_player[sid] = Player.B
             else:
-                self.log(f"connected {user.intra_id} is not assigned player")
+                self.logger.warn(f"connected {user.intra_id} is not assigned player")
                 await self.disconnect(sid)
 
         except Exception as e:
-            self.log(f"Error in connect: {e}")
+            self.logger.error(f"Error in connect: {e}")
             await self.disconnect(sid)
 
     # SIO: F>B disconnect
     def on_disconnect(self, sid):
-        print(f"Ns={self.namespace}, {sid} disconnected")
+        self.logger.debug(f"Ns={self.namespace}, {sid} disconnected")
         if sid in self.sid_to_player:
             del self.sid_to_player[sid]
 
     # SIO: F>B leave
     async def on_leave(self, sid, data):
-        print(f"Ns={self.namespace}, {sid} event: leave, data={data}")
+        self.logger.debug(f"Ns={self.namespace}, {sid} event: leave, data={data}")
         del self.sid_to_player[sid]
 
     # SIO: F>B keyboard_input
     async def on_keyboard_input(self, sid, data):
-        print(f"Ns={self.namespace}, {sid} event: keyboard_input, data={data}")
+        self.logger.debug(
+            f"Ns={self.namespace}, {sid} event: keyboard_input, data={data}"
+        )
 
         if not self.running:
-            self.log(f"SubGameSession is not running")
+            self.logger.debug(f"SubGameSession is not running")
             return
 
         if not sid in self.sid_to_player:
-            self.log(f"sid {sid} is not connected player")
+            self.logger.warn(f"sid {sid} is not connected player")
             return
 
         player: Player = self.sid_to_player[sid]
@@ -119,7 +122,7 @@ class SubGameSession(socketio.AsyncNamespace):
 
         self.paddles[player].update_key(key_input)
         self.paddles[player].update(time.time())
-        self.log(
+        self.logger.debug(
             f"Update player {player.name} key to {key_input}, y={self.paddles[player].y} dy={self.paddles[player].dy}"
         )
 
@@ -141,12 +144,12 @@ class SubGameSession(socketio.AsyncNamespace):
         self.t_start = time.time()
         self.emit_update_time_left_until_end()
         self.running = True
-        self.log(f"start simulation of SubGameSession at {self.t_start}")
+        self.logger.debug(f"start simulation of SubGameSession at {self.t_start}")
 
         self.balltrack = BallTrack(
             self.config, 0, 0, self.ball_init_dx, self.ball_init_dy, self.t_start
         )
-        self.log(f"start balltrack: {self.balltrack}")
+        self.logger.debug(f"start balltrack: {self.balltrack}")
 
         # run until score reaches matchpoint
         while True:
@@ -174,7 +177,7 @@ class SubGameSession(socketio.AsyncNamespace):
             self.paddle_offense = self.paddles[Player.A]
             self.paddle_defense = self.paddles[Player.B]
 
-        print(
+        self.logger.debug(
             f"{id(self)}: Attack: {self.paddle_offense.player.name} -> {self.paddle_defense.player.name}"
         )
 
@@ -186,13 +189,13 @@ class SubGameSession(socketio.AsyncNamespace):
         new_t = time.time()
 
         if new_t - self.t_start > self.config.t_limit:
-            self.log("time is up")
+            self.logger.debug("time is up")
 
         # only update defending paddle
         self.paddle_defense.update(new_t)
         if self.paddle_defense.hit(self.balltrack.y_impact):
             # success to defend, create reflection
-            print(
+            self.logger.debug(
                 f"{id(self)}: Player {self.paddle_defense.player.name} reflects the ball"
             )
             new_x_start, new_y_start = self.balltrack.next_xy_start
@@ -210,9 +213,9 @@ class SubGameSession(socketio.AsyncNamespace):
         else:
             # fail to defend, scoring, reset
             self.paddle_offense.score += 1
-            print(f"Player {self.paddle_offense.player} scored")
+            self.logger.debug(f"Player {self.paddle_offense.player} scored")
             await self.emit_update_scores()
-            print(
+            self.logger.debug(
                 f"{id(self)}: Player {self.paddle_offense.player.name} scores to {self.paddle_offense.score}"
             )
             new_dx, new_dy = self.balltrack.next_dx_dy
@@ -227,14 +230,18 @@ class SubGameSession(socketio.AsyncNamespace):
         data = {"t_event": time.time()}
         # SIO: B>F start
         await sio.emit(event, data=data, namespace=self.namespace)
-        print(f"Emit event {event} data {data} to namespace {self.namespace}")
+        self.logger.debug(
+            f"Emit event {event} data {data} to namespace {self.namespace}"
+        )
 
     async def emit_config(self) -> None:
         event = "config"
         data = {"t_event": time.time(), "config": serialize_subgame_config(self.config)}
         # SIO: B>F config
         await sio.emit(event, data=data, namespace=self.namespace)
-        print(f"Emit event {event} data {data} to namespace {self.namespace}")
+        self.logger.debug(
+            f"Emit event {event} data {data} to namespace {self.namespace}"
+        )
 
     async def emit_update_time_left(self) -> int:
         event = "update_time_left"
@@ -245,7 +252,9 @@ class SubGameSession(socketio.AsyncNamespace):
         }
         # SIO: B>F update_time_left
         await sio.emit(event, data=data, namespace=self.namespace)
-        print(f"Emit event {event} data {data} to namespace {self.namespace}")
+        self.logger.debug(
+            f"Emit event {event} data {data} to namespace {self.namespace}"
+        )
         return time_left
 
     async def emit_update_time_left_until_end(self) -> None:
@@ -258,7 +267,7 @@ class SubGameSession(socketio.AsyncNamespace):
             await asyncio.sleep(t_next_emit - t_emit)
 
     async def emit_update_scores(self):
-        print(
+        self.logger.debug(
             f"Emit score: A {self.paddles[Player.A].score} : {self.paddles[Player.B].score} B"
         )
         event = "update_scores"
@@ -269,7 +278,9 @@ class SubGameSession(socketio.AsyncNamespace):
         }
         # SIO: B>F update_scores
         await sio.emit(event, data=data, namespace=self.namespace)
-        print(f"Emit event {event} data {data} to namespace {self.namespace}")
+        self.logger.debug(
+            f"Emit event {event} data {data} to namespace {self.namespace}"
+        )
 
     async def emit_update_track_ball(self):
         event = "update_track_ball"
@@ -282,7 +293,9 @@ class SubGameSession(socketio.AsyncNamespace):
         }
         # SIO: B>F update_track_ball
         await sio.emit(event, data=data, namespace=self.namespace)
-        print(f"Emit event {event} data {data} to namespace {self.namespace}")
+        self.logger.debug(
+            f"Emit event {event} data {data} to namespace {self.namespace}"
+        )
 
     async def emit_update_track_paddle(self, paddle: PaddleStatus):
         event = "update_track_paddle"
@@ -294,14 +307,18 @@ class SubGameSession(socketio.AsyncNamespace):
         }
         # SIO: B>F update_track_paddle
         await sio.emit(event, data=data, namespace=self.namespace)
-        print(f"Emit event {event} data {data} to namespace {self.namespace}")
+        self.logger.debug(
+            f"Emit event {event} data {data} to namespace {self.namespace}"
+        )
 
     async def emit_ended(self):
         event = "ended"
         data = {"t_event": time.time(), "winner": self.winner.name}
         # SIO: B>F ended
         await sio.emit(event, data=data, namespace=self.namespace)
-        print(f"Emit event {event} data {data} to namespace {self.namespace}")
+        self.logger.debug(
+            f"Emit event {event} data {data} to namespace {self.namespace}"
+        )
 
     def get_time_left(self) -> int:
         time_now = time.time()
