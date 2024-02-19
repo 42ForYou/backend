@@ -1,7 +1,11 @@
 import math
 import os
+import logging
 
 from game.models import Game
+
+
+logger = logging.getLogger(__name__)
 
 
 class SubGameConfig:
@@ -21,7 +25,7 @@ class SubGameConfig:
         time_limit: float,
         time_before_start: float,
     ) -> None:
-        print(
+        logger.info(
             f"Create SubGameConfig with args: width: {width}, height: {height}, match_point: {match_point}, player_a_init_point: {player_a_init_point}, player_b_init_point: {player_b_init_point}, paddle_len: {paddle_len}, paddle_speed: {paddle_speed}, epsilon: {epsilon}, ball_init_x: {ball_init_x}, ball_init_y: {ball_init_y}, ball_speed: {ball_speed}, time_limit: {time_limit}, time_before_start: {time_before_start}"
         )
         self.width = width
