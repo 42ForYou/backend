@@ -1,4 +1,7 @@
 import math
+import os
+
+from game.models import Game
 
 
 class SubGameConfig:
@@ -18,6 +21,9 @@ class SubGameConfig:
         time_limit: float,
         time_before_start: float,
     ) -> None:
+        print(
+            f"Create SubGameConfig with args: width: {width}, height: {height}, match_point: {match_point}, player_a_init_point: {player_a_init_point}, player_b_init_point: {player_b_init_point}, paddle_len: {paddle_len}, paddle_speed: {paddle_speed}, epsilon: {epsilon}, ball_init_x: {ball_init_x}, ball_init_y: {ball_init_y}, ball_speed: {ball_speed}, time_limit: {time_limit}, time_before_start: {time_before_start}"
+        )
         self.width = width
         self.height = height
         self.match_point = match_point
@@ -44,20 +50,32 @@ class SubGameConfig:
         return math.isclose(a, b, abs_tol=self.e)
 
 
-# TODO: move setting value to somewhere else
-def get_default_subgame_config() -> SubGameConfig:
+sgc_width = os.environ.get("SUBGAMECONFIG_WIDTH", "800")
+sgc_height = os.environ.get("SUBGAMECONFIG_HEIGHT", "600")
+sgc_player_a_init_point = os.environ.get("SUBGAMECONFIG_PLAYER_A_INIT_POINT", "0")
+sgc_player_b_init_point = os.environ.get("SUBGAMECONFIG_PLAYER_B_INIT_POINT", "0")
+sgc_paddle_len = os.environ.get("SUBGAMECONFIG_PADDLE_LENGTH", "50")
+sgc_paddle_speed = os.environ.get("SUBGAMECONFIG_PADDLE_SPEED", "100")
+sgc_epsilon = os.environ.get("SUBGAMECONFIG_EPSILON", "1")
+sgc_ball_init_x = os.environ.get("SUBGAMECONFIG_BALL_INIT_X", "0")
+sgc_ball_init_y = os.environ.get("SUBGAMECONFIG_BALL_INIT_Y", "0")
+sgc_ball_speed = os.environ.get("SUBGAMECONFIG_BALL_SPEED", "200")
+sgc_time_before_start = os.environ.get("SUBGAMECONFIG_TIME_BEFORE_START", "5")
+
+
+def get_default_subgame_config(game: Game) -> SubGameConfig:
     return SubGameConfig(
-        width=800,
-        height=600,
-        match_point=10,
-        player_a_init_point=0,
-        player_b_init_point=0,
-        paddle_len=50,
-        paddle_speed=100,
-        epsilon=1,
-        ball_init_x=0,
-        ball_init_y=0,
-        ball_speed=200,
-        time_limit=60,
-        time_before_start=5.0,
+        width=float(sgc_width),
+        height=float(sgc_height),
+        match_point=game.game_point,
+        player_a_init_point=int(sgc_player_a_init_point),
+        player_b_init_point=int(sgc_player_b_init_point),
+        paddle_len=float(sgc_paddle_len),
+        paddle_speed=float(sgc_paddle_speed),
+        epsilon=float(sgc_epsilon),
+        ball_init_x=float(sgc_ball_init_x),
+        ball_init_y=float(sgc_ball_init_y),
+        ball_speed=float(sgc_ball_speed),
+        time_limit=game.time_limit,
+        time_before_start=float(sgc_time_before_start),
     )
