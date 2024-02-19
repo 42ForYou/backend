@@ -1,3 +1,4 @@
+import logging
 import socketio
 from asgiref.sync import sync_to_async
 from socketcontrol.events import sio
@@ -13,6 +14,7 @@ def update_online_sid(user, sid):
 class OnlineStatusNamespace(socketio.AsyncNamespace):
     def __init__(self, namespace="/online_status"):
         super().__init__(namespace=namespace)
+        self.logger = logging.getLogger(__class__.__name__)
 
     # SIO: F>B connect
     async def on_connect(self, sid, environ):
@@ -26,8 +28,8 @@ class OnlineStatusNamespace(socketio.AsyncNamespace):
                 user = await get_user_by_token(token)
                 await update_online_sid(user, sid)
             else:
-                print("No token")
+                self.logger.warn("No token")
                 await self.disconnect(sid)
         except Exception as e:
-            print(f"Error in connect: {e}")
+            self.logger.error(f"Error in connect: {e}")
             await self.disconnect(sid)
