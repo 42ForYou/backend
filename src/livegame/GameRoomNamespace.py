@@ -6,7 +6,7 @@ from typing import Dict, List
 
 import socketio
 
-from accounts.models import User, UserDataCache
+from accounts.models import User, UserDataCache, fetch_user_data_cache
 from game.models import GamePlayer, GameRoom
 from .databaseio import left_game_room, game_start
 from socketcontrol.events import sio
@@ -69,11 +69,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             user: User = await get_user_by_token(token)
             await update_game_room_sid(user, sid)
 
-            self.sid_to_user_data[sid] = UserDataCache(
-                user.intra_id,
-                user.profile.nickname,
-                user.profile.avatar,
-            )
+            self.sid_to_user_data[sid] = await fetch_user_data_cache(user)
 
         except Exception as e:
             print(f"Error in connect: {e}")

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from asgiref.sync import sync_to_async
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
@@ -17,6 +18,15 @@ class UserDataCache:
     intra_id: str
     nickname: str
     avatar: str
+
+
+@sync_to_async
+def fetch_user_data_cache(user: User) -> UserDataCache:
+    UserDataCache(
+        user.intra_id,
+        user.profile.nickname,
+        user.profile.avatar,
+    )
 
 
 class Profile(models.Model):
