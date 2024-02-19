@@ -103,7 +103,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         await self.build_tournament_tree()
         await self.emit_update_tournament()
 
-        while True:
+        while self.rank_ongoing >= 0:
             for idx_in_rank, subgame_item in enumerate(
                 self.tournament_tree[self.rank_ongoing]  # 이번 rank의 SubGameResult들
             ):
