@@ -7,6 +7,7 @@ django.setup()
 from accounts.models import User, Profile
 from game.models import Game, GameRoom, GamePlayer
 from friends.models import Friend
+from rest_framework.authtoken.models import Token
 
 
 def create_dummy_users(num_users=100):
@@ -29,6 +30,8 @@ def create_dummy_users(num_users=100):
             avatar="",
             two_factor_auth=False,
         )
+
+        Token.objects.create(user=user)
 
 
 def create_friends():
@@ -126,7 +129,7 @@ def assign_remaining_users_to_games(user_num):
 
 if __name__ == "__main__":
     print("Creating dummy users and profiles...")
-    create_dummy_users(20)  # 기본값으로 100명의 사용자 생성
+    create_dummy_users(10)  # 기본값으로 100명의 사용자 생성
     create_friends()
     # create_game_room(10)  # 기본값으로 30개의 게임룸 생성
     # assign_remaining_users_to_games(10)
