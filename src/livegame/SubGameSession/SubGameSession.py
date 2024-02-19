@@ -167,11 +167,11 @@ class SubGameSession(socketio.AsyncNamespace):
 
     def update_turns(self) -> None:
         if self.balltrack.heading == BallTrack.Heading.LEFT:
-            self.paddle_offense = self.paddles[Player.A]
-            self.paddle_defense = self.paddles[Player.B]
-        else:
             self.paddle_offense = self.paddles[Player.B]
             self.paddle_defense = self.paddles[Player.A]
+        else:
+            self.paddle_offense = self.paddles[Player.A]
+            self.paddle_defense = self.paddles[Player.B]
 
         print(
             f"{id(self)}: Attack: {self.paddle_offense.player.name} -> {self.paddle_offense.player.name}"
