@@ -133,10 +133,19 @@ class GameRoomNamespace(socketio.AsyncNamespace):
                 ]
             )
 
+            # TODO: delete in production
+            if not self.is_current_rank_done():
+                raise Exception(f"Logic error: current rank is not done...")
+
             # 이번 rank의 SubGameResult들 un-register
             for subgame_item in self.tournament_tree[self.rank_ongoing]:
                 sio.namespace_handlers.pop(subgame_item.session.namespace)
 
+            print(f"Current rank {self.rank_ongoing} is finished")
+            self.rank_ongoing -= 1
+            print(f"rank_ongoing decrease to {self.rank_ongoing}")
+
+    # TODO: delete in production
     def is_current_rank_done(self) -> bool:
         winners = [item.winner for item in self.tournament_tree[self.rank_ongoing]]
         return all([winner_val is not None for winner_val in winners])
@@ -199,10 +208,6 @@ class GameRoomNamespace(socketio.AsyncNamespace):
     ):
         self.tournament_tree[idx_rank][idx_in_rank].winner = winner.name
         print(f"rank {idx_in_rank} idx {idx_in_rank} winnder is {winner.name}")
-
-        if self.is_current_rank_done():
-            print(f"Current rank {self.rank_ongoing} is finished")
-            self.rank_ongoing -= 1
 
         await self.emit_update_tournament()
 
