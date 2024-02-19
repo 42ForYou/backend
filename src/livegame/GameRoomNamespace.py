@@ -70,7 +70,6 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             await update_game_room_sid(user, sid)
 
             self.sid_to_user_data[sid] = await fetch_user_data_cache(user)
-            print(f"######sid_to_user_data: {self.sid_to_user_data}")
 
         except Exception as e:
             print(f"Error in connect: {e}")
@@ -136,11 +135,11 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         winners = [item.winner for item in self.tournament_tree[self.rank_ongoing]]
         return all([winner_val is not None for winner_val in winners])
 
-    def get_sid_from_intra_id(self, sid) -> str:
+    def get_sid_from_intra_id(self, intra_id) -> str:
         for sid_key, user_data in self.sid_to_user_data.items():
-            if sid_key == sid:
-                return user_data.intra_id
-        raise ValueError(f"{sid} not found in GameRoomNamespace {self.namespace}")
+            if user_data.intra_id == intra_id:
+                return sid_key
+        raise ValueError(f"{intra_id} not found in GameRoomNamespace {self.namespace}")
 
     def is_host(self, sid) -> bool:
         if sid not in self.sid_to_user_data:
@@ -178,7 +177,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             )
 
         # fill actual determined values for subgames in the lowest rank
-        for idx_in_rank in int(range(self.n_players / 2)):
+        for idx_in_rank in range(self.n_players // 2):
             # idx_in_rank = 0    | 1    | 2    | 3
             # idx player  = 0, 1 | 2, 3 | 4, 5 | 6, 7
             subgame_result = self.tournament_tree[self.n_ranks - 1][idx_in_rank]

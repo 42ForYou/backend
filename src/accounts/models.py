@@ -19,10 +19,17 @@ class UserDataCache:
     nickname: str
     avatar: str
 
+    def to_json(self) -> dict:
+        return {
+            "intra_id": self.intra_id,
+            "nickname": self.nickname,
+            "avatar": self.avatar,
+        }
+
 
 @sync_to_async
 def fetch_user_data_cache(user: User) -> UserDataCache:
-    UserDataCache(
+    return UserDataCache(
         user.intra_id,
         user.profile.nickname,
         user.profile.avatar,

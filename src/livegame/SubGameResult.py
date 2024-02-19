@@ -23,12 +23,12 @@ class SubGameResult:
         if self.sid_a is None:
             result["player_a"] = None
         else:
-            result["player_a"] = sid_to_user_data[self.sid_a]
+            result["player_a"] = sid_to_user_data[self.sid_a].to_json()
 
         if self.sid_b is None:
             result["player_b"] = None
         else:
-            result["player_b"] = sid_to_user_data[self.sid_b]
+            result["player_b"] = sid_to_user_data[self.sid_b].to_json()
 
         result["winner"] = self.winner
 
