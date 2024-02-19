@@ -55,7 +55,7 @@ class SubGameSession(socketio.AsyncNamespace):
         self.ball_init_dx = ball_init_dx
         self.ball_init_dy = ball_init_dy
         self.update_balltrack()
-        self.started = False
+        self.running = False
         self.time_over = False
         self.winner = Player.NOBODY
         self.sid_to_player = {}
@@ -107,8 +107,8 @@ class SubGameSession(socketio.AsyncNamespace):
     async def on_keyboard_input(self, sid, data):
         print(f"Ns={self.namespace}, {sid} event: keyboard_input, data={data}")
 
-        if not self.started:
-            self.log(f"SubGameSession has not started")
+        if not self.running:
+            self.log(f"SubGameSession is not running")
             return
 
         if not sid in self.sid_to_player:
@@ -141,7 +141,7 @@ class SubGameSession(socketio.AsyncNamespace):
     async def start(self) -> None:
         self.t_start = time.time()
         self.emit_update_time_left_until_end()
-        self.started = True
+        self.running = True
         self.log(f"start simulation of SubGameSession at {self.t_start}")
 
         self.balltrack = BallTrack(
@@ -160,6 +160,7 @@ class SubGameSession(socketio.AsyncNamespace):
                 self.gameroom.report_end_of_subgame(
                     self.idx_rank, self.idx_in_rank, self.winner
                 )
+                self.running = False
                 return
 
             # emit balltrack
