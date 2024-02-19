@@ -109,7 +109,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
                 player_data_a = self.sid_to_user_data[subgame_item.sid_a]
                 player_data_b = self.sid_to_user_data[subgame_item.sid_b]
                 subgame_item.session = SubGameSession(
-                    namespace=f"{self.namespace}/{self.n_ranks - 1}/{idx_in_rank}",
+                    namespace=f"{self.namespace}/{self.rank_ongoing}/{idx_in_rank}",
                     config=self.config,
                     gameroom_namespace=self,
                     intra_id_a=player_data_a.intra_id,
