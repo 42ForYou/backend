@@ -2,21 +2,23 @@ import math
 from typing import Tuple
 from enum import Enum
 
-from GameConfig import GameConfig
+from livegame.SubGameConfig import SubGameConfig
+
+
+class PointCategory(Enum):
+    INVALID = 0
+    CENTER = 1
+    WALL_TOP = 2
+    WALL_BOTTOM = 3
+    PADDLE_LEFT = 4
+    PADDLE_RIGHT = 5
 
 
 class BallTrackSegment:
-    class PointCategory(Enum):
-        INVALID = 0
-        CENTER = 1
-        WALL_TOP = 2
-        WALL_BOTTOM = 3
-        PADDLE_LEFT = 4
-        PADDLE_RIGHT = 5
 
     def __init__(
         self,
-        config: GameConfig,
+        config: SubGameConfig,
         x_start: float,
         y_start: float,
         x_end: float,
@@ -32,8 +34,8 @@ class BallTrackSegment:
         self.dx = dx
         self.dy = dy
         self.len = math.hypot(self.x_end - self.x_start, self.y_end - self.y_start)
-        self.p_start = BallTrackSegment.PointCategory.INVALID
-        self.p_end = BallTrackSegment.PointCategory.INVALID
+        self.p_start = PointCategory.INVALID
+        self.p_end = PointCategory.INVALID
         self.is_valid = False
         self.calculate_validity()
 
@@ -50,7 +52,7 @@ class BallTrackSegment:
             self.y_start, 0.0
         )
         if result:
-            self.p_start = BallTrackSegment.PointCategory.CENTER
+            self.p_start = PointCategory.CENTER
         return result
 
     def is_inside_line(
@@ -83,9 +85,9 @@ class BallTrackSegment:
         )
         if result:
             if self.y_start > 0:
-                self.p_start = BallTrackSegment.PointCategory.WALL_TOP
+                self.p_start = PointCategory.WALL_TOP
             else:
-                self.p_start = BallTrackSegment.PointCategory.WALL_BOTTOM
+                self.p_start = PointCategory.WALL_BOTTOM
         return result
 
     @property
@@ -100,9 +102,9 @@ class BallTrackSegment:
         )
         if result:
             if self.y_end > 0:
-                self.p_end = BallTrackSegment.PointCategory.WALL_TOP
+                self.p_end = PointCategory.WALL_TOP
             else:
-                self.p_end = BallTrackSegment.PointCategory.WALL_BOTTOM
+                self.p_end = PointCategory.WALL_BOTTOM
         return result
 
     @property
@@ -117,9 +119,9 @@ class BallTrackSegment:
         )
         if result:
             if self.x_start > 0:
-                self.p_start = BallTrackSegment.PointCategory.PADDLE_RIGHT
+                self.p_start = PointCategory.PADDLE_RIGHT
             else:
-                self.p_start = BallTrackSegment.PointCategory.PADDLE_LEFT
+                self.p_start = PointCategory.PADDLE_LEFT
         return result
 
     @property
@@ -134,9 +136,9 @@ class BallTrackSegment:
         )
         if result:
             if self.x_end > 0:
-                self.p_end = BallTrackSegment.PointCategory.PADDLE_RIGHT
+                self.p_end = PointCategory.PADDLE_RIGHT
             else:
-                self.p_end = BallTrackSegment.PointCategory.PADDLE_LEFT
+                self.p_end = PointCategory.PADDLE_LEFT
         return result
 
     @property
@@ -162,16 +164,13 @@ class BallTrackSegment:
         if not (self.end_at_walls or self.end_at_paddles):
             return
 
-        if (
-            self.p_start == BallTrackSegment.PointCategory.INVALID
-            or self.p_end == BallTrackSegment.PointCategory.INVALID
-        ):
+        if self.p_start == PointCategory.INVALID or self.p_end == PointCategory.INVALID:
             raise ValueError(f"p_start or p_end is invalid")
         self.is_valid = True
 
 
 def get_ball_track_segment_to_wall(
-    config: GameConfig,
+    config: SubGameConfig,
     x_start: float,
     y_start: float,
     dx: float,
@@ -191,7 +190,7 @@ def get_ball_track_segment_to_wall(
 
 
 def get_ball_track_segment_to_paddle(
-    config: GameConfig,
+    config: SubGameConfig,
     x_start: float,
     y_start: float,
     dx: float,

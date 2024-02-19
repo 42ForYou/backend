@@ -39,13 +39,18 @@ class OAuthView(APIView):
                         settings.EMAIL_HOST_USER,
                         [user.profile.email],
                     )
-                    return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
+                    return Response(
+                        data=wrap_data(
+                            email=user.profile.email, intra_id=user.intra_id
+                        ),
+                        status=status.HTTP_428_PRECONDITION_REQUIRED,
+                    )
                 token, created = Token.objects.get_or_create(user=user)
                 if created:
                     token.save()
                 response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
                 response.set_cookie(
-                    "kimyeonhkimbabo_token", token.key, httponly=True
+                    "pong_token", token.key, httponly=True
                 )  # remove samesite=strict for development
                 return response
             except User.DoesNotExist:
@@ -63,7 +68,7 @@ class OAuthView(APIView):
                 token.save()
             response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
             response.set_cookie(
-                "kimyeonhkimbabo_token", token.key, httponly=True
+                "pong_token", token.key, httponly=True
             )  # remove samesite=strict for development
             return response
         except Exception as e:

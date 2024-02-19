@@ -14,8 +14,8 @@ from accounts.models import User, Profile
 
 
 # TODO: Add check token when login
-# if request.COOKIES.get("kimyeonhkimbabo_token"):
-#     token = request.COOKIES.get("kimyeonhkimbabo_token")
+# if request.COOKIES.get("pong_token"):
+#     token = request.COOKIES.get("pong_token")
 #     try:
 #         token = Token.objects.get(key=token)
 #         user = token.user
@@ -27,7 +27,7 @@ from accounts.models import User, Profile
 #         )
 #     except Exception as e:
 #         response = Response(status=status.HTTP_400_BAD_REQUEST)
-#         response.delete_cookie("kimyeonhkimbabo_token")
+#         response.delete_cookie("pong_token")
 #         return response
 class LoginView(APIView):
     authentication_classes = ()
@@ -50,11 +50,11 @@ class LogoutView(APIView):
             token = Token.objects.get(user=request.user)
             token.delete()
             response = Response(status=status.HTTP_204_NO_CONTENT)
-            response.delete_cookie("kimyeonhkimbabo_token")
+            response.delete_cookie("pong_token")
             return response
         except Token.DoesNotExist:
             response = Response(status=status.HTTP_400_BAD_REQUEST)
-            response.delete_cookie("kimyeonhkimbabo_token")
+            response.delete_cookie("pong_token")
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -65,7 +65,7 @@ class TokenValidationView(APIView):
     def get(self, request):
         if not request.user.is_authenticated:
             response = Response(status=status.HTTP_401_UNAUTHORIZED)
-            response.delete_cookie("kimyeonhkimbabo_token")
+            response.delete_cookie("pong_token")
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         user = UserSerializer(request.user).data
         profile = ProfileSerializer(request.user.profile).data
@@ -78,10 +78,11 @@ class TwoFactorAuthView(APIView):
 
     def get(self, request):
         try:
-            data = request.data.get("data")
-            user = User.objects.get(intra_id=data["intra_id"])
+            intra_id = request.query_params.get("intra_id")
+            code = request.query_params.get("code")
+            user = User.objects.get(intra_id=intra_id)
             two_factor_auth = user.two_factor_auth
-            if two_factor_auth.is_valid(data["code"]):
+            if two_factor_auth.is_valid(code):
                 user_serializer = UserSerializer(user).data
                 profile_serializer = ProfileSerializer(user.profile).data
                 token, created = Token.objects.get_or_create(user=user)
@@ -92,7 +93,7 @@ class TwoFactorAuthView(APIView):
                     status=status.HTTP_200_OK,
                 )
                 response.set_cookie(
-                    "kimyeonhkimbabo_token", token.key, httponly=True
+                    "pong_token", token.key, httponly=True
                 )  # remove samesite=strict for development
                 return response
             else:
