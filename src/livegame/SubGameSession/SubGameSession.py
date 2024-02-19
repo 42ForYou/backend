@@ -174,7 +174,7 @@ class SubGameSession(socketio.AsyncNamespace):
             self.paddle_defense = self.paddles[Player.B]
 
         print(
-            f"{id(self)}: Attack: {self.paddle_offense.player.name} -> {self.paddle_offense.player.name}"
+            f"{id(self)}: Attack: {self.paddle_offense.player.name} -> {self.paddle_defense.player.name}"
         )
 
     async def update_balltrack(self) -> TurnResult:
@@ -209,6 +209,8 @@ class SubGameSession(socketio.AsyncNamespace):
         else:
             # fail to defend, scoring, reset
             self.paddle_offense.score += 1
+            print(f"Player {self.paddle_offense.player} scored")
+            await self.emit_update_scores()
             print(
                 f"{id(self)}: Player {self.paddle_offense.player.name} scores to {self.paddle_offense.score}"
             )
@@ -255,6 +257,9 @@ class SubGameSession(socketio.AsyncNamespace):
             await asyncio.sleep(t_next_emit - t_emit)
 
     async def emit_update_scores(self):
+        print(
+            f"Emit score: A {self.paddles[Player.A].score} : {self.paddles[Player.B].score} B"
+        )
         event = "update_scores"
         data = {
             "t_event": time.time(),
