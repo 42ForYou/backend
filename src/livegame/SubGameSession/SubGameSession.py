@@ -26,7 +26,6 @@ class TurnResult(Enum):
 class SubGameSession(socketio.AsyncNamespace):
     def __init__(
         self,
-        namespace,
         config: SubGameConfig,
         gameroom_namespace,
         intra_id_a: str,
@@ -36,7 +35,7 @@ class SubGameSession(socketio.AsyncNamespace):
         ball_init_dx: float,
         ball_init_dy: float,
     ):
-        super().__init__(namespace)
+        super().__init__(f"{gameroom_namespace.namespace}/{idx_rank}/{idx_in_rank}")
 
         self.config = config
         if self.config.flt_eq(ball_init_dx, 0.0):
