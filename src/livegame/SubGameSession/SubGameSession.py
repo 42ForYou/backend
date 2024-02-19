@@ -27,7 +27,7 @@ class SubGameSession(socketio.AsyncNamespace):
     def __init__(
         self,
         config: SubGameConfig,
-        gameroom_namespace,
+        gameroom_session,
         intra_id_a: str,
         intra_id_b: str,
         idx_rank: int,
@@ -35,13 +35,13 @@ class SubGameSession(socketio.AsyncNamespace):
         ball_init_dx: float,
         ball_init_dy: float,
     ):
-        super().__init__(f"{gameroom_namespace.namespace}/{idx_rank}/{idx_in_rank}")
+        super().__init__(f"{gameroom_session.namespace}/{idx_rank}/{idx_in_rank}")
 
         self.config = config
         if self.config.flt_eq(ball_init_dx, 0.0):
             raise ValueError(f"SubGameSession got invalid dx {ball_init_dx}")
 
-        self.gameroom = gameroom_namespace
+        self.gr_session = gameroom_session
         self.idx_rank = idx_rank
         self.idx_in_rank = idx_in_rank
 
@@ -156,7 +156,7 @@ class SubGameSession(socketio.AsyncNamespace):
 
             if self.winner != Player.NOBODY:
                 await self.emit_ended()
-                await self.gameroom.report_end_of_subgame(
+                await self.gr_session.report_end_of_subgame(
                     self.idx_rank, self.idx_in_rank, self.winner
                 )
                 self.running = False

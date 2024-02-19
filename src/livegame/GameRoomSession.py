@@ -35,7 +35,7 @@ def update_game_room_sid(user, sid):
     user.socket_session.save()
 
 
-class GameRoomNamespace(socketio.AsyncNamespace):
+class GameRoomSession(socketio.AsyncNamespace):
     def __init__(self, game: Game):
         super().__init__(namespace=f"/game/room/{game.game_room.id}")
         self.game_room_id = game.game_room.id
@@ -111,7 +111,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
                 player_data_b = self.sid_to_user_data[subgame_item.sid_b]
                 subgame_item.session = SubGameSession(
                     config=self.config,
-                    gameroom_namespace=self,
+                    gameroom_session=self,
                     intra_id_a=player_data_a.intra_id,
                     intra_id_b=player_data_b.intra_id,
                     idx_rank=self.rank_ongoing,
@@ -158,7 +158,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         for sid_key, user_data in self.sid_to_user_data.items():
             if user_data.intra_id == intra_id:
                 return sid_key
-        raise ValueError(f"{intra_id} not found in GameRoomNamespace {self.namespace}")
+        raise ValueError(f"{intra_id} not found in GameRoomSession {self.namespace}")
 
     def is_host(self, sid) -> bool:
         if sid not in self.sid_to_user_data:
@@ -269,4 +269,4 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         await sio.emit("update_tournament", data, namespace=self.namespace)
 
 
-GAMEROOMNAMESPACE_REGISTRY: Dict[int, GameRoomNamespace] = {}
+GAMEROOMSESSION_REGISTRY: Dict[int, GameRoomSession] = {}

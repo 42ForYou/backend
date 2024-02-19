@@ -20,9 +20,9 @@ from pong.utils import (
 )
 from .databaseio import get_single_game_room, create_game
 from socketcontrol.events import sio
-from livegame.GameRoomNamespace import (
-    GameRoomNamespace,
-    GAMEROOMNAMESPACE_REGISTRY,
+from livegame.GameRoomSession import (
+    GameRoomSession,
+    GAMEROOMSESSION_REGISTRY,
 )
 
 
@@ -129,8 +129,8 @@ class GameRoomViewSet(
             request_data = request.data.get("data")
             game = create_game(request_data.get("game"))
             game_room = self.create_room(request, request_data, game)
-            GAMEROOMNAMESPACE_REGISTRY[game_room.id] = GameRoomNamespace(game)
-            sio.register_namespace(GAMEROOMNAMESPACE_REGISTRY[game_room.id])
+            GAMEROOMSESSION_REGISTRY[game_room.id] = GameRoomSession(game)
+            sio.register_namespace(GAMEROOMSESSION_REGISTRY[game_room.id])
             player = self.join_host(game_room)
             data = self.serialize_game_and_room(game, game_room)
             data.update({"players": [GamePlayerSerializer(player).data]})
@@ -274,7 +274,7 @@ class PlayerViewSet(
             game_room_serializer = GameRoomSerializer(game_room)
             my_player_id = game.game_player.get(user=user).id
 
-            game_room_ns = GAMEROOMNAMESPACE_REGISTRY[game_room.id]
+            game_room_ns = GAMEROOMSESSION_REGISTRY[game_room.id]
             data = {
                 "game": game_serializer.data,
                 "room": game_room_serializer.data,
@@ -321,7 +321,7 @@ class PlayerViewSet(
             game_room = game.game_room
             if game_room.host == player.user:
                 game.delete()
-                game_room_ns = GAMEROOMNAMESPACE_REGISTRY[game_room.id]
+                game_room_ns = GAMEROOMSESSION_REGISTRY[game_room.id]
                 data = {"t_event": time.time(), "destroyed_because": "host_left"}
                 asyncio.run(game_room_ns.emit_destroyed(data))
                 return Response(
