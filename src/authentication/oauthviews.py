@@ -39,7 +39,10 @@ class OAuthView(APIView):
                         settings.EMAIL_HOST_USER,
                         [user.profile.email],
                     )
-                    return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
+                    return Response(
+                        data=wrap_data(email=user.profile.email),
+                        status=status.HTTP_428_PRECONDITION_REQUIRED,
+                    )
                 token, created = Token.objects.get_or_create(user=user)
                 if created:
                     token.save()

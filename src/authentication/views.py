@@ -78,10 +78,11 @@ class TwoFactorAuthView(APIView):
 
     def get(self, request):
         try:
-            data = request.data.get("data")
-            user = User.objects.get(intra_id=data["intra_id"])
+            intra_id = request.query_params.get("intra_id")
+            code = request.query_params.get("code")
+            user = User.objects.get(intra_id=intra_id)
             two_factor_auth = user.two_factor_auth
-            if two_factor_auth.is_valid(data["code"]):
+            if two_factor_auth.is_valid(code):
                 user_serializer = UserSerializer(user).data
                 profile_serializer = ProfileSerializer(user.profile).data
                 token, created = Token.objects.get_or_create(user=user)
