@@ -26,14 +26,11 @@ class KeyInput:
 
 
 class PaddleStatus:
-    def __init__(
-        self, config: SubGameConfig, player: Player, len: float, time_now: float
-    ) -> None:
+    def __init__(self, config: SubGameConfig, player: Player, time_now: float) -> None:
         self.config = config
         self.player = player
         self.y: float = 0.0
         self.dy: float = 0.0
-        self.len = len
         self.score = 0
         self.key_pressed: Dict[KeyInput.Key, bool] = {
             KeyInput.Key.UP: False,
@@ -83,7 +80,9 @@ class PaddleStatus:
             raise ValueError(f"Invalid KeyInput Action: {key_input}")
 
     def hit(self, y_ball: float) -> bool:
-        return self.y - self.len / 2 <= y_ball <= self.y + self.len
+        return (
+            self.y - self.config.l_paddle / 2 <= y_ball <= self.y + self.config.l_paddle
+        )
 
     def __str__(self) -> str:
-        return f"Paddle(len={self.len}) at y={self.y}, dy={self.dy}"
+        return f"Paddle(l={self.config.l_paddle}) at y={self.y}, dy={self.dy}"
