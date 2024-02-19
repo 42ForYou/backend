@@ -129,9 +129,7 @@ class GameRoomViewSet(
             request_data = request.data.get("data")
             game = create_game(request_data.get("game"))
             game_room = self.create_room(request, request_data, game)
-            GAMEROOMNAMESPACE_REGISTRY[game_room.id] = GameRoomNamespace(
-                namespace=f"/game/room/{game_room.id}", game_room_id=game_room.id
-            )
+            GAMEROOMNAMESPACE_REGISTRY[game_room.id] = GameRoomNamespace(game)
             sio.register_namespace(GAMEROOMNAMESPACE_REGISTRY[game_room.id])
             player = self.join_host(game_room)
             data = self.serialize_game_and_room(game, game_room)

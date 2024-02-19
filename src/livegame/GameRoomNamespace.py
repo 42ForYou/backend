@@ -7,7 +7,7 @@ from typing import Dict, List
 import socketio
 
 from accounts.models import User, UserDataCache, fetch_user_data_cache
-from game.models import GamePlayer, GameRoom
+from game.models import Game, GamePlayer, GameRoom
 from .databaseio import left_game_room, game_start
 from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
@@ -36,10 +36,10 @@ def update_game_room_sid(user, sid):
 
 
 class GameRoomNamespace(socketio.AsyncNamespace):
-    def __init__(self, namespace, game_room_id):
-        super().__init__(namespace=namespace)
-        self.game_room_id = game_room_id
-        self.host_user = GameRoom.objects.get(id=game_room_id).host
+    def __init__(self, game: Game):
+        super().__init__(namespace=f"/game/room/{game.game_room.id}")
+        self.game_room_id = game.game_room.id
+        self.host_user = game.game_room.host
 
         self.sid_to_user_data: Dict[str, UserDataCache] = {}
         self.match_dict = {}
@@ -51,7 +51,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         self.tournament_tree: List[List[SubGameResult]] = []
 
         # config value hardcoded for now
-        self.config = get_default_subgame_config()
+        self.config = get_default_subgame_config(game)
         print(f"game room namespace ##{self.game_room_id}## created")
 
     # SIO: F>B connect
