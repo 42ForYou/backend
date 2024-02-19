@@ -33,3 +33,14 @@ class SubGameResult:
         result["winner"] = self.winner
 
         return result
+
+    def get_sid_of_winner(self) -> str:
+        if not self.winner:
+            raise ValueError("Winner is not yet determined")
+
+        if self.winner == "A":
+            return self.sid_a
+        elif self.winner == "B":
+            return self.sid_b
+        else:
+            raise ValueError(f"Invalid winner value: {self.winner}")

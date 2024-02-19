@@ -44,6 +44,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         self.sid_to_user_data: Dict[str, UserDataCache] = {}
         self.match_dict = {}
 
+        self.users_cache: List[UserDataCache] = []
         self.n_players = -1
         self.n_ranks = -1
         self.rank_ongoing = -1
@@ -141,9 +142,13 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             for subgame_item in self.tournament_tree[self.rank_ongoing]:
                 sio.namespace_handlers.pop(subgame_item.session.namespace)
 
+            self.rebuild_tournament_tree(self.rank_ongoing, self.rank_ongoing - 1)
+
             print(f"Current rank {self.rank_ongoing} is finished")
             self.rank_ongoing -= 1
             print(f"rank_ongoing decrease to {self.rank_ongoing}")
+
+        print(f"GameRoom finished.")
 
     # TODO: delete in production
     def is_current_rank_done(self) -> bool:
@@ -168,8 +173,17 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         game_room = GameRoom.objects.get(pk=self.game_room_id)
         game = game_room.game
         players: List[GamePlayer] = list(game.game_player.all().order_by("id"))
-        self.n_players = len(players)
-        random.shuffle(players)
+
+        self.users_cache = [
+            UserDataCache(
+                game_player.user.intra_id,
+                game_player.user.profile.nickname,
+                game_player.user.profile.avatar,
+            )
+            for game_player in players
+        ]
+        self.n_players = len(self.users_cache)
+        random.shuffle(self.users_cache)
 
         if not is_power_of_two(self.n_players):
             raise ValueError(f"Invalid number of players {self.n_players}")
@@ -198,10 +212,28 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             subgame_result = self.tournament_tree[self.n_ranks - 1][idx_in_rank]
             idx_player_a = idx_in_rank * 2 + 0
             idx_player_b = idx_in_rank * 2 + 1
-            intra_id_a = players[idx_player_a].user.intra_id
-            intra_id_b = players[idx_player_b].user.intra_id
+            intra_id_a = self.users_cache[idx_player_a].intra_id
+            intra_id_b = self.users_cache[idx_player_b].intra_id
             subgame_result.sid_a = self.get_sid_from_intra_id(intra_id_a)
             subgame_result.sid_b = self.get_sid_from_intra_id(intra_id_b)
+
+    def rebuild_tournament_tree(self, rank_curr: int, rank_next: int) -> None:
+        if rank_curr == 0:  # 결승이 끝났을땐 rebuild 불가
+            return
+
+        for idx_in_rank_next in range(int(math.pow(2, rank_next))):
+            idx_in_rank_curr_l = idx_in_rank_next * 2 + 0
+            idx_in_rank_curr_r = idx_in_rank_next * 2 + 1
+
+            sid_winner_l = self.tournament_tree[rank_curr][
+                idx_in_rank_curr_l
+            ].get_sid_of_winner()
+            sid_winner_r = self.tournament_tree[rank_curr][
+                idx_in_rank_curr_r
+            ].get_sid_of_winner()
+
+            self.tournament_tree[rank_next][idx_in_rank_next].sid_a = sid_winner_l
+            self.tournament_tree[rank_next][idx_in_rank_next].sid_b = sid_winner_r
 
     async def report_end_of_subgame(
         self, idx_rank: int, idx_in_rank: int, winner: Player
