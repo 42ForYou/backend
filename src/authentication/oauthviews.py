@@ -40,7 +40,9 @@ class OAuthView(APIView):
                         [user.profile.email],
                     )
                     return Response(
-                        data=wrap_data(email=user.profile.email),
+                        data=wrap_data(
+                            email=user.profile.email, intra_id=user.intra_id
+                        ),
                         status=status.HTTP_428_PRECONDITION_REQUIRED,
                     )
                 token, created = Token.objects.get_or_create(user=user)
