@@ -60,7 +60,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             cookie_dict = dict(
                 item.split("=") for item in cookies.split("; ") if "=" in item
             )
-            token = cookie_dict.get("kimyeonhkimbabo_token", None)
+            token = cookie_dict.get("pong_token", None)
 
             if not token:
                 print("No token")
@@ -70,6 +70,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             await update_game_room_sid(user, sid)
 
             self.sid_to_user_data[sid] = await fetch_user_data_cache(user)
+            print(f"######sid_to_user_data: {self.sid_to_user_data}")
 
         except Exception as e:
             print(f"Error in connect: {e}")
@@ -99,7 +100,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
 
         await game_start(self.game_room_id)
 
-        self.build_tournament_tree()
+        await self.build_tournament_tree()
         await self.emit_update_tournament()
 
         while True:
@@ -148,6 +149,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
         host_intra = self.sid_to_user_data[sid].intra_id
         return host_intra == self.host_user.intra_id
 
+    @sync_to_async
     def build_tournament_tree(self):
         game_room = GameRoom.objects.get(pk=self.game_room_id)
         game = game_room.game
@@ -176,7 +178,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             )
 
         # fill actual determined values for subgames in the lowest rank
-        for idx_in_rank in range(self.n_players / 2):
+        for idx_in_rank in int(range(self.n_players / 2)):
             # idx_in_rank = 0    | 1    | 2    | 3
             # idx player  = 0, 1 | 2, 3 | 4, 5 | 6, 7
             subgame_result = self.tournament_tree[self.n_ranks - 1][idx_in_rank]

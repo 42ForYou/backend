@@ -21,7 +21,7 @@ class OnlineStatusNamespace(socketio.AsyncNamespace):
             cookie_dict = dict(
                 item.split("=") for item in cookies.split("; ") if "=" in item
             )
-            token = cookie_dict.get("kimyeonhkimbabo_token", None)
+            token = cookie_dict.get("pong_token", None)
             if token:
                 user = await get_user_by_token(token)
                 await update_online_sid(user, sid)

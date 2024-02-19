@@ -45,7 +45,7 @@ class OAuthView(APIView):
                     token.save()
                 response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
                 response.set_cookie(
-                    "kimyeonhkimbabo_token", token.key, httponly=True
+                    "pong_token", token.key, httponly=True
                 )  # remove samesite=strict for development
                 return response
             except User.DoesNotExist:
@@ -63,7 +63,7 @@ class OAuthView(APIView):
                 token.save()
             response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
             response.set_cookie(
-                "kimyeonhkimbabo_token", token.key, httponly=True
+                "pong_token", token.key, httponly=True
             )  # remove samesite=strict for development
             return response
         except Exception as e:

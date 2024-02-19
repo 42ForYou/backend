@@ -73,7 +73,7 @@ class SubGameSession(socketio.AsyncNamespace):
             cookie_dict = dict(
                 item.split("=") for item in cookies.split("; ") if "=" in item
             )
-            token = cookie_dict.get("kimyeonhkimbabo_token", None)
+            token = cookie_dict.get("pong_token", None)
             if not token:
                 self.log("No token")
                 await self.disconnect(sid)
