@@ -120,6 +120,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
                     ball_init_dx=math.sqrt(2) * self.config.v_ball,
                     ball_init_dy=math.sqrt(2) * self.config.v_ball,
                 )
+                sio.register_namespace(subgame_item.session)
                 # SIO: B>F config
                 await subgame_item.session.emit_config()
 
@@ -131,6 +132,10 @@ class GameRoomNamespace(socketio.AsyncNamespace):
                     for subgameresult in self.tournament_tree[self.rank_ongoing]
                 ]
             )
+
+            # 이번 rank의 SubGameResult들 un-register
+            for subgame_item in self.tournament_tree[self.rank_ongoing]:
+                sio.namespace_handlers.pop(subgame_item.session.namespace)
 
     def is_current_rank_done(self) -> bool:
         winners = [item.winner for item in self.tournament_tree[self.rank_ongoing]]

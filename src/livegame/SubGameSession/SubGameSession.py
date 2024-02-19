@@ -161,6 +161,7 @@ class SubGameSession(socketio.AsyncNamespace):
                     self.idx_rank, self.idx_in_rank, self.winner
                 )
                 self.running = False
+                # TODO: disconnect all clients?
                 return
 
             # emit balltrack
