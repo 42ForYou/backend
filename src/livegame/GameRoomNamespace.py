@@ -109,15 +109,16 @@ class GameRoomNamespace(socketio.AsyncNamespace):
                 player_data_a = self.sid_to_user_data[subgame_item.sid_a]
                 player_data_b = self.sid_to_user_data[subgame_item.sid_b]
                 subgame_item.session = SubGameSession(
-                    f"{self.namespace}/{self.n_ranks - 1}/{idx_in_rank}",
-                    self.config,
-                    player_data_a.intra_id,
-                    player_data_b.intra_id,
-                    self.rank_ongoing,
-                    idx_in_rank,
+                    namespace=f"{self.namespace}/{self.n_ranks - 1}/{idx_in_rank}",
+                    config=self.config,
+                    gameroom_namespace=self,
+                    intra_id_a=player_data_a.intra_id,
+                    intra_id_b=player_data_b.intra_id,
+                    idx_rank=self.rank_ongoing,
+                    idx_in_rank=idx_in_rank,
                     # TODO: implement random ball direction
-                    math.sqrt(2) * self.config.v_ball,
-                    math.sqrt(2) * self.config.v_ball,
+                    ball_init_dx=math.sqrt(2) * self.config.v_ball,
+                    ball_init_dy=math.sqrt(2) * self.config.v_ball,
                 )
                 # SIO: B>F config
                 await subgame_item.session.emit_config()
