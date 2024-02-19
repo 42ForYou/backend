@@ -188,7 +188,7 @@ class SubGameSession(socketio.AsyncNamespace):
             self.log("time is up")
 
         # only update defending paddle
-        self.paddle_defense.update()
+        self.paddle_defense.update(new_t)
         if self.paddle_defense.hit(self.balltrack.y_impact):
             # success to defend, create reflection
             print(

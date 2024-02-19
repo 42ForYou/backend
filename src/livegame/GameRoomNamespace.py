@@ -126,7 +126,7 @@ class GameRoomNamespace(socketio.AsyncNamespace):
             await asyncio.sleep(self.config.time_before_start)
 
             await asyncio.gather(
-                [  # update winner & emit update tournament happens inside subgameresult
+                *[  # update winner & emit update tournament happens inside subgameresult
                     subgameresult.session.start()
                     for subgameresult in self.tournament_tree[self.rank_ongoing]
                 ]
