@@ -248,13 +248,20 @@ LOGGING = {
             "level": LOGLEVEL_DJANGO,
             "propagate": False,
         },
+        "daphne": {
+            "handlers": ["consoleBasic", "file"],
+            "level": LOGLEVEL_DJANGO,
+            "propagate": False,
+        },
         "socketio": {
             "handlers": ["consoleBasic"],
             "level": LOGLEVEL_SOCKETIO,
+            "propagate": False,
         },
         "livegame": {
             "handlers": ["consolePrecise"],
             "level":LOGLEVEL_LIVEGAME,
+            "propagate": False,
         }
     },
 }
