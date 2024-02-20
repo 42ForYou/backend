@@ -1,4 +1,6 @@
 import socketio
+import logging
+
 from asgiref.sync import sync_to_async
 from django.db.models import Q
 from rest_framework.authtoken.models import Token
@@ -20,6 +22,8 @@ sio = socketio.AsyncServer(
     logger=True,
     engineio_logger=True,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @sync_to_async
@@ -104,7 +108,7 @@ async def connect(sid: str, environ: dict) -> None:
         else:
             await sio.disconnect(sid)
     except Exception as e:
-        print(f"@@@@@@@@@@@@@@Error in connect: {e}@@@@@@@@@@@@@@@@@@@@@@@@")
+        logger.error(f"Error in connect: {e}")
         await sio.disconnect(sid)
 
 
@@ -129,4 +133,4 @@ async def disconnect(sid):
                 namespace="/online_status",
             )
     except Exception as e:
-        print(f"@@@@@@@@@@@@@@Error in disconnect: {e}@@@@@@@@@@@@@@@@@@@@@@@@")
+        logger.error(f"Error in disconnect: {e}")
