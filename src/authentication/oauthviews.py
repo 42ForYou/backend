@@ -39,7 +39,6 @@ class OAuthView(APIView):
                         settings.EMAIL_HOST_USER,
                         [user.profile.email],
                     )
-                    print(f"profile in auth: {user.profile}")
                     return Response(
                         data=wrap_data(
                             email=user.profile.email, intra_id=user.intra_id
