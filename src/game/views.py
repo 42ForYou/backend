@@ -1,16 +1,14 @@
-from rest_framework import viewsets
+import time
+import asyncio
+
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
-
+from rest_framework import viewsets
 from rest_framework import mixins
 from rest_framework import permissions
-
 from rest_framework.response import Response
-
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
-
 
 from .models import Game, GameRoom, GamePlayer, SubGame
 from .serializers import *
@@ -21,6 +19,11 @@ from pong.utils import (
     CustomPageNumberPagination,
 )
 from .databaseio import get_single_game_room, create_game
+from socketcontrol.events import sio
+from livegame.GameRoomSession import (
+    GameRoomSession,
+    GAMEROOMSESSION_REGISTRY,
+)
 
 
 def get_game_room(id):
@@ -126,6 +129,8 @@ class GameRoomViewSet(
             request_data = request.data.get("data")
             game = create_game(request_data.get("game"))
             game_room = self.create_room(request, request_data, game)
+            GAMEROOMSESSION_REGISTRY[game_room.id] = GameRoomSession(game)
+            sio.register_namespace(GAMEROOMSESSION_REGISTRY[game_room.id])
             player = self.join_host(game_room)
             data = self.serialize_game_and_room(game, game_room)
             data.update({"players": [GamePlayerSerializer(player).data]})
@@ -233,12 +238,12 @@ class PlayerViewSet(
     def create(self, request, *args, **kwargs):
         try:
             game_id = request.data.get("data").get("game_id")
-            game = Game.objects.get(game_id=game_id)
-            game_room = game.game_room
             if not game_id:
                 raise CustomError(
                     "game_id is required", status_code=status.HTTP_400_BAD_REQUEST
                 )
+            game = Game.objects.get(game_id=game_id)
+            game_room = game.game_room
             if game.n_players == game_room.join_players:
                 raise CustomError(
                     "The game room is full",
@@ -267,6 +272,20 @@ class PlayerViewSet(
             players_serializer = GamePlayerSerializer(players, many=True)
             game_serializer = GameSerializer(game)
             game_room_serializer = GameRoomSerializer(game_room)
+            my_player_id = game.game_player.get(user=user).id
+
+            game_room_ns = GAMEROOMSESSION_REGISTRY[game_room.id]
+            data = {
+                "game": game_serializer.data,
+                "room": game_room_serializer.data,
+                "players": players_serializer.data,
+            }
+            player_id_list = [player.id for player in players]
+            sid_list = [
+                player.user.socket_session.game_room_session_id for player in players
+            ]
+            asyncio.run(game_room_ns.emit_update_room(data, player_id_list, sid_list))
+
             return Response(
                 wrap_data(
                     game=game_serializer.data,
@@ -302,6 +321,9 @@ class PlayerViewSet(
             game_room = game.game_room
             if game_room.host == player.user:
                 game.delete()
+                game_room_ns = GAMEROOMSESSION_REGISTRY[game_room.id]
+                data = {"t_event": time.time(), "destroyed_because": "host_left"}
+                asyncio.run(game_room_ns.emit_destroyed(data))
                 return Response(
                     {"message": "The host left the game room"},
                     status=status.HTTP_204_NO_CONTENT,

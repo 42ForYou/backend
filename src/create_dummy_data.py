@@ -7,6 +7,7 @@ django.setup()
 from accounts.models import User, Profile
 from game.models import Game, GameRoom, GamePlayer
 from friends.models import Friend
+from rest_framework.authtoken.models import Token
 
 
 def create_dummy_users(num_users=100):
@@ -30,6 +31,8 @@ def create_dummy_users(num_users=100):
             two_factor_auth=False,
         )
 
+        Token.objects.create(user=user)
+
 
 def create_friends():
     users = User.objects.exclude(username="admin")
@@ -45,7 +48,9 @@ def create_friends():
 
 
 def create_game_room(num_games=50):
-    users = User.objects.exclude(username="admin")[:50]  # 1부터 30까지의 사용자만 선택
+    users = User.objects.exclude(username="admin")[
+        :num_games
+    ]  # 1부터 30까지의 사용자만 선택
 
     for i, user in enumerate(users):
         is_tournament = True if (i + 1) % 3 == 0 else False
@@ -57,7 +62,7 @@ def create_game_room(num_games=50):
             n_players=n_players,
         )
 
-        GameRoom.objects.create(
+        game_room = GameRoom.objects.create(
             host=user,
             game=game,
             title=f"GameRoom {i + 1}",
@@ -77,12 +82,14 @@ def create_game_room(num_games=50):
 import random
 
 
-def assign_remaining_users_to_games():
+def assign_remaining_users_to_games(user_num):
     # 남은 50명의 사용자를 가져옵니다.
-    remaining_users = User.objects.exclude(username="admin").order_by("-intra_id")[:50]
+    remaining_users = User.objects.exclude(username="admin").order_by("-intra_id")[
+        :user_num
+    ]
 
     # 이미 생성된 50개의 게임을 가져옵니다.
-    games = Game.objects.all()[:50]
+    games = Game.objects.all()
 
     # 게임별로 현재 참가자 수를 추적하기 위한 딕셔너리
     game_players_count = {
@@ -122,8 +129,8 @@ def assign_remaining_users_to_games():
 
 if __name__ == "__main__":
     print("Creating dummy users and profiles...")
-    create_dummy_users()  # 기본값으로 100명의 사용자 생성
+    create_dummy_users(10)  # 기본값으로 100명의 사용자 생성
     create_friends()
-    create_game_room()  # 기본값으로 30개의 게임룸 생성
-    assign_remaining_users_to_games()
+    # create_game_room(10)  # 기본값으로 30개의 게임룸 생성
+    # assign_remaining_users_to_games(10)
     print("Dummy users and profiles created successfully!")

@@ -57,7 +57,7 @@ def wrap_data(**kwargs):
 
 class CookieTokenAuthentication(BaseAuthentication):
     def authenticate(self, request):
-        token_key = request.COOKIES.get("kimyeonhkimbabo_token")
+        token_key = request.COOKIES.get("pong_token")
         if not token_key:
             raise CustomError(
                 "Token not provided", status_code=status.HTTP_403_FORBIDDEN

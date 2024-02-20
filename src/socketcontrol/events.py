@@ -1,12 +1,11 @@
 import socketio
-from .models import SocketSession
+from asgiref.sync import sync_to_async
+from django.db.models import Q
 from rest_framework.authtoken.models import Token
-from accounts.models import User, Profile
+from pong.utils import wrap_data
+from .models import SocketSession
 from friends.serializers import FriendUserSerializer
 from friends.models import Friend
-from django.db.models import Q
-from asgiref.sync import sync_to_async
-from pong.utils import wrap_data
 
 
 """
@@ -14,6 +13,13 @@ connect, disconnect 에 액세스할 수 없음 에러는 문제없다.
 이벤트를 등록하면 자동으로 connect, disconnect 가 등록된다.
 connect, disconnect 는 socketio 라이브러리에서 자동으로 등록된다.
 """
+
+sio = socketio.AsyncServer(
+    async_mode="asgi",
+    cors_allowed_origins=["https://localhost", "https://localhost:8000"],
+    logger=True,
+    engineio_logger=True,
+)
 
 
 @sync_to_async
@@ -36,7 +42,7 @@ def filter_online_friends(friends_users):
     online_friends_sids = set()
     for friend in friends_users:
         if friend.is_online:
-            online_friends_sids.add(friend.socket_session.session_id)
+            online_friends_sids.add(friend.socket_session.online_session_id)
     return online_friends_sids
 
 
@@ -47,7 +53,13 @@ def get_user_by_token(token):
 
 @sync_to_async
 def get_user_by_sid(sid):
-    return SocketSession.objects.get(session_id=sid).user
+    return (
+        SocketSession.objects.filter(
+            Q(session_id=sid) | Q(online_session_id=sid) | Q(game_room_session_id=sid)
+        )
+        .first()
+        .user
+    )
 
 
 @sync_to_async
@@ -63,14 +75,14 @@ def async_frienduserserializer(user):
     return FriendUserSerializer(user).data
 
 
-def register_sio_control(sio):
-    @sio.on("connect")
-    async def connect(sid: str, environ: dict) -> None:
+@sio.on("connect")
+async def connect(sid: str, environ: dict) -> None:
+    try:
         cookies = environ.get("HTTP_COOKIE", "")
         cookie_dict = dict(
             item.split("=") for item in cookies.split("; ") if "=" in item
         )
-        token = cookie_dict.get("kimyeonhkimbabo_token", None)
+        token = cookie_dict.get("pong_token", None)
         if token:
             user = await get_user_by_token(token)
             session = await get_session(user, sid)
@@ -81,15 +93,25 @@ def register_sio_control(sio):
             user_info = await async_frienduserserializer(user)
             user_info.update({"is_online": user.is_online})
             for online_friend_sid in online_friends_sids:
+                user = await get_user_by_sid(online_friend_sid)
+                # SIO: emit update_friends
                 await sio.emit(
-                    "info_friends", wrap_data(friend=user_info), room=online_friend_sid
+                    "update_friends",
+                    {"friend": user_info},
+                    room=online_friend_sid,
+                    namespace="/online_status",
                 )
         else:
-            disconnect(sid)
-        print("Client connected", sid)
+            await sio.disconnect(sid)
+    except Exception as e:
+        print(f"@@@@@@@@@@@@@@Error in connect: {e}@@@@@@@@@@@@@@@@@@@@@@@@")
+        await sio.disconnect(sid)
 
-    @sio.on("disconnect")
-    async def disconnect(sid):
+
+# SIO: F>B disconnect
+@sio.on("disconnect")
+async def disconnect(sid):
+    try:
         user = await get_user_by_sid(sid)
         user.is_online = False
         await sync_to_async(user.save)()
@@ -98,5 +120,13 @@ def register_sio_control(sio):
         user_info = await async_frienduserserializer(user)
         user_info.update({"is_online": user.is_online})
         for online_friend_sid in online_friends_sids:
-            await sio.emit("info_friends", {"data": user_info}, room=online_friend_sid)
-        print("Client disconnected", sid)
+            user = await get_user_by_sid(online_friend_sid)
+            # SIO: B>F update_friends
+            await sio.emit(
+                "update_friends",
+                {"friend": user_info},
+                room=online_friend_sid,
+                namespace="/online_status",
+            )
+    except Exception as e:
+        print(f"@@@@@@@@@@@@@@Error in disconnect: {e}@@@@@@@@@@@@@@@@@@@@@@@@")
