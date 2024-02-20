@@ -151,14 +151,6 @@ class GameRoomSession(socketio.AsyncNamespace):
             self.rank_ongoing -= 1
             self.logger.debug(f"rank_ongoing decrease to {self.rank_ongoing}")
 
-        for idx_in_rank, subgame_item in enumerate(self.tournament_tree[1]):
-            self.logger.debug(
-                f"idx_in_1rank: {idx_in_rank}, subgame_item: {subgame_item}"
-            )
-        for idx_in_rank, subgame_item in enumerate(self.tournament_tree[0]):
-            self.logger.debug(
-                f"idx_in_0rank: {idx_in_rank}, subgame_item: {subgame_item}"
-            )
         # TODO: database update
         await self.update_database()
 
