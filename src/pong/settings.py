@@ -210,7 +210,7 @@ LOGGING = {
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
         "precise": {
-            "format": "[%(levelname)s][%(asctime)s.%(msecs)d] %(name)s: %(message)s",
+            "format": "[%(levelname)s][%(asctime)s.%(msecs)03d] %(name)s: %(message)s",
             "datefmt": "%H:%M:%S",
         },
     },
