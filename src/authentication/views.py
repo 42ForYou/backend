@@ -108,16 +108,7 @@ class TwoFactorAuthView(APIView):
         try:
             data = request.data.get("data")
             user = User.objects.get(intra_id=data["intra_id"])
-            two_factor_auth = user.two_factor_auth
-            new_code = two_factor_auth.generate_secret_code()
-            two_factor_auth.secret_code = new_code
-            two_factor_auth.save()
-            send_email(
-                "PlanetPong 2FA Code",
-                f"Your Code is [ {new_code} ]",
-                settings.EMAIL_HOST_USER,
-                [user.profile.email],
-            )
+            user.two_factor_auth.send_secret_code()
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
             raise CustomError(
