@@ -166,32 +166,30 @@ class GameRoomSession(socketio.AsyncNamespace):
             for subgame_result in rank:
                 player_a_intra_id = self.sid_to_user_data[subgame_result.sid_a].intra_id
                 player_b_intra_id = self.sid_to_user_data[subgame_result.sid_b].intra_id
-                SubGame.objects.create(
-                    game=self.game,
-                    rank=subgame_result.session.idx_rank,
-                    idx_in_rank=subgame_result.session.idx_in_rank,
-                    player_a=GamePlayer.objects.get(
-                        user__intra_id=player_a_intra_id, game=self.game
-                    ),
-                    player_b=GamePlayer.objects.get(
-                        user__intra_id=player_b_intra_id, game=self.game
-                    ),
-                    point_a=subgame_result.session.paddles[Player.A].score,
-                    point_b=subgame_result.session.paddles[Player.B].score,
-                    winner=subgame_result.winner,
-                )
                 player_a = GamePlayer.objects.get(
                     user__intra_id=player_a_intra_id, game=self.game
                 )
                 player_b = GamePlayer.objects.get(
                     user__intra_id=player_b_intra_id, game=self.game
                 )
+                SubGame.objects.create(
+                    game=self.game,
+                    rank=subgame_result.session.idx_rank,
+                    idx_in_rank=subgame_result.session.idx_in_rank,
+                    player_a=player_a,
+                    player_b=player_b,
+                    point_a=subgame_result.session.paddles[Player.A].score,
+                    point_b=subgame_result.session.paddles[Player.B].score,
+                    winner=subgame_result.winner,
+                )
                 if subgame_result.winner == "A":
                     player_a.rank -= 1 if player_a.rank != 0 else 0
+                    player_a.save()
                 else:
                     player_b.rank -= 1 if player_a.rank != 0 else 0
-                player_a.save()
-                player_b.save()
+                    player_b.save()
+                self.game.users.add(player_a.user)
+                self.game.users.add(player_b.user)
 
     # TODO: delete in production
     def is_current_rank_done(self) -> bool:
