@@ -78,7 +78,7 @@ class TwoFactorAuthView(APIView):
 
     def get(self, request):
         try:
-            intra_id = request.query_params.get("intra_id")
+            intra_id = request.query_params.get("intra-id")
             code = request.query_params.get("code")
             user = User.objects.get(intra_id=intra_id)
             two_factor_auth = user.two_factor_auth
@@ -101,7 +101,7 @@ class TwoFactorAuthView(APIView):
                     data={"error": "Invalid Code"}, status=status.HTTP_401_UNAUTHORIZED
                 )
         except Exception as e:
-            return CustomError(
+            raise CustomError(
                 exception=e, model_name="user", status_code=status.HTTP_400_BAD_REQUEST
             )
 
