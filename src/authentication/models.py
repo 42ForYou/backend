@@ -5,6 +5,8 @@ from django.utils import timezone
 from rest_framework import status
 from accounts.models import User, Profile
 from pong.utils import CustomError
+from pong.utils import send_email
+import pong.settings as settings
 
 
 class OAuth(models.Model):
@@ -20,19 +22,24 @@ class TwoFactorAuth(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, primary_key=True, related_name="two_factor_auth"
     )
-    secret_code = models.CharField(max_length=100)
+    secret_code = models.CharField(max_length=100, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def generate_secret_code(self):
         characters = string.ascii_uppercase + string.digits
-        secret_code = "".join(random.choice(characters) for _ in range(6))
-        return secret_code
+        self.secret_code = "".join(random.choice(characters) for _ in range(6))
+        self.updated_at = timezone.now()
+        self.save()
 
-    def save(self, *args, **kwargs):
-        if not self.secret_code:
-            self.secret_code = self.generate_secret_code()
-        super().save(*args, **kwargs)
+    def send_secret_code(self):
+        self.generate_secret_code()
+        send_email(
+            "PlanetPong 2FA Code",
+            f"Your Code is [ {self.secret_code} ]",
+            settings.EMAIL_HOST_USER,
+            [self.user.profile.email],
+        )
 
     def is_valid(self, code):
         if (timezone.now() - self.updated_at).seconds > 180:
