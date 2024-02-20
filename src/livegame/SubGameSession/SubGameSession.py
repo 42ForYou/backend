@@ -38,7 +38,7 @@ class SubGameSession(socketio.AsyncNamespace):
         super().__init__(f"{gameroom_session.namespace}/{idx_rank}/{idx_in_rank}")
 
         self.logger = logging.getLogger(
-            f"{self.__class__.__name__}.{idx_rank}.{idx_in_rank}"
+            f"{__package__}.{self.__class__.__name__}.{idx_rank}.{idx_in_rank}"
         )
 
         self.config = config

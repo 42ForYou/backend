@@ -23,7 +23,7 @@ sio = socketio.AsyncServer(
     engineio_logger=logging.getLogger("socketio.engineio"),
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"{__package__}.{__name__}")
 
 
 @sync_to_async

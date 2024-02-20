@@ -5,7 +5,7 @@ import logging
 from game.models import Game
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"{__package__}.{__name__}")
 
 
 class SubGameConfig:

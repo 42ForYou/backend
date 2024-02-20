@@ -8,7 +8,7 @@ from game.models import GamePlayer, Game, GameRoom
 from game.serializers import GamePlayerSerializer, GameSerializer, GameRoomSerializer
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"{__package__}.{__name__}")
 
 
 @sync_to_async

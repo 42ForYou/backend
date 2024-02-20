@@ -14,7 +14,7 @@ def update_online_sid(user, sid):
 class OnlineStatusNamespace(socketio.AsyncNamespace):
     def __init__(self, namespace="/online_status"):
         super().__init__(namespace=namespace)
-        self.logger = logging.getLogger(__class__.__name__)
+        self.logger = logging.getLogger(f"{__package__}.{__class__.__name__}")
 
     # SIO: F>B connect
     async def on_connect(self, sid, environ):
