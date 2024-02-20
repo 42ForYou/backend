@@ -59,10 +59,11 @@ class OAuthView(APIView):
             code = request.GET.get("code")
             response = self.request42OAuth(code)
             userData = self.request42UserData(response.json()["access_token"])
-            user = self.createUserProfileOauth(userData, response)
-            if user.profile.two_factor_auth:
+            user, profile = self.createUserProfileOauth(userData, response)
+            if profile.two_factor_auth:
                 self.do_2fa(user)
-                return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
+                data = wrap_data(email=profile.email, intra_id=user.intra_id)
+                return Response(data=data, status=status.HTTP_428_PRECONDITION_REQUIRED)
             token, created = Token.objects.get_or_create(user=user)
             if created:
                 token.save()
@@ -121,7 +122,7 @@ class OAuthView(APIView):
         }
         try:
             user = User.objects.get(intra_id=data["intra_id"])
-            return user
+            return user, user.profile
         except User.DoesNotExist:
             pass
 
@@ -141,7 +142,7 @@ class OAuthView(APIView):
                 refresh_token=response.json()["refresh_token"],
                 token_type=response.json()["token_type"],
             )
-            return user
+            return user, profile
         except Exception as e:
             if user:
                 user.delete()
