@@ -148,11 +148,8 @@ class GameRoomSession(socketio.AsyncNamespace):
             self.rank_ongoing -= 1
             print(f"rank_ongoing decrease to {self.rank_ongoing}")
 
-        for idx_in_rank, subgame_item in enumerate(self.tournament_tree[1]):
-            print(f"idx_in_1rank: {idx_in_rank}, subgame_item: {subgame_item}")
-        for idx_in_rank, subgame_item in enumerate(self.tournament_tree[0]):
-            print(f"idx_in_0rank: {idx_in_rank}, subgame_item: {subgame_item}")
-        # TODO: database update
+            await self.emit_update_tournament()
+
         await self.update_database()
 
         print(f"GameRoom finished.")
@@ -279,7 +276,19 @@ class GameRoomSession(socketio.AsyncNamespace):
     async def report_end_of_subgame(
         self, idx_rank: int, idx_in_rank: int, winner: Player
     ):
+        self.tournament_tree[idx_rank][idx_in_rank].ended_time = time.time()
         self.tournament_tree[idx_rank][idx_in_rank].winner = winner.name
+        if idx_rank == 0:
+            return
+        if idx_rank >= self.n_ranks - 1:
+            another_idx_in_rank = 1 - idx_in_rank
+            current_subgame = self.tournament_tree[idx_rank][idx_in_rank]
+            another_subgame = self.tournament_tree[idx_rank][another_idx_in_rank]
+            if (
+                another_subgame.ended_time is not None
+                and another_subgame.ended_time < current_subgame.ended_time
+            ):
+                return
         await self.emit_update_tournament()
 
     async def emit_update_room(self, data, player_id_list, sid_list):
