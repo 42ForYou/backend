@@ -178,7 +178,7 @@ class SubGameSession(socketio.AsyncNamespace):
             self.paddle_defense = self.paddles[Player.B]
 
         self.logger.debug(
-            f"{id(self)}: Attack: {self.paddle_offense.player.name} -> {self.paddle_defense.player.name}"
+            f"Attack: {self.paddle_offense.player.name} -> {self.paddle_defense.player.name}"
         )
 
     async def update_balltrack(self) -> TurnResult:
@@ -196,7 +196,7 @@ class SubGameSession(socketio.AsyncNamespace):
         if self.paddle_defense.hit(self.balltrack.y_impact):
             # success to defend, create reflection
             self.logger.debug(
-                f"{id(self)}: Player {self.paddle_defense.player.name} reflects the ball"
+                f"Player {self.paddle_defense.player.name} reflects the ball"
             )
             new_x_start, new_y_start = self.balltrack.next_xy_start
             new_dx, new_dy = self.balltrack.next_dx_dy
@@ -216,7 +216,7 @@ class SubGameSession(socketio.AsyncNamespace):
             self.logger.debug(f"Player {self.paddle_offense.player} scored")
             await self.emit_update_scores()
             self.logger.debug(
-                f"{id(self)}: Player {self.paddle_offense.player.name} scores to {self.paddle_offense.score}"
+                f"Player {self.paddle_offense.player.name} scores to {self.paddle_offense.score}"
             )
             new_dx, new_dy = self.balltrack.next_dx_dy
             self.balltrack = BallTrack(self.config, 0, 0, new_dx, new_dy, new_t)

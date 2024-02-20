@@ -39,7 +39,7 @@ def update_game_room_sid(user, sid):
 class GameRoomSession(socketio.AsyncNamespace):
     def __init__(self, game: Game):
         super().__init__(namespace=f"/game/room/{game.game_room.id}")
-        self.logger = logging.getLogger(__class__.__name__)
+        self.logger = logging.getLogger(f"{__class__.__name__}.{game.game_room.id}")
 
         self.game = game
         self.game_room_id = game.game_room.id
@@ -56,7 +56,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
         # config value hardcoded for now
         self.config = get_default_subgame_config(game)
-        self.logger.info(f"game room namespace ##{self.game_room_id}## created")
+        self.logger.info(f"Created {self.__class__.__name__} {self.namespace} created")
 
     # SIO: F>B connect
     async def on_connect(self, sid, environ):
