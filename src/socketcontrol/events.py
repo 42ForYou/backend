@@ -19,8 +19,8 @@ connect, disconnect 는 socketio 라이브러리에서 자동으로 등록된다
 sio = socketio.AsyncServer(
     async_mode="asgi",
     cors_allowed_origins=["https://localhost", "https://localhost:8000"],
-    logger=True,
-    engineio_logger=True,
+    logger=logging.getLogger("socketio.server"),
+    engineio_logger=logging.getLogger("socketio.engineio"),
 )
 
 logger = logging.getLogger(__name__)
