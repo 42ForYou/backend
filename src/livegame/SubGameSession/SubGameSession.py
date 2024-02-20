@@ -57,7 +57,6 @@ class SubGameSession(socketio.AsyncNamespace):
         self.intra_id_b = intra_id_b
         self.ball_init_dx = ball_init_dx
         self.ball_init_dy = ball_init_dy
-        self.update_balltrack()
         self.running = False
         self.time_over = False
         self.winner = Player.NOBODY
