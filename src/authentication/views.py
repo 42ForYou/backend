@@ -109,7 +109,7 @@ class TwoFactorAuthView(APIView):
             data = request.data.get("data")
             user = User.objects.get(intra_id=data["intra_id"])
             two_factor_auth = user.two_factor_auth
-            new_code = two_factor_auth.generate_secret_key()
+            new_code = two_factor_auth.generate_secret_code()
             two_factor_auth.secret_code = new_code
             two_factor_auth.save()
             send_email(
