@@ -94,11 +94,6 @@ class SubGameSession(socketio.AsyncNamespace):
         if sid in self.sid_to_player:
             del self.sid_to_player[sid]
 
-    # SIO: F>B leave
-    async def on_leave(self, sid, data):
-        self.logger.debug(f"Ns={self.namespace}, {sid} event: leave, data={data}")
-        del self.sid_to_player[sid]
-
     # SIO: F>B keyboard_input
     async def on_keyboard_input(self, sid, data):
         self.logger.debug(
