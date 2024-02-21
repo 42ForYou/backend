@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from dotenv import load_dotenv
 from pathlib import Path
 import os
+import datetime
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -190,24 +191,78 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
+DIR_LOG = os.path.join(BASE_DIR.parent, "logs")
+os.system(f"mkdir -p {DIR_LOG}")
+
+LOGLEVEL_ROOT = os.environ.get("LOGLEVEL_ROOT", "WARNING")
+LOGLEVEL_DJANGO = os.environ.get("LOGLEVEL_DJANGO", "WARNING")
+LOGLEVEL_SOCKETIO = os.environ.get("LOGLEVEL_SOCKETIO", "WARNING")
+LOGLEVEL_PONG = os.environ.get("LOGLEVEL_PONG", "WARNING")
+LOGLEVEL_LIVEGAME = os.environ.get("LOGLEVEL_LIVEGAME", "WARNING")
+
 
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
+    "formatters": {
+        "basic": {
+            "format": "[%(levelname)s][%(asctime)s] %(name)s: %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
         },
+        "precise": {
+            "format": "[%(levelname)s][%(asctime)s.%(msecs)03d] %(name)s: %(message)s",
+            "datefmt": "%H:%M:%S",
+        },
+    },
+    "handlers": {
+        "file": {
+            "level": LOGLEVEL_ROOT,
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(
+                DIR_LOG,
+                f"log_{datetime.datetime.now().strftime("%Y-%m-%d")}.log",
+            ),
+            "encoding": "UTF-8",
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB
+            "backupCount": 10,
+            "formatter": "basic",
+        },
+        "consoleBasic": {
+            "level": LOGLEVEL_ROOT,
+            "class": "logging.StreamHandler",
+            "formatter": "basic",
+        },
+        "consolePrecise": {
+            "level": LOGLEVEL_ROOT,
+            "class": "logging.StreamHandler",
+            "formatter": "precise",
+        },
+    },
+    "root": {
+        "handlers": ["consoleBasic"],
+        "level": LOGLEVEL_ROOT,
     },
     "loggers": {
         "django": {
-            "handlers": ["console"],
-            "level": "INFO",
+            "handlers": ["consoleBasic", "file"],
+            "level": LOGLEVEL_DJANGO,
+            "propagate": False,
+        },
+        "daphne": {
+            "handlers": ["consoleBasic", "file"],
+            "level": LOGLEVEL_DJANGO,
+            "propagate": False,
         },
         "socketio": {
-            "handlers": ["console"],
-            "level": "DEBUG",
+            "handlers": ["consoleBasic"],
+            "level": LOGLEVEL_SOCKETIO,
+            "propagate": False,
         },
+        "livegame": {
+            "handlers": ["consolePrecise"],
+            "level":LOGLEVEL_LIVEGAME,
+            "propagate": False,
+        }
     },
 }
 

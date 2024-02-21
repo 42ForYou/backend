@@ -2,6 +2,7 @@ import random
 import math
 import time
 import asyncio
+import logging
 from typing import Dict, List
 
 import socketio
@@ -38,6 +39,10 @@ def update_game_room_sid(user, sid):
 class GameRoomSession(socketio.AsyncNamespace):
     def __init__(self, game: Game):
         super().__init__(namespace=f"/game/room/{game.game_room.id}")
+        self.logger = logging.getLogger(
+            f"{__package__}.{__class__.__name__}.{game.game_room.id}"
+        )
+
         self.game = game
         self.game_room_id = game.game_room.id
         self.host_user = game.game_room.host
@@ -53,7 +58,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
         # config value hardcoded for now
         self.config = get_default_subgame_config(game)
-        print(f"game room namespace ##{self.game_room_id}## created")
+        self.logger.info(f"Created {self.__class__.__name__} {self.namespace} created")
 
     # SIO: F>B connect
     async def on_connect(self, sid, environ):
@@ -65,7 +70,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             token = cookie_dict.get("pong_token", None)
 
             if not token:
-                print("No token")
+                self.logger.warn("No token")
                 await self.disconnect(sid)
 
             user: User = await get_user_by_token(token)
@@ -74,7 +79,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             self.sid_to_user_data[sid] = await fetch_user_data_cache(user)
 
         except Exception as e:
-            print(f"Error in connect: {e}")
+            self.logger.error(f"Error in connect: {e}")
             await self.disconnect(sid)
 
     # SIO: F>B exited
@@ -94,7 +99,7 @@ class GameRoomSession(socketio.AsyncNamespace):
     # SIO: F>B start
     async def on_start(self, sid, data):
         if not self.is_host(sid):
-            print(
+            self.logger.warn(
                 f"Player pressing start button is not host: {sid} ({self.sid_to_user_data[sid]})"
             )
             return
@@ -144,15 +149,15 @@ class GameRoomSession(socketio.AsyncNamespace):
 
             self.rebuild_tournament_tree(self.rank_ongoing, self.rank_ongoing - 1)
 
-            print(f"Current rank {self.rank_ongoing} is finished")
+            self.logger.debug(f"Current rank {self.rank_ongoing} is finished")
             self.rank_ongoing -= 1
-            print(f"rank_ongoing decrease to {self.rank_ongoing}")
+            self.logger.debug(f"rank_ongoing decrease to {self.rank_ongoing}")
 
             await self.emit_update_tournament()
 
         await self.update_database()
 
-        print(f"GameRoom finished.")
+        self.logger.info(f"GameRoom finished.")
 
     @sync_to_async
     def update_database(self):

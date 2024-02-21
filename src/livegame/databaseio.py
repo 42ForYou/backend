@@ -1,9 +1,14 @@
 import time
 import random
+import logging
+
 from asgiref.sync import sync_to_async
 from django.db.models import Prefetch
 from game.models import GamePlayer, Game, GameRoom
 from game.serializers import GamePlayerSerializer, GameSerializer, GameRoomSerializer
+
+
+logger = logging.getLogger(f"{__package__}.{__name__}")
 
 
 @sync_to_async
@@ -20,7 +25,7 @@ def left_game_room(game_room_id, player_id):
             id=player_id
         )
     except (GameRoom.DoesNotExist, GamePlayer.DoesNotExist) as e:
-        print(f"Error in left_game_room: {e}")
+        logger.error(f"Error in left_game_room: {e}")
         return None, None, None
 
     game = game_room.game
