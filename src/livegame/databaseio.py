@@ -26,7 +26,7 @@ def left_game_room(game_room_id, player_id):
         )
     except (GameRoom.DoesNotExist, GamePlayer.DoesNotExist) as e:
         logger.error(f"Error in left_game_room: {e}")
-        return None, None, None
+        return None, None, None, None
 
     game = game_room.game
     ordered_players = getattr(game, "ordered_players", None)
@@ -35,7 +35,7 @@ def left_game_room(game_room_id, player_id):
         game.delete()
         unix_time = time.time()
         data = {"t_event": unix_time, "destroyed_because": "host_left"}
-        return data, None, None
+        return data, None, None, None
 
     ordered_players.remove(player)
     player.delete()
@@ -49,6 +49,30 @@ def left_game_room(game_room_id, player_id):
     data = serialize_game_data(game, game_room, ordered_players)
 
     return data, player_id_list, sid_list, am_i_host_list
+
+
+@sync_to_async
+def get_room_data(game_room_id, user_intra_id):
+    try:
+        game_room = GameRoom.objects.prefetch_related(
+            Prefetch(
+                "game__game_player",
+                queryset=GamePlayer.objects.order_by("id"),
+                to_attr="ordered_players",
+            )
+        ).get(id=game_room_id)
+    except (GameRoom.DoesNotExist, GamePlayer.DoesNotExist) as e:
+        logger.error(f"Error in left_game_room: {e}")
+        return None
+
+    game = game_room.game
+    ordered_players = getattr(game, "ordered_players", None)
+    data = serialize_game_data(game, game_room, ordered_players)
+    my_player_id = game.game_player.get(user__intra_id=user_intra_id).id
+    am_i_host = game_room.host.intra_id == user_intra_id
+    data["my_player_id"] = my_player_id
+    data["am_i_host"] = am_i_host
+    return data
 
 
 def serialize_game_data(game, game_room, players):

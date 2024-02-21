@@ -9,7 +9,7 @@ import socketio
 
 from accounts.models import User, UserDataCache, fetch_user_data_cache
 from game.models import Game, GamePlayer, GameRoom, SubGame
-from .databaseio import left_game_room
+from .databaseio import left_game_room, get_room_data
 from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
 from asgiref.sync import sync_to_async
@@ -318,6 +318,13 @@ class GameRoomSession(socketio.AsyncNamespace):
             copy_data["am_i_host"] = am_i_host_list[sid_list.index(sid)]
             await sio.emit("update_room", copy_data, room=sid, namespace=self.namespace)
             self.logger.debug(f"emit update_room: {copy_data}")
+
+    async def on_entered(self, sid, data):
+        self.logger.debug(f"entered from sid {sid}")
+
+        user_intra_id = self.sid_to_user_data[sid].intra_id
+        data = await get_room_data(self.game_room_id, user_intra_id)
+        sio.emit("update_room", data, room=sid, namespace=self.namespace)
 
     async def emit_destroyed(self, cause):
         data = {"t_event": time.time(), "destroyed_because": cause}

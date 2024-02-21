@@ -135,6 +135,7 @@ class GameRoomViewSet(
             data = self.serialize_game_and_room(game, game_room)
             data.update({"players": [GamePlayerSerializer(player).data]})
             data.update({"my_player_id": player.id})
+            data.update({"am_i_host": True})
             return Response(
                 {"data": data},
                 status=status.HTTP_201_CREATED,
