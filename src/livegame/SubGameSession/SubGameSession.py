@@ -131,6 +131,8 @@ class SubGameSession(socketio.AsyncNamespace):
     # start simulation. start accepting key press.
     async def start(self) -> None:
         self.t_start = time.time()
+        await self.emit_start()
+
         self.emit_update_time_left_until_end()
         self.running = True
         self.logger.debug(f"start simulation of SubGameSession at {self.t_start}")
@@ -216,7 +218,7 @@ class SubGameSession(socketio.AsyncNamespace):
 
     async def emit_start(self) -> None:
         event = "start"
-        data = {"t_event": time.time()}
+        data = {"t_event": self.t_start}
         # SIO: B>F start
         await sio.emit(event, data=data, namespace=self.namespace)
         self.logger.debug(
