@@ -100,7 +100,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
     # SIO: F>B start
     async def on_start(self, sid, data):
-        self.logger.debug(f"start from sid {sid}")
+        self.logger.info(f"start from sid {sid}")
         if not self.is_host(sid):
             self.logger.warn(
                 f"Player pressing start button is not host: {sid} ({self.sid_to_user_data[sid]})"
@@ -134,8 +134,10 @@ class GameRoomSession(socketio.AsyncNamespace):
                 )
                 sio.register_namespace(subgame_item.session)
 
+            self.logger.debug(f"sleeping {self.config.time_before_start} seconds...")
             await asyncio.sleep(self.config.time_before_start)
 
+            self.logger.debug(f"wait until all SubGameSession ends in rank {self.rank_ongoing}")
             await asyncio.gather(
                 *[  # update winner & emit update tournament happens inside subgameresult
                     subgameresult.session.start()
@@ -159,6 +161,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
             await self.emit_update_tournament()
 
+        self.logger.debug(f"Update database...")
         await self.update_database()
 
         self.logger.info(f"GameRoom finished.")
