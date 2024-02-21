@@ -254,7 +254,7 @@ class PlayerViewSet(
                     "The game room is already started",
                     status_code=status.HTTP_400_BAD_REQUEST,
                 )
-            if self.user_already_in_game_room(request.auth.user):
+            if self.user_already_in_game_room(request.auth.user, game):
                 raise CustomError(
                     "The user is already participating",
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -344,8 +344,13 @@ class PlayerViewSet(
         except Exception as e:
             raise CustomError(e, "game room", status_code=status.HTTP_400_BAD_REQUEST)
 
-    def user_already_in_game_room(self, user):
-        if GamePlayer.objects.filter(user=user, game__game_room__isnull=False):
+    def user_already_in_game_room(self, user, game):
+        if (
+            GamePlayer.objects.filter(
+                user=user, game__game_room__is_playing=False
+            ).exists()
+            or GamePlayer.objects.filter(user=user, game=game).exists()
+        ):
             return True
         return False
 

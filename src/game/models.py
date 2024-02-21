@@ -15,7 +15,7 @@ class Game(models.Model):
 
 
 class GameRoom(models.Model):
-    host = models.OneToOneField(
+    host = models.ForeignKey(
         User, on_delete=models.DO_NOTHING, related_name="game_room"
     )
     game = models.OneToOneField(
