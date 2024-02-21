@@ -153,7 +153,8 @@ class GameRoomSession(socketio.AsyncNamespace):
             self.rank_ongoing -= 1
             self.logger.debug(f"rank_ongoing decrease to {self.rank_ongoing}")
 
-        # TODO: database update
+            await self.emit_update_tournament()
+
         await self.update_database()
 
         self.logger.info(f"GameRoom finished.")
@@ -167,32 +168,30 @@ class GameRoomSession(socketio.AsyncNamespace):
             for subgame_result in rank:
                 player_a_intra_id = self.sid_to_user_data[subgame_result.sid_a].intra_id
                 player_b_intra_id = self.sid_to_user_data[subgame_result.sid_b].intra_id
-                SubGame.objects.create(
-                    game=self.game,
-                    rank=subgame_result.session.idx_rank,
-                    idx_in_rank=subgame_result.session.idx_in_rank,
-                    player_a=GamePlayer.objects.get(
-                        user__intra_id=player_a_intra_id, game=self.game
-                    ),
-                    player_b=GamePlayer.objects.get(
-                        user__intra_id=player_b_intra_id, game=self.game
-                    ),
-                    point_a=subgame_result.session.paddles[Player.A].score,
-                    point_b=subgame_result.session.paddles[Player.B].score,
-                    winner=subgame_result.winner,
-                )
                 player_a = GamePlayer.objects.get(
                     user__intra_id=player_a_intra_id, game=self.game
                 )
                 player_b = GamePlayer.objects.get(
                     user__intra_id=player_b_intra_id, game=self.game
                 )
+                SubGame.objects.create(
+                    game=self.game,
+                    rank=subgame_result.session.idx_rank,
+                    idx_in_rank=subgame_result.session.idx_in_rank,
+                    player_a=player_a,
+                    player_b=player_b,
+                    point_a=subgame_result.session.paddles[Player.A].score,
+                    point_b=subgame_result.session.paddles[Player.B].score,
+                    winner=subgame_result.winner,
+                )
                 if subgame_result.winner == "A":
                     player_a.rank -= 1 if player_a.rank != 0 else 0
+                    player_a.save()
                 else:
                     player_b.rank -= 1 if player_a.rank != 0 else 0
-                player_a.save()
-                player_b.save()
+                    player_b.save()
+                self.game.users.add(player_a.user)
+                self.game.users.add(player_b.user)
 
     # TODO: delete in production
     def is_current_rank_done(self) -> bool:
@@ -282,7 +281,19 @@ class GameRoomSession(socketio.AsyncNamespace):
     async def report_end_of_subgame(
         self, idx_rank: int, idx_in_rank: int, winner: Player
     ):
+        self.tournament_tree[idx_rank][idx_in_rank].ended_time = time.time()
         self.tournament_tree[idx_rank][idx_in_rank].winner = winner.name
+        if idx_rank == 0:
+            return
+        if idx_rank >= self.n_ranks - 1:
+            another_idx_in_rank = 1 - idx_in_rank
+            current_subgame = self.tournament_tree[idx_rank][idx_in_rank]
+            another_subgame = self.tournament_tree[idx_rank][another_idx_in_rank]
+            if (
+                another_subgame.ended_time is not None
+                and another_subgame.ended_time < current_subgame.ended_time
+            ):
+                return
         await self.emit_update_tournament()
 
     async def emit_update_room(self, data, player_id_list, sid_list):

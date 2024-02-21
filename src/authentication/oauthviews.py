@@ -14,6 +14,7 @@ from accounts.serializers import (
 )
 from pong.utils import custom_exception_handler, CustomError, wrap_data, send_email
 from .models import OAuth, TwoFactorAuth
+from pong.utils import CookieTokenAuthentication
 
 
 class OAuthView(APIView):
@@ -24,45 +25,25 @@ class OAuthView(APIView):
         return wrap_data(user=userJson, profile=profileJson)
 
     def get(self, request):
-        if request.user.is_authenticated:
-            try:
-                user = User.objects.get(intra_id=request.user.intra_id)
-                if user.profile.two_factor_auth:
-                    two_factor_auth, created = TwoFactorAuth.objects.get_or_create(
-                        user=user
-                    )
-                    new_code = two_factor_auth.generate_secret_code()
-                    two_factor_auth.save()
-                    send_email(
-                        "PlanetPong 2FA Code",
-                        f"Your Code is {new_code}",
-                        settings.EMAIL_HOST_USER,
-                        [user.profile.email],
-                    )
-                    return Response(
-                        data=wrap_data(
-                            email=user.profile.email, intra_id=user.intra_id
-                        ),
-                        status=status.HTTP_428_PRECONDITION_REQUIRED,
-                    )
-                token, created = Token.objects.get_or_create(user=user)
-                if created:
-                    token.save()
-                response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
-                response.set_cookie(
-                    "pong_token", token.key, httponly=True
-                )  # remove samesite=strict for development
-                return response
-            except User.DoesNotExist:
-                pass
+        try:
+            user, token = CookieTokenAuthentication().authenticate(request)
+            response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
+            response.set_cookie(
+                "pong_token", token.key, httponly=True
+            )  # remove samesite=strict for development
+            return response
+        except Exception as e:
+            pass
+
         try:
             code = request.GET.get("code")
             response = self.request42OAuth(code)
             userData = self.request42UserData(response.json()["access_token"])
-            user = self.createUserProfileOauth(userData, response)
-            if user.profile.two_factor_auth:
+            user, profile = self.createUserProfileOauth(userData, response)
+            if profile.two_factor_auth:
                 self.do_2fa(user)
-                return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
+                data = wrap_data(email=profile.email, intra_id=user.intra_id)
+                return Response(data=data, status=status.HTTP_428_PRECONDITION_REQUIRED)
             token, created = Token.objects.get_or_create(user=user)
             if created:
                 token.save()
@@ -76,15 +57,7 @@ class OAuthView(APIView):
 
     def do_2fa(self, user):
         two_factor_auth, created = TwoFactorAuth.objects.get_or_create(user=user)
-        new_code = two_factor_auth.generate_secret_code()
-        two_factor_auth.secret_code = new_code
-        two_factor_auth.save()
-        send_email(
-            "PlanetPong 2FA Code",
-            f"Your Code is [ {new_code} ]",
-            settings.EMAIL_HOST_USER,
-            [user.profile.email],
-        )
+        two_factor_auth.send_secret_code()
 
     def request42OAuth(self, code):
         data = {
@@ -121,7 +94,7 @@ class OAuthView(APIView):
         }
         try:
             user = User.objects.get(intra_id=data["intra_id"])
-            return user
+            return user, user.profile
         except User.DoesNotExist:
             pass
 
@@ -141,7 +114,7 @@ class OAuthView(APIView):
                 refresh_token=response.json()["refresh_token"],
                 token_type=response.json()["token_type"],
             )
-            return user
+            return user, profile
         except Exception as e:
             if user:
                 user.delete()

@@ -78,7 +78,7 @@ class TwoFactorAuthView(APIView):
 
     def get(self, request):
         try:
-            intra_id = request.query_params.get("intra_id")
+            intra_id = request.query_params.get("intra-id")
             code = request.query_params.get("code")
             user = User.objects.get(intra_id=intra_id)
             two_factor_auth = user.two_factor_auth
@@ -101,22 +101,17 @@ class TwoFactorAuthView(APIView):
                     data={"error": "Invalid Code"}, status=status.HTTP_401_UNAUTHORIZED
                 )
         except Exception as e:
-            return CustomError(
+            raise CustomError(
                 exception=e, model_name="user", status_code=status.HTTP_400_BAD_REQUEST
             )
 
     def patch(self, request, *args, **kwargs):
-        data = request.data.get("data")
-        email = data["email"]
-        user = User.objects.get(intra_id=data["intra_id"])
-        two_factor_auth = user.two_factor_auth
-        new_code = two_factor_auth.generate_secret_key()
-        two_factor_auth.secret_code = new_code
-        two_factor_auth.save()
-        send_email(
-            "PlanetPong 2FA Code",
-            f"Your Code is {new_code}",
-            settings.EMAIL_HOST_USER,
-            [email],
-        )
-        return Response(status=status.HTTP_200_OK)
+        try:
+            data = request.data.get("data")
+            user = User.objects.get(intra_id=data["intra_id"])
+            user.two_factor_auth.send_secret_code()
+            return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            raise CustomError(
+                exception=e, model_name="user", status_code=status.HTTP_400_BAD_REQUEST
+            )

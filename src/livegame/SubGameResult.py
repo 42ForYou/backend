@@ -16,6 +16,7 @@ class SubGameResult:
         self.sid_a = sid_a
         self.sid_b = sid_b
         self.winner = winner
+        self.ended_time = None
 
     def to_json(self, sid_to_user_data: Dict[str, UserDataCache]) -> dict:
         result = {}
