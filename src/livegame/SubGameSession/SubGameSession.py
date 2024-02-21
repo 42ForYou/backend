@@ -11,10 +11,7 @@ from socketcontrol.events import sio, get_user_by_token
 from livegame.SubGameConfig import SubGameConfig
 from livegame.SubGameSession.PaddleStatus import PaddleStatus, KeyInput, Player
 from livegame.SubGameSession.BallTrack import BallTrack
-from livegame.SubGameSession.SIOAdapter import (
-    serialize_balltrack,
-    serialize_subgame_config,
-)
+from livegame.SubGameSession.SIOAdapter import serialize_balltrack
 
 
 class TurnResult(Enum):

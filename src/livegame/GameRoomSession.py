@@ -130,8 +130,6 @@ class GameRoomSession(socketio.AsyncNamespace):
                     ball_init_dy=math.sqrt(2) * self.config.v_ball,
                 )
                 sio.register_namespace(subgame_item.session)
-                # SIO: B>F config
-                await subgame_item.session.emit_config()
 
             await asyncio.sleep(self.config.time_before_start)
 
