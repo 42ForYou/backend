@@ -86,13 +86,14 @@ class GameRoomSession(socketio.AsyncNamespace):
 
     # SIO: F>B exited
     async def on_exited(self, sid, data):
+        self.logger.debug(f"exited from sid {sid}")
+
         if self.is_playing:
             self.logger.warn(
                 f"Player exiting while game is playing: {sid} ({self.sid_to_user_data[sid]})"
             )
             return
 
-        self.logger.debug(f"exited from sid {sid}")
         del self.sid_to_user_data[sid]
 
         player_id = data["my_player_id"]
@@ -115,7 +116,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             )
             return
 
-        await self.game_start(self)
+        await self.game_start()
 
         # SIO: B>F config
         await self.emit_config()
@@ -145,7 +146,9 @@ class GameRoomSession(socketio.AsyncNamespace):
             self.logger.debug(f"sleeping {self.config.time_before_start} seconds...")
             await asyncio.sleep(self.config.time_before_start)
 
-            self.logger.debug(f"wait until all SubGameSession ends in rank {self.rank_ongoing}")
+            self.logger.debug(
+                f"wait until all SubGameSession ends in rank {self.rank_ongoing}"
+            )
             await asyncio.gather(
                 *[  # update winner & emit update tournament happens inside subgameresult
                     subgameresult.session.start()
