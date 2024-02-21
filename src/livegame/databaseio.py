@@ -37,21 +37,18 @@ def left_game_room(game_room_id, player_id):
         data = {"t_event": unix_time, "destroyed_because": "host_left"}
         return data, None, None
 
+    ordered_players.remove(player)
+    player.delete()
+
+    sid_list = [
+        player.user.socket_session.game_room_session_id for player in ordered_players
+    ]
+    player_id_list = [player.id for player in ordered_players if player.id != player_id]
+    am_i_host_list = [player.user == game_room.host for player in ordered_players]
+
     data = serialize_game_data(game, game_room, ordered_players)
 
-    if not game_room.is_playing:
-        updated_players, sid_list = update_game_room_for_leaving_player(
-            game_room, player, ordered_players
-        )
-        data["players"] = updated_players
-    else:
-        sid_list = [
-            player.user.socket_session.game_room_session_id
-            for player in ordered_players
-        ]
-    player_id_list = [player.id for player in ordered_players if player.id != player_id]
-
-    return data, player_id_list, sid_list
+    return data, player_id_list, sid_list, am_i_host_list
 
 
 def serialize_game_data(game, game_room, players):
@@ -63,13 +60,3 @@ def serialize_game_data(game, game_room, players):
         "room": game_room_serializer.data,
         "players": players_serializer.data,
     }
-
-
-def update_game_room_for_leaving_player(game_room, leaving_player, players):
-    players = [player for player in players if player.id != leaving_player.id]
-    sid_list = [player.user.socket_session.game_room_session_id for player in players]
-    leaving_player.delete()
-    game_room.join_players -= 1
-    game_room.save()
-    serialized_players = GamePlayerSerializer(players, many=True).data
-    return serialized_players, sid_list

@@ -284,7 +284,8 @@ class PlayerViewSet(
             sid_list = [
                 player.user.socket_session.game_room_session_id for player in players
             ]
-            asyncio.run(game_room_ns.emit_update_room(data, player_id_list, sid_list))
+            am_i_host_list = [player.user == game_room.host for player in players]
+            asyncio.run(game_room_ns.emit_update_room(data, player_id_list, sid_list, am_i_host_list))
 
             return Response(
                 wrap_data(

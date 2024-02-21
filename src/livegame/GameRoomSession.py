@@ -97,7 +97,7 @@ class GameRoomSession(socketio.AsyncNamespace):
         del self.sid_to_user_data[sid]
 
         player_id = data["my_player_id"]
-        data, player_id_list, sid_list = await left_game_room(
+        data, player_id_list, sid_list, am_i_host_list = await left_game_room(
             self.game_room_id, player_id
         )
 
@@ -105,7 +105,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             await self.emit("destroyed", data)
             return
 
-        await self.emit_update_room(data, player_id_list, sid_list)
+        await self.emit_update_room(data, player_id_list, sid_list, am_i_host_list)
 
     # SIO: F>B start
     async def on_start(self, sid, data):
@@ -309,12 +309,15 @@ class GameRoomSession(socketio.AsyncNamespace):
         self.update_tournament_tree(self.rank_ongoing, self.rank_ongoing - 1)
         await self.emit_update_tournament()
 
-    async def emit_update_room(self, data, player_id_list, sid_list):
+    async def emit_update_room(
+        self, data, player_id_list, sid_list, am_i_host_list
+    ) -> None:
         for sid in sid_list:
             copy_data = data.copy()
             copy_data["my_player_id"] = player_id_list[sid_list.index(sid)]
-            await sio.emit("update_room", data, room=sid, namespace=self.namespace)
-            self.logger.debug(f"emit update_room: {data}")
+            copy_data["am_i_host"] = am_i_host_list[sid_list.index(sid)]
+            await sio.emit("update_room", copy_data, room=sid, namespace=self.namespace)
+            self.logger.debug(f"emit update_room: {copy_data}")
 
     async def emit_destroyed(self, cause):
         data = {"t_event": time.time(), "destroyed_because": cause}
