@@ -298,9 +298,11 @@ class GameRoomSession(socketio.AsyncNamespace):
             copy_data["my_player_id"] = player_id_list[sid_list.index(sid)]
             await sio.emit("update_room", data, room=sid, namespace=self.namespace)
 
-    async def emit_destroyed(self, data):
+    async def emit_destroyed(self, cause):
+        data = {"t_event": time.time(), "destroyed_because": cause}
         # SIO: B>F destroyed
         await sio.emit("destroyed", data, namespace=self.namespace)
+        self.logger.debug(f"emit destroyed: {data}")
 
     async def emit_update_tournament(self):
         # SIO: B>F update_tournament
