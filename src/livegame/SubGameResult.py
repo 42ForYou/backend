@@ -13,22 +13,6 @@ class SubGameResult:
         self.user_data_b = None
         self.winner = None
 
-    def __init__(
-        self,
-        session: Union[SubGameSession, None],
-        sid_a: Union[str, None],
-        sid_b: Union[str, None],
-        user_data_a: Union[UserDataCache, None],
-        user_data_b: Union[UserDataCache, None],
-        winner: Union[str, None],
-    ) -> None:
-        self.session = session
-        self.sid_a = sid_a
-        self.sid_b = sid_b
-        self.user_data_a = user_data_a
-        self.user_data_b = user_data_b
-        self.winner = winner
-
     def to_json(self) -> dict:
         result = {}
 

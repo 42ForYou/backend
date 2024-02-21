@@ -11,10 +11,7 @@ from socketcontrol.events import sio, get_user_by_token
 from livegame.SubGameConfig import SubGameConfig
 from livegame.SubGameSession.PaddleStatus import PaddleStatus, KeyInput, Player
 from livegame.SubGameSession.BallTrack import BallTrack
-from livegame.SubGameSession.SIOAdapter import (
-    serialize_balltrack,
-    serialize_subgame_config,
-)
+from livegame.SubGameSession.SIOAdapter import serialize_balltrack
 
 
 class TurnResult(Enum):
@@ -66,7 +63,7 @@ class SubGameSession(socketio.AsyncNamespace):
 
     # SIO: F>B connect
     async def on_connect(self, sid, environ):
-        self.logger.debug(f"Ns={self.namespace}, {sid} connected")
+        self.logger.debug(f"connect from sid {sid}")
         try:
             cookies = environ.get("HTTP_COOKIE", "")
             cookie_dict = dict(
@@ -93,20 +90,13 @@ class SubGameSession(socketio.AsyncNamespace):
 
     # SIO: F>B disconnect
     def on_disconnect(self, sid):
-        self.logger.debug(f"Ns={self.namespace}, {sid} disconnected")
+        self.logger.debug(f"disconnect from sid {sid}")
         if sid in self.sid_to_player:
             del self.sid_to_player[sid]
 
-    # SIO: F>B leave
-    async def on_leave(self, sid, data):
-        self.logger.debug(f"Ns={self.namespace}, {sid} event: leave, data={data}")
-        del self.sid_to_player[sid]
-
     # SIO: F>B keyboard_input
     async def on_keyboard_input(self, sid, data):
-        self.logger.debug(
-            f"Ns={self.namespace}, {sid} event: keyboard_input, data={data}"
-        )
+        self.logger.debug(f"keyboard_input from sid {sid}, data={data}")
 
         if not self.running:
             self.logger.debug(f"SubGameSession is not running")
@@ -141,6 +131,8 @@ class SubGameSession(socketio.AsyncNamespace):
     # start simulation. start accepting key press.
     async def start(self) -> None:
         self.t_start = time.time()
+        await self.emit_start()
+
         self.emit_update_time_left_until_end()
         self.running = True
         self.logger.debug(f"start simulation of SubGameSession at {self.t_start}")
@@ -158,7 +150,7 @@ class SubGameSession(socketio.AsyncNamespace):
 
             if self.winner != Player.NOBODY:
                 await self.emit_ended()
-                await self.gr_session.report_end_of_subgame(
+                await self.gr_session.report_winner_of_subgame(
                     self.idx_rank, self.idx_in_rank, self.winner
                 )
                 self.running = False
@@ -226,17 +218,8 @@ class SubGameSession(socketio.AsyncNamespace):
 
     async def emit_start(self) -> None:
         event = "start"
-        data = {"t_event": time.time()}
+        data = {"t_event": self.t_start}
         # SIO: B>F start
-        await sio.emit(event, data=data, namespace=self.namespace)
-        self.logger.debug(
-            f"Emit event {event} data {data} to namespace {self.namespace}"
-        )
-
-    async def emit_config(self) -> None:
-        event = "config"
-        data = {"t_event": time.time(), "config": serialize_subgame_config(self.config)}
-        # SIO: B>F config
         await sio.emit(event, data=data, namespace=self.namespace)
         self.logger.debug(
             f"Emit event {event} data {data} to namespace {self.namespace}"

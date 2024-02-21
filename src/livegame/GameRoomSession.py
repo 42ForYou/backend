@@ -17,6 +17,7 @@ from livegame.SubGameSession.SubGameSession import SubGameSession
 from livegame.SubGameSession.PaddleStatus import Player
 from livegame.SubGameResult import SubGameResult
 from livegame.SubGameConfig import get_default_subgame_config
+from livegame.SubGameSession.SIOAdapter import serialize_subgame_config
 
 
 def is_power_of_two(n: int) -> bool:
@@ -62,6 +63,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
     # SIO: F>B connect
     async def on_connect(self, sid, environ):
+        self.logger.debug(f"connect from sid {sid}")
         try:
             cookies = environ.get("HTTP_COOKIE", "")
             cookie_dict = dict(
@@ -90,6 +92,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             )
             return
 
+        self.logger.debug(f"exited from sid {sid}")
         del self.sid_to_user_data[sid]
 
         player_id = data["my_player_id"]
@@ -105,6 +108,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
     # SIO: F>B start
     async def on_start(self, sid, data):
+        self.logger.debug(f"start from sid {sid}")
         if not self.is_host(sid):
             self.logger.warn(
                 f"Player pressing start button is not host: {sid} ({self.sid_to_user_data[sid]})"
@@ -112,6 +116,9 @@ class GameRoomSession(socketio.AsyncNamespace):
             return
 
         await self.game_start(self)
+
+        # SIO: B>F config
+        await self.emit_config()
 
         await self.build_tournament_tree()
         await self.emit_update_tournament()
@@ -134,8 +141,6 @@ class GameRoomSession(socketio.AsyncNamespace):
                     ball_init_dy=math.sqrt(2) * self.config.v_ball,
                 )
                 sio.register_namespace(subgame_item.session)
-                # SIO: B>F config
-                await subgame_item.session.emit_config()
 
             await asyncio.sleep(self.config.time_before_start)
 
@@ -303,10 +308,13 @@ class GameRoomSession(socketio.AsyncNamespace):
             copy_data = data.copy()
             copy_data["my_player_id"] = player_id_list[sid_list.index(sid)]
             await sio.emit("update_room", data, room=sid, namespace=self.namespace)
+            self.logger.debug(f"emit update_room: {data}")
 
-    async def emit_destroyed(self, data):
+    async def emit_destroyed(self, cause):
+        data = {"t_event": time.time(), "destroyed_because": cause}
         # SIO: B>F destroyed
         await sio.emit("destroyed", data, namespace=self.namespace)
+        self.logger.debug(f"emit destroyed: {data}")
 
     async def emit_update_tournament(self):
         # SIO: B>F update_tournament
@@ -320,6 +328,16 @@ class GameRoomSession(socketio.AsyncNamespace):
             ],
         }
         await sio.emit("update_tournament", data, namespace=self.namespace)
+        self.logger.debug(f"emit update tournament: {data}")
+
+    async def emit_config(self) -> None:
+        event = "config"
+        data = {"t_event": time.time(), "config": serialize_subgame_config(self.config)}
+        # SIO: B>F config
+        await sio.emit(event, data=data, namespace=self.namespace)
+        self.logger.debug(
+            f"Emit event {event} data {data} to namespace {self.namespace}"
+        )
 
     @sync_to_async
     def game_start(self):

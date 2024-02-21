@@ -322,8 +322,7 @@ class PlayerViewSet(
             if game_room.host == player.user:
                 game.delete()
                 game_room_ns = GAMEROOMSESSION_REGISTRY[game_room.id]
-                data = {"t_event": time.time(), "destroyed_because": "host_left"}
-                asyncio.run(game_room_ns.emit_destroyed(data))
+                asyncio.run(game_room_ns.emit_destroyed("host_left"))
                 return Response(
                     {"message": "The host left the game room"},
                     status=status.HTTP_204_NO_CONTENT,

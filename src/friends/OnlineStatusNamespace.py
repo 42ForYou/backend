@@ -18,6 +18,7 @@ class OnlineStatusNamespace(socketio.AsyncNamespace):
 
     # SIO: F>B connect
     async def on_connect(self, sid, environ):
+        self.logger.debug(f"connect from sid {sid}")
         try:
             cookies = environ.get("HTTP_COOKIE", "")
             cookie_dict = dict(
