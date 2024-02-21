@@ -146,7 +146,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             for subgame_item in self.tournament_tree[self.rank_ongoing]:
                 sio.namespace_handlers.pop(subgame_item.session.namespace)
 
-            self.rebuild_tournament_tree(self.rank_ongoing, self.rank_ongoing - 1)
+            self.update_tournament_tree(self.rank_ongoing, self.rank_ongoing - 1)
 
             self.logger.debug(f"Current rank {self.rank_ongoing} is finished")
             self.rank_ongoing -= 1
@@ -238,9 +238,7 @@ class GameRoomSession(socketio.AsyncNamespace):
         for idx_rank in range(self.n_ranks):  # 0, 1, 2...
             # 0 -> (0..1), 1 -> (0..2)
             for _ in range(int(math.pow(2, idx_rank))):
-                self.tournament_tree[idx_rank].append(
-                    SubGameResult(None, None, None, None)
-                )
+                self.tournament_tree[idx_rank].append(SubGameResult(self))
 
         if int(math.pow(2, self.n_ranks - 1)) != self.n_players / 2:
             raise ValueError(
@@ -258,8 +256,10 @@ class GameRoomSession(socketio.AsyncNamespace):
             intra_id_b = self.users_cache[idx_player_b].intra_id
             subgame_result.sid_a = self.get_sid_from_intra_id(intra_id_a)
             subgame_result.sid_b = self.get_sid_from_intra_id(intra_id_b)
+            subgame_result.user_data_a = self.users_cache[idx_player_a]
+            subgame_result.user_data_b = self.users_cache[idx_player_b]
 
-    def rebuild_tournament_tree(self, rank_curr: int, rank_next: int) -> None:
+    def update_tournament_tree(self, rank_curr: int, rank_next: int) -> None:
         if rank_curr == 0:  # 결승이 끝났을땐 rebuild 불가
             return
 
@@ -267,32 +267,27 @@ class GameRoomSession(socketio.AsyncNamespace):
             idx_in_rank_curr_l = idx_in_rank_next * 2 + 0
             idx_in_rank_curr_r = idx_in_rank_next * 2 + 1
 
-            sid_winner_l = self.tournament_tree[rank_curr][
-                idx_in_rank_curr_l
-            ].get_sid_of_winner()
-            sid_winner_r = self.tournament_tree[rank_curr][
-                idx_in_rank_curr_r
-            ].get_sid_of_winner()
+            sg_result_curr_l = self.tournament_tree[rank_curr][idx_in_rank_curr_l]
+            sg_result_curr_r = self.tournament_tree[rank_curr][idx_in_rank_curr_r]
 
-            self.tournament_tree[rank_next][idx_in_rank_next].sid_a = sid_winner_l
-            self.tournament_tree[rank_next][idx_in_rank_next].sid_b = sid_winner_r
+            sg_result_next = self.tournament_tree[rank_next][idx_in_rank_next]
 
-    async def report_end_of_subgame(
+            if sg_result_curr_l.winner:
+                sg_result_next.sid_a = sg_result_curr_l.get_sid_of_winner()
+                sg_result_next.user_data_a = sg_result_curr_l.get_user_data_of_winner()
+
+            if sg_result_curr_r.winner:
+                sg_result_next.sid_b = sg_result_curr_r.get_sid_of_winner()
+                sg_result_next.user_data_b = sg_result_curr_r.get_user_data_of_winner()
+
+    async def report_winner_of_subgame(
         self, idx_rank: int, idx_in_rank: int, winner: Player
     ):
-        self.tournament_tree[idx_rank][idx_in_rank].ended_time = time.time()
         self.tournament_tree[idx_rank][idx_in_rank].winner = winner.name
         if idx_rank == 0:
             return
-        if idx_rank >= self.n_ranks - 1:
-            another_idx_in_rank = 1 - idx_in_rank
-            current_subgame = self.tournament_tree[idx_rank][idx_in_rank]
-            another_subgame = self.tournament_tree[idx_rank][another_idx_in_rank]
-            if (
-                another_subgame.ended_time is not None
-                and another_subgame.ended_time < current_subgame.ended_time
-            ):
-                return
+
+        self.update_tournament_tree(self.rank_ongoing, self.rank_ongoing - 1)
         await self.emit_update_tournament()
 
     async def emit_update_room(self, data, player_id_list, sid_list):
@@ -305,19 +300,16 @@ class GameRoomSession(socketio.AsyncNamespace):
         # SIO: B>F destroyed
         await sio.emit("destroyed", data, namespace=self.namespace)
 
-    def get_subgames_json(self) -> List[List[dict]]:
-        return [
-            [subgame.to_json(self.sid_to_user_data) for subgame in subgame_in_rank]
-            for subgame_in_rank in self.tournament_tree
-        ]
-
     async def emit_update_tournament(self):
         # SIO: B>F update_tournament
         data = {
             "t_event": time.time(),
             "n_ranks": self.n_ranks,
             "rank_ongoing": self.rank_ongoing,
-            "subgames": self.get_subgames_json(),
+            "subgames": [
+                [subgame.to_json() for subgame in subgame_in_rank]
+                for subgame_in_rank in self.tournament_tree
+            ],
         }
         await sio.emit("update_tournament", data, namespace=self.namespace)
 
