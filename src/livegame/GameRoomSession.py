@@ -48,7 +48,6 @@ class GameRoomSession(socketio.AsyncNamespace):
         self.host_user = game.game_room.host
 
         self.sid_to_user_data: Dict[str, UserDataCache] = {}
-        self.match_dict = {}
 
         self.users_cache: List[UserDataCache] = []
         self.n_players = -1
