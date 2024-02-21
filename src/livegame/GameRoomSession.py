@@ -46,6 +46,7 @@ class GameRoomSession(socketio.AsyncNamespace):
         self.game = game
         self.game_room_id = game.game_room.id
         self.host_user = game.game_room.host
+        self.is_playing = False
 
         self.sid_to_user_data: Dict[str, UserDataCache] = {}
 
@@ -83,12 +84,19 @@ class GameRoomSession(socketio.AsyncNamespace):
 
     # SIO: F>B exited
     async def on_exited(self, sid, data):
+        if self.is_playing:
+            self.logger.warn(
+                f"Player exiting while game is playing: {sid} ({self.sid_to_user_data[sid]})"
+            )
+            return
+
         del self.sid_to_user_data[sid]
 
         player_id = data["my_player_id"]
         data, player_id_list, sid_list = await left_game_room(
             self.game_room_id, player_id
         )
+
         if data.get("destroyed_because", None):
             await self.emit("destroyed", data)
             return
@@ -103,7 +111,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             )
             return
 
-        await game_start(self.game_room_id)
+        await self.game_start(self)
 
         await self.build_tournament_tree()
         await self.emit_update_tournament()
@@ -312,6 +320,13 @@ class GameRoomSession(socketio.AsyncNamespace):
             ],
         }
         await sio.emit("update_tournament", data, namespace=self.namespace)
+
+    @sync_to_async
+    def game_start(self):
+        game_room = self.game.game_room
+        game_room.is_playing = True
+        game_room.save()
+        self.is_playing = True
 
 
 GAMEROOMSESSION_REGISTRY: Dict[int, GameRoomSession] = {}
