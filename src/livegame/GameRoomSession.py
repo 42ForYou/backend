@@ -17,6 +17,7 @@ from livegame.SubGameSession.SubGameSession import SubGameSession
 from livegame.SubGameSession.PaddleStatus import Player
 from livegame.SubGameResult import SubGameResult
 from livegame.SubGameConfig import get_default_subgame_config
+from livegame.SubGameSession.SIOAdapter import serialize_subgame_config
 
 
 def is_power_of_two(n: int) -> bool:
@@ -104,6 +105,9 @@ class GameRoomSession(socketio.AsyncNamespace):
             return
 
         await game_start(self.game_room_id)
+
+        # SIO: B>F config
+        await self.emit_config()
 
         await self.build_tournament_tree()
         await self.emit_update_tournament()
@@ -312,6 +316,15 @@ class GameRoomSession(socketio.AsyncNamespace):
             ],
         }
         await sio.emit("update_tournament", data, namespace=self.namespace)
+
+    async def emit_config(self) -> None:
+        event = "config"
+        data = {"t_event": time.time(), "config": serialize_subgame_config(self.config)}
+        # SIO: B>F config
+        await sio.emit(event, data=data, namespace=self.namespace)
+        self.logger.debug(
+            f"Emit event {event} data {data} to namespace {self.namespace}"
+        )
 
 
 GAMEROOMSESSION_REGISTRY: Dict[int, GameRoomSession] = {}

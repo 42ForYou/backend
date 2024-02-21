@@ -233,15 +233,6 @@ class SubGameSession(socketio.AsyncNamespace):
             f"Emit event {event} data {data} to namespace {self.namespace}"
         )
 
-    async def emit_config(self) -> None:
-        event = "config"
-        data = {"t_event": time.time(), "config": serialize_subgame_config(self.config)}
-        # SIO: B>F config
-        await sio.emit(event, data=data, namespace=self.namespace)
-        self.logger.debug(
-            f"Emit event {event} data {data} to namespace {self.namespace}"
-        )
-
     async def emit_update_time_left(self) -> int:
         event = "update_time_left"
         time_left = self.get_time_left()
