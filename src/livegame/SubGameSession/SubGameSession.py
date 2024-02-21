@@ -63,7 +63,7 @@ class SubGameSession(socketio.AsyncNamespace):
 
     # SIO: F>B connect
     async def on_connect(self, sid, environ):
-        self.logger.debug(f"Ns={self.namespace}, {sid} connected")
+        self.logger.debug(f"connect from sid {sid}")
         try:
             cookies = environ.get("HTTP_COOKIE", "")
             cookie_dict = dict(
@@ -90,15 +90,13 @@ class SubGameSession(socketio.AsyncNamespace):
 
     # SIO: F>B disconnect
     def on_disconnect(self, sid):
-        self.logger.debug(f"Ns={self.namespace}, {sid} disconnected")
+        self.logger.debug(f"disconnect from sid {sid}")
         if sid in self.sid_to_player:
             del self.sid_to_player[sid]
 
     # SIO: F>B keyboard_input
     async def on_keyboard_input(self, sid, data):
-        self.logger.debug(
-            f"Ns={self.namespace}, {sid} event: keyboard_input, data={data}"
-        )
+        self.logger.debug(f"keyboard_input from sid {sid}, data={data}")
 
         if not self.running:
             self.logger.debug(f"SubGameSession is not running")

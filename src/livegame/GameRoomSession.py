@@ -62,6 +62,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
     # SIO: F>B connect
     async def on_connect(self, sid, environ):
+        self.logger.debug(f"connect from sid {sid}")
         try:
             cookies = environ.get("HTTP_COOKIE", "")
             cookie_dict = dict(
@@ -84,6 +85,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
     # SIO: F>B exited
     async def on_exited(self, sid, data):
+        self.logger.debug(f"exited from sid {sid}")
         del self.sid_to_user_data[sid]
 
         player_id = data["my_player_id"]
@@ -98,6 +100,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
     # SIO: F>B start
     async def on_start(self, sid, data):
+        self.logger.debug(f"start from sid {sid}")
         if not self.is_host(sid):
             self.logger.warn(
                 f"Player pressing start button is not host: {sid} ({self.sid_to_user_data[sid]})"
@@ -297,6 +300,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             copy_data = data.copy()
             copy_data["my_player_id"] = player_id_list[sid_list.index(sid)]
             await sio.emit("update_room", data, room=sid, namespace=self.namespace)
+            self.logger.debug(f"emit update_room: {data}")
 
     async def emit_destroyed(self, cause):
         data = {"t_event": time.time(), "destroyed_because": cause}
@@ -316,6 +320,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             ],
         }
         await sio.emit("update_tournament", data, namespace=self.namespace)
+        self.logger.debug(f"emit update tournament: {data}")
 
     async def emit_config(self) -> None:
         event = "config"
