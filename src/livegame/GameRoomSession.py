@@ -9,7 +9,7 @@ import socketio
 
 from accounts.models import User, UserDataCache, fetch_user_data_cache
 from game.models import Game, GamePlayer, GameRoom, SubGame
-from .databaseio import left_game_room, game_start
+from .databaseio import left_game_room
 from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
 from asgiref.sync import sync_to_async
