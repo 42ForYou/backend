@@ -73,10 +73,3 @@ def update_game_room_for_leaving_player(game_room, leaving_player, players):
     game_room.save()
     serialized_players = GamePlayerSerializer(players, many=True).data
     return serialized_players, sid_list
-
-
-@sync_to_async
-def game_start(game_room_id):
-    game_room = GameRoom.objects.get(pk=game_room_id)
-    game_room.is_playing = True
-    game_room.save()
