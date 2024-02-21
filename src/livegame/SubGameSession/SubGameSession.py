@@ -150,7 +150,7 @@ class SubGameSession(socketio.AsyncNamespace):
 
             if self.winner != Player.NOBODY:
                 await self.emit_ended()
-                await self.gr_session.report_end_of_subgame(
+                await self.gr_session.report_winner_of_subgame(
                     self.idx_rank, self.idx_in_rank, self.winner
                 )
                 self.running = False
