@@ -244,17 +244,19 @@ class PlayerViewSet(
                 )
             game = Game.objects.get(game_id=game_id)
             game_room = game.game_room
-            if game.n_players == game_room.join_players:
-                raise CustomError(
-                    "The game room is full",
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                )
             if game_room.is_playing == True:
                 raise CustomError(
                     "The game room is already started",
                     status_code=status.HTTP_400_BAD_REQUEST,
                 )
-            if self.user_already_in_game_room(request.auth.user, game):
+            if self.user_already_in_same_game_room(request.auth.user, game):
+                return self.return_response(request.auth.user, game)
+            if game.n_players == game_room.join_players:
+                raise CustomError(
+                    "The game room is full",
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                )
+            if self.user_already_in_other_game_room(request.auth.user, game):
                 raise CustomError(
                     "The user is already participating",
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -267,24 +269,7 @@ class PlayerViewSet(
             serializer.save()
             game_room.join_players += 1
             game_room.save()
-            players = game.game_player.all().order_by("id")
-            my_player_id = game.game_player.get(user=user).id
-            players_serializer = GamePlayerSerializer(players, many=True)
-            game_serializer = GameSerializer(game)
-            game_room_serializer = GameRoomSerializer(game_room)
-            my_player_id = game.game_player.get(user=user).id
-            am_i_host = game_room.host == user
-
-            return Response(
-                wrap_data(
-                    game=game_serializer.data,
-                    room=game_room_serializer.data,
-                    players=players_serializer.data,
-                    my_player_id=my_player_id,
-                    am_i_host=am_i_host,
-                ),
-                status=status.HTTP_201_CREATED,
-            )
+            return self.return_response(user, game)
         except Exception as e:
             if isinstance(e, serializers.ValidationError):
                 raise CustomError(
@@ -334,15 +319,40 @@ class PlayerViewSet(
         except Exception as e:
             raise CustomError(e, "game room", status_code=status.HTTP_400_BAD_REQUEST)
 
-    def user_already_in_game_room(self, user, game):
+    def user_already_in_same_game_room(self, user, game):
         if (
-            GamePlayer.objects.filter(
-                user=user, game__game_room__is_playing=False
-            ).exists()
-            or GamePlayer.objects.filter(user=user, game=game).exists()
+            GamePlayer.objects.filter(user=user, game=game).exists()
+            and game.game_room.is_playing == False
         ):
             return True
         return False
+
+    def user_already_in_other_game_room(self, user, game):
+        if GamePlayer.objects.filter(user=user, game=game).exists():
+            return True
+        if game.game_room.is_playing == True:
+            return True
+        return False
+
+    def return_response(self, user, game):
+        players = game.game_player.all().order_by("id")
+        my_player_id = game.game_player.get(user=user).id
+        players_serializer = GamePlayerSerializer(players, many=True)
+        game_serializer = GameSerializer(game)
+        game_room_serializer = GameRoomSerializer(game.game_room)
+        my_player_id = game.game_player.get(user=user).id
+        am_i_host = game.game_room.host == user
+
+        return Response(
+            wrap_data(
+                game=game_serializer.data,
+                room=game_room_serializer.data,
+                players=players_serializer.data,
+                my_player_id=my_player_id,
+                am_i_host=am_i_host,
+            ),
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class SubGameViewSet(
