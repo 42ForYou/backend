@@ -6,7 +6,6 @@ import logging
 from typing import Dict, List
 
 import socketio
-
 from accounts.models import User, UserDataCache, fetch_user_data_cache
 from game.models import Game, GamePlayer, GameRoom, SubGame
 from .databaseio import left_game_room, get_room_data
@@ -80,9 +79,17 @@ class GameRoomSession(socketio.AsyncNamespace):
 
             self.sid_to_user_data[sid] = await fetch_user_data_cache(user)
 
+            self.logger.debug(f"sid_to_user_data: {self.sid_to_user_data}")
         except Exception as e:
             self.logger.error(f"Error in connect: {e}")
             await self.disconnect(sid)
+
+    async def on_disconnect(self, sid):
+        self.logger.debug(f"disconnect from sid {self.sid_to_user_data[sid].intra_id}")
+
+        if self.is_playing == False:
+            del self.sid_to_user_data[sid]
+            return
 
     # SIO: F>B entered
     async def on_entered(self, sid, data):
@@ -97,7 +104,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
     # SIO: F>B exited
     async def on_exited(self, sid, data):
-        self.logger.debug(f"exited from sid {sid}, data: {data}")
+        self.logger.debug(f"exited from sid {sid}")
 
         if self.is_playing:
             self.logger.warn(
