@@ -6,7 +6,6 @@ import logging
 from typing import Dict, List
 
 import socketio
-
 from accounts.models import User, UserDataCache, fetch_user_data_cache
 from game.models import Game, GamePlayer, GameRoom, SubGame
 from .databaseio import left_game_room, get_room_data
@@ -80,9 +79,28 @@ class GameRoomSession(socketio.AsyncNamespace):
 
             self.sid_to_user_data[sid] = await fetch_user_data_cache(user)
 
+            self.logger.debug(f"sid_to_user_data: {self.sid_to_user_data}")
         except Exception as e:
             self.logger.error(f"Error in connect: {e}")
             await self.disconnect(sid)
+
+    async def on_disconnect(self, sid):
+        self.logger.debug(f"disconnect from sid {self.sid_to_user_data[sid].intra_id}")
+
+        if self.is_playing == False:
+            del self.sid_to_user_data[sid]
+            return
+
+    # SIO: F>B entered
+    async def on_entered(self, sid, data):
+        self.logger.debug(
+            f"entered {self.namespace} from sid {self.sid_to_user_data[sid].intra_id}"
+        )
+
+        data, sid_list, player_id_list, am_i_host_list = await get_room_data(
+            self.game_room_id
+        )
+        await self.emit_update_room(data, player_id_list, sid_list, am_i_host_list)
 
     # SIO: F>B exited
     async def on_exited(self, sid, data):
@@ -94,11 +112,11 @@ class GameRoomSession(socketio.AsyncNamespace):
             )
             return
 
+        intra_id = self.sid_to_user_data[sid].intra_id
         del self.sid_to_user_data[sid]
 
-        player_id = data["my_player_id"]
         data, player_id_list, sid_list, am_i_host_list = await left_game_room(
-            self.game_room_id, player_id
+            self.game_room_id, intra_id
         )
 
         if data.get("destroyed_because", None):
@@ -318,13 +336,6 @@ class GameRoomSession(socketio.AsyncNamespace):
             copy_data["am_i_host"] = am_i_host_list[sid_list.index(sid)]
             await sio.emit("update_room", copy_data, room=sid, namespace=self.namespace)
             self.logger.debug(f"emit update_room: {copy_data}")
-
-    async def on_entered(self, sid, data):
-        self.logger.debug(f"entered from sid {sid}")
-
-        user_intra_id = self.sid_to_user_data[sid].intra_id
-        data = await get_room_data(self.game_room_id, user_intra_id)
-        sio.emit("update_room", data, room=sid, namespace=self.namespace)
 
     async def emit_destroyed(self, cause):
         data = {"t_event": time.time(), "destroyed_because": cause}
