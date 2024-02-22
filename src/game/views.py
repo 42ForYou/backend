@@ -8,7 +8,6 @@ from rest_framework import mixins
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.pagination import PageNumberPagination
 
 from .models import Game, GameRoom, GamePlayer, SubGame
 from .serializers import *
@@ -274,19 +273,7 @@ class PlayerViewSet(
             game_serializer = GameSerializer(game)
             game_room_serializer = GameRoomSerializer(game_room)
             my_player_id = game.game_player.get(user=user).id
-
-            game_room_ns = GAMEROOMSESSION_REGISTRY[game_room.id]
-            data = {
-                "game": game_serializer.data,
-                "room": game_room_serializer.data,
-                "players": players_serializer.data,
-            }
-            player_id_list = [player.id for player in players]
-            sid_list = [
-                player.user.socket_session.game_room_session_id for player in players
-            ]
-            am_i_host_list = [player.user == game_room.host for player in players]
-            asyncio.run(game_room_ns.emit_update_room(data, player_id_list, sid_list, am_i_host_list))
+            am_i_host = game_room.host == user
 
             return Response(
                 wrap_data(
@@ -294,6 +281,7 @@ class PlayerViewSet(
                     room=game_room_serializer.data,
                     players=players_serializer.data,
                     my_player_id=my_player_id,
+                    am_i_host=am_i_host,
                 ),
                 status=status.HTTP_201_CREATED,
             )
