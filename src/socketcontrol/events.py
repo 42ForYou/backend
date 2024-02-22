@@ -8,6 +8,7 @@ from pong.utils import wrap_data
 from .models import SocketSession
 from friends.serializers import FriendUserSerializer
 from friends.models import Friend
+import pong.settings as settings
 
 
 """
@@ -18,7 +19,7 @@ connect, disconnect 는 socketio 라이브러리에서 자동으로 등록된다
 
 sio = socketio.AsyncServer(
     async_mode="asgi",
-    cors_allowed_origins=["https://localhost", "https://localhost:8000"],
+    cors_allowed_origins=settings.CORS_ALLOWED_ORIGINS,
     logger=logging.getLogger("socketio.server"),
     engineio_logger=logging.getLogger("socketio.engineio"),
 )

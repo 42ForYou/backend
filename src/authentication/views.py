@@ -93,7 +93,7 @@ class TwoFactorAuthView(APIView):
                     status=status.HTTP_200_OK,
                 )
                 response.set_cookie(
-                    "pong_token", token.key, httponly=True
+                    "pong_token", token.key, httponly=True, samesite=None
                 )  # remove samesite=strict for development
                 return response
             else:

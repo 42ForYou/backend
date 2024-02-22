@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os
 import datetime
+import urllib.parse
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -31,8 +32,6 @@ DEBUG = True
 
 APPEND_SLASH = True
 
-ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -49,8 +48,6 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "rest_framework_simplejwt",
     "corsheaders",
-    "channels",
-    "channels_redis",
     "django_filters",
     "authentication",
     "game",
@@ -62,20 +59,16 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "django.middleware.common.CommonMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-
-# CORS_ORIGIN_WHITELIST = [
-#     "http://localhost:4242",
-# ]
 
 ROOT_URLCONF = "pong.urls"
 
@@ -171,25 +164,31 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "pong.utils.custom_exception_handler",
 }
 
+cors_origins_raw = os.getenv("CORS_ALLOWED_ORIGINS", "")
+cors_origins_list = cors_origins_raw.split(",")
+
+csrf_trusted_raw = os.getenv("CSRF_TRUSTED_ORIGINS", "")
+csrf_trusted_list = csrf_trusted_raw.split(",")
+
+MAIN_URL = os.environ.get("MAIN_URL")
+
+parsed_url = urllib.parse.urlparse(os.environ.get("MAIN_URL"))
+current_ip = parsed_url.hostname
+
+# en0 인터페이스의 IP 주소를 가져옵니다.
+cors_origins_list.append(MAIN_URL)
+csrf_trusted_list.append(MAIN_URL)
+
+CORS_ALLOWED_ORIGINS = cors_origins_list
+CSRF_TRUSTED_ORIGINS = csrf_trusted_list
+CORS_ALLOW_CREDENTIALS = True
+
 CLIENT_ID = os.environ.get("CLIENT_ID")
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
 TOKEN_URL = os.environ.get("42TOKEN_URL")
 OAUTH_URL = os.environ.get("42OAUTH_URL")
-CALLBACK_URL = os.environ.get("CALLBACK_URL")
+CALLBACK_URL = f"{MAIN_URL}/login/callback"
 AVATAR_LOCATION = os.environ.get("AVATAR_LOCATION")
-
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4242",
-    "http://localhost:8000",
-    "https://localhost",
-]
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:4242",
-    "http://localhost:8000",
-    "https://localhost",
-]
-CORS_ALLOW_CREDENTIALS = True
 
 DIR_LOG = os.path.join(BASE_DIR.parent, "logs")
 os.system(f"mkdir -p {DIR_LOG}")
@@ -199,6 +198,7 @@ LOGLEVEL_DJANGO = os.environ.get("LOGLEVEL_DJANGO", "WARNING")
 LOGLEVEL_SOCKETIO = os.environ.get("LOGLEVEL_SOCKETIO", "WARNING")
 LOGLEVEL_PONG = os.environ.get("LOGLEVEL_PONG", "WARNING")
 LOGLEVEL_LIVEGAME = os.environ.get("LOGLEVEL_LIVEGAME", "WARNING")
+
 
 
 LOGGING = {
