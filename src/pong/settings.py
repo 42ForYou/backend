@@ -179,6 +179,7 @@ current_ip = parsed_url.hostname
 cors_origins_list.append(MAIN_URL)
 csrf_trusted_list.append(MAIN_URL)
 
+ALLOWED_HOSTS = ["*"]
 CORS_ALLOWED_ORIGINS = cors_origins_list
 CSRF_TRUSTED_ORIGINS = csrf_trusted_list
 CORS_ALLOW_CREDENTIALS = True
