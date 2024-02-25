@@ -178,6 +178,9 @@ class GameRoomSession(socketio.AsyncNamespace):
             if not self.is_current_rank_done():
                 raise Exception(f"Logic error: current rank is not done...")
 
+            self.logger.debug(f"sleeping {self.config.t_delay_rank_end} seconds...")
+            await asyncio.sleep(self.config.t_delay_rank_end)
+
             # 이번 rank의 SubGameResult들 un-register
             for subgame_item in self.tournament_tree[self.rank_ongoing]:
                 sio.namespace_handlers.pop(subgame_item.session.namespace)
