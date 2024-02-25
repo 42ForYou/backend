@@ -161,8 +161,8 @@ class GameRoomSession(socketio.AsyncNamespace):
                 )
                 sio.register_namespace(subgame_item.session)
 
-            self.logger.debug(f"sleeping {self.config.time_before_start} seconds...")
-            await asyncio.sleep(self.config.time_before_start)
+            self.logger.debug(f"sleeping {self.config.t_delay_rank_start} seconds...")
+            await asyncio.sleep(self.config.t_delay_rank_start)
 
             self.logger.debug(
                 f"wait until all SubGameSession ends in rank {self.rank_ongoing}"
