@@ -18,15 +18,18 @@ class SubGameConfig:
         player_b_init_point: int,
         paddle_len: float,
         paddle_speed: float,
+        paddle_init_y: float,
         epsilon: float,  # expected floating point error
         ball_init_x: float,
         ball_init_y: float,
         ball_speed: float,
         time_limit: float,
-        time_before_start: float,
+        delay_time_before_rank_start: float,
+        delay_time_before_subgame_start: float,
+        delay_time_after_rank_end: float,
     ) -> None:
         logger.info(
-            f"Create SubGameConfig with args: width: {width}, height: {height}, match_point: {match_point}, player_a_init_point: {player_a_init_point}, player_b_init_point: {player_b_init_point}, paddle_len: {paddle_len}, paddle_speed: {paddle_speed}, epsilon: {epsilon}, ball_init_x: {ball_init_x}, ball_init_y: {ball_init_y}, ball_speed: {ball_speed}, time_limit: {time_limit}, time_before_start: {time_before_start}"
+            f"Create SubGameConfig with args: width: {width}, height: {height}, match_point: {match_point}, player_a_init_point: {player_a_init_point}, player_b_init_point: {player_b_init_point}, paddle_len: {paddle_len}, paddle_speed: {paddle_speed}, epsilon: {epsilon}, ball_init_x: {ball_init_x}, ball_init_y: {ball_init_y}, ball_speed: {ball_speed}, time_limit: {time_limit}, time_before_start: {delay_time_before_rank_start}"
         )
         self.width = width
         self.height = height
@@ -39,12 +42,15 @@ class SubGameConfig:
         self.y_min = -height / 2
         self.l_paddle = paddle_len
         self.v_paddle = paddle_speed
+        self.y_paddle_init = paddle_init_y
         self.e = abs(epsilon)
         self.x_ball_init = ball_init_x
         self.y_ball_init = ball_init_y
         self.v_ball = ball_speed
         self.t_limit = time_limit
-        self.time_before_start = time_before_start
+        self.t_delay_rank_start = delay_time_before_rank_start
+        self.t_delay_subgame_start = delay_time_before_subgame_start
+        self.t_delay_rank_end = delay_time_after_rank_end
 
     def __str__(self) -> str:
         return f"SubGameConfig {self.width} * {self.height} (e={self.e}), v_paddle={self.v_paddle}, l_paddle={self.l_paddle}, {self.x_min} <= x <= {self.x_max}, {self.y_min} <= y <= {self.y_max}"
@@ -60,11 +66,20 @@ sgc_player_a_init_point = os.environ.get("SUBGAMECONFIG_PLAYER_A_INIT_POINT", "0
 sgc_player_b_init_point = os.environ.get("SUBGAMECONFIG_PLAYER_B_INIT_POINT", "0")
 sgc_paddle_len = os.environ.get("SUBGAMECONFIG_PADDLE_LENGTH", "50")
 sgc_paddle_speed = os.environ.get("SUBGAMECONFIG_PADDLE_SPEED", "100")
+sgc_paddle_init_y = os.environ.get("SUBGAMECONFIG_PADDLE_INIT_Y", "100")
 sgc_epsilon = os.environ.get("SUBGAMECONFIG_EPSILON", "1")
 sgc_ball_init_x = os.environ.get("SUBGAMECONFIG_BALL_INIT_X", "0")
 sgc_ball_init_y = os.environ.get("SUBGAMECONFIG_BALL_INIT_Y", "0")
 sgc_ball_speed = os.environ.get("SUBGAMECONFIG_BALL_SPEED", "200")
-sgc_time_before_start = os.environ.get("SUBGAMECONFIG_TIME_BEFORE_START", "5")
+sgc_delay_time_before_rank_start = os.environ.get(
+    "SUBGAMECONFIG_DELAY_TIME_BEFORE_RANK_START", "5"
+)
+sgc_delay_time_before_subgame_start = os.environ.get(
+    "SUBGAMECONFIG_DELAY_TIME_BEFORE_SUBGAME_START", "3"
+)
+sgc_delay_time_after_rank_end = os.environ.get(
+    "SUBGAMECONFIG_DELAY_TIME_AFTER_RANK_END", "5"
+)
 
 
 def get_default_subgame_config(game: Game) -> SubGameConfig:
@@ -76,10 +91,13 @@ def get_default_subgame_config(game: Game) -> SubGameConfig:
         player_b_init_point=int(sgc_player_b_init_point),
         paddle_len=float(sgc_paddle_len),
         paddle_speed=float(sgc_paddle_speed),
+        paddle_init_y=float(sgc_paddle_init_y),
         epsilon=float(sgc_epsilon),
         ball_init_x=float(sgc_ball_init_x),
         ball_init_y=float(sgc_ball_init_y),
         ball_speed=float(sgc_ball_speed),
         time_limit=game.time_limit,
-        time_before_start=float(sgc_time_before_start),
+        delay_time_before_rank_start=float(sgc_delay_time_before_rank_start),
+        delay_time_before_subgame_start=float(sgc_delay_time_before_subgame_start),
+        delay_time_after_rank_end=float(sgc_delay_time_after_rank_end),
     )

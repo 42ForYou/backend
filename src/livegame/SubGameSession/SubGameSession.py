@@ -130,10 +130,9 @@ class SubGameSession(socketio.AsyncNamespace):
 
     # start simulation. start accepting key press.
     async def start(self) -> None:
-        self.t_start = time.time() + 3
+        self.t_start = time.time() + self.config.t_delay_subgame_start
         await self.emit_start()
-
-        await asyncio.sleep(3)
+        await asyncio.sleep(self.config.t_delay_subgame_start)
 
         self.emit_update_time_left_until_end()
         self.running = True
