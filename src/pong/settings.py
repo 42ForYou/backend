@@ -24,6 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
+# TODO: move to .env
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure--tx=7@tvtt)n%fb-l*l-mp-xf(60x9o)&09z2lu%@@5#e-0ys0"
 
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "rest_framework_simplejwt",
+    'rest_framework_simplejwt.token_blacklist',
     "corsheaders",
     "django_filters",
     "authentication",
@@ -155,9 +157,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 
 REST_FRAMEWORK = {
-    # "DEFAULT_AUTHENTICATION_CLASSES": [
-    #     "pong.utils.CookieTokenAuthentication",
-    # ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 6,
     "PAGE_SIZE_QUERY_PARAM": "page_size",
@@ -263,9 +262,72 @@ LOGGING = {
             "handlers": ["consolePrecise"],
             "level":LOGLEVEL_LIVEGAME,
             "propagate": False,
-        }
+        },
+        "authenticate": {
+            "handlers": ["consoleBasic"],
+            "level": DEBUG,
+            "propagate": False,
+        },
     },
 }
+
+SIMPLE_JWT = {
+    # 토큰 암호화에 사용할 알고리즘
+    'ALGORITHM': 'HS256',
+
+    # 액세스 토큰의 유효 기간
+    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=30),
+
+    # 리프레시 토큰의 유효 기간
+    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=1),
+
+    # 회전(refresh) 시 새 리프레시 토큰의 유효 기간을 리셋할지 여부
+    'ROTATE_REFRESH_TOKENS': False,
+
+    # 리프레시 토큰이 만료될 때 새로운 토큰 발급을 거부할지 여부
+    'BLACKLIST_AFTER_ROTATION': True,
+
+    # 토큰의 `aud` 클레임 검증에 사용할 값
+    'AUDIENCE': None,
+
+    # 토큰의 `iss` 클레임 검증에 사용할 값
+    'ISSUER': None,
+
+    # 토큰에 포함될 사용자 정의 클레임
+    'USER_ID_FIELD': 'intra_id',
+
+    # 사용자 정의 클레임의 필드 이름
+    'USER_ID_CLAIM': 'intra_id',
+
+    'AUTH_COOKIE': 'pong_token',
+
+    'AUTH_COOKIE_REFRESH': 'refresh_token',
+
+    # 사용자 모델의 필드를 통해 사용자를 인증할 때 사용할 필드
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+
+    # 토큰 발급 시 사용할 시크릿 키
+    'SIGNING_KEY': SECRET_KEY,
+
+    # 검증 시 사용할 공개 키 (기본적으로 시크릿 키와 동일)
+    'VERIFYING_KEY': '',
+
+    # 토큰에 포함될 헤더
+    'TOKEN_TYPE_CLAIM': 'JWT',
+
+    # 토큰에 포함될 타입
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+
+    # JTI (JWT ID) 클레임을 사용할지 여부
+    'JTI_CLAIM': 'jti',
+
+    # 슬라이딩 토큰의 유효 기간
+    'SLIDING_TOKEN_LIFETIME': datetime.timedelta(minutes=30),
+
+    # 슬라이딩 토큰 리프레시 유효 기간
+    'SLIDING_TOKEN_REFRESH_LIFETIME': datetime.timedelta(days=1),
+}
+
 
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND")
 EMAIL_HOST = os.environ.get("EMAIL_HOST")
