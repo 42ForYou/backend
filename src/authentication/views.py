@@ -1,40 +1,22 @@
-from django.shortcuts import redirect
-from django.conf import settings
-from rest_framework.authtoken.models import Token
+import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth import logout
-from django.db.models import Prefetch
+from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
+from rest_framework_simplejwt.tokens import RefreshToken
 from urllib.parse import quote
-from pong.utils import CustomError, wrap_data, CookieTokenAuthentication, send_email
+from pong.utils import CustomError, wrap_data, CookieTokenAuthentication
+import pong.settings as settings
 from accounts.serializers import UserSerializer, ProfileSerializer
-from .models import TwoFactorAuth
-from accounts.models import User, Profile
+from accounts.models import User
+from .utils import get_token_for_user, set_cookie_response
 
 
-# TODO: Add check token when login
-# if request.COOKIES.get("pong_token"):
-#     token = request.COOKIES.get("pong_token")
-#     try:
-#         token = Token.objects.get(key=token)
-#         user = token.user
-#         user_serializer = UserSerializer(user).data
-#         profile_serializer = ProfileSerializer(user.profile).data
-#         return Response(
-#             wrap_data(user=user_serializer, profile=profile_serializer),
-#             status=status.HTTP_200_OK,
-#         )
-#     except Exception as e:
-#         response = Response(status=status.HTTP_400_BAD_REQUEST)
-#         response.delete_cookie("pong_token")
-#         return response
 class LoginView(APIView):
     authentication_classes = ()
     permission_classes = ()
 
     def get(self, request):
-        # TODO: Add check token when login
         redirect_url = quote(settings.CALLBACK_URL)
         url = f"{settings.OAUTH_URL}?client_id={settings.CLIENT_ID}&redirect_uri={redirect_url}&response_type=code"
         return Response(wrap_data(url=url), status=status.HTTP_200_OK)
@@ -44,18 +26,55 @@ class LogoutView(APIView):
     authentication_classes = [CookieTokenAuthentication]
 
     def get(self, request):
-        if not request.user.is_authenticated:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        response = Response(status=status.HTTP_204_NO_CONTENT)
         try:
-            token = Token.objects.get(user=request.user)
-            token.delete()
-            response = Response(status=status.HTTP_204_NO_CONTENT)
-            response.delete_cookie("pong_token")
+            refresh_token = request.COOKIES.get("refresh_token")
+            if refresh_token:
+                refresh = RefreshToken(refresh_token)
+                refresh.blacklist()
+        except Exception as e:
+            pass
+        response.delete_cookie("pong_token")
+        response.delete_cookie("refresh_token")
+
+        return response
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        logger = logging.getLogger("authentication.TokenRefreshView")
+        refresh_token = request.COOKIES.get("refresh_token")
+        if not refresh_token:
+            raise CustomError("Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
+
+        request.data["refresh"] = refresh_token
+        try:
+            response = super().post(request, *args, **kwargs)
+            token = response.data["access"]
+            response.data = None
+            response.set_cookie(
+                "pong_token", token, httponly=True, samesite="Strict", path="/"
+            )  # remove samesite=strict for development
+            logger.debug(f"refreshed token: {token}")
             return response
-        except Token.DoesNotExist:
-            response = Response(status=status.HTTP_400_BAD_REQUEST)
-            response.delete_cookie("pong_token")
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            raise CustomError("Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
+
+
+# JWT 유효성 검사
+# 401 토큰 불량
+# 403 토큰 없음
+class CustomTokenVerifyView(TokenVerifyView):
+    authentication_classes = [CookieTokenAuthentication]
+
+    def get(self, request):
+        if not request.user.is_authenticated:
+            response = Response(status=status.HTTP_401_UNAUTHORIZED)
+            return response
+        user = UserSerializer(request.user).data
+        profile = ProfileSerializer(request.user.profile).data
+        user.update(profile)
+        return Response(wrap_data(user=user), status=status.HTTP_200_OK)
 
 
 # Token 유효성 검증 view
@@ -85,16 +104,14 @@ class TwoFactorAuthView(APIView):
             if two_factor_auth.is_valid(code):
                 user_serializer = UserSerializer(user).data
                 profile_serializer = ProfileSerializer(user.profile).data
-                token, created = Token.objects.get_or_create(user=user)
-                if created:
-                    token.save()
+                token = get_token_for_user(user)
                 response = Response(
                     data=wrap_data(user=user_serializer, profile=profile_serializer),
                     status=status.HTTP_200_OK,
                 )
-                response.set_cookie(
-                    "pong_token", token.key, httponly=True, samesite=None
-                )  # remove samesite=strict for development
+                response = set_cookie_response(
+                    response, token["access"], token["refresh"]
+                )
                 return response
             else:
                 return Response(
