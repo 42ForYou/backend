@@ -8,6 +8,8 @@ from accounts.models import User, Profile
 from game.models import Game, GameRoom, GamePlayer
 from friends.models import Friend
 from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
+from authentication.models import OAuth
 
 
 def create_dummy_users(num_users=100):
@@ -127,10 +129,24 @@ def assign_remaining_users_to_games(user_num):
                 break  # 현재 사용자에 대한 적절한 게임을 찾았으므로 다음 사용자로 넘어감
 
 
+def create_jwt():
+    users = User.objects.exclude(username="admin")
+
+    for user in users:
+        refresh = RefreshToken.for_user(user)
+        OAuth.objects.create(
+            user=user,
+            access_token=str(refresh.access_token),
+            refresh_token=str(refresh),
+            token_type="JWT",
+        )
+
+
 if __name__ == "__main__":
     print("Creating dummy users and profiles...")
-    create_dummy_users(10)  # 기본값으로 100명의 사용자 생성
-    create_friends()
+    create_dummy_users(5)  # 기본값으로 100명의 사용자 생성
+    create_jwt()
+    # create_friends()
     # create_game_room(10)  # 기본값으로 30개의 게임룸 생성
     # assign_remaining_users_to_games(10)
     print("Dummy users and profiles created successfully!")
