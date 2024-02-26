@@ -1,4 +1,5 @@
 from rest_framework_simplejwt.tokens import RefreshToken
+import pong.settings as settings
 
 
 def get_token_for_user(user):
@@ -12,7 +13,7 @@ def get_token_for_user(user):
 def set_cookie_response(response, access=None, refresh=None):
     if access:
         response.set_cookie(
-            "pong_token",
+            settings.SIMPLE_JWT["AUTH_COOKIE"],
             access,
             httponly=True,
             samesite="Strict",
@@ -20,7 +21,7 @@ def set_cookie_response(response, access=None, refresh=None):
         )
     if refresh:
         response.set_cookie(
-            "refresh_token",
+            settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"],
             refresh,
             httponly=True,
             samesite="Strict",

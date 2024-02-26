@@ -3,13 +3,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from urllib.parse import quote
 from pong.utils import CustomError, wrap_data, CookieTokenAuthentication
 import pong.settings as settings
 from accounts.serializers import UserSerializer, ProfileSerializer
 from accounts.models import User
-from .utils import get_token_for_user, set_cookie_response
+from .utils import get_token_for_user, set_cookie_response, get_response_data
 
 
 class LoginView(APIView):
@@ -28,14 +28,16 @@ class LogoutView(APIView):
     def get(self, request):
         response = Response(status=status.HTTP_204_NO_CONTENT)
         try:
-            refresh_token = request.COOKIES.get("refresh_token")
+            refresh_token = request.COOKIES.get(
+                settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"]
+            )
             if refresh_token:
                 refresh = RefreshToken(refresh_token)
                 refresh.blacklist()
         except Exception as e:
             pass
-        response.delete_cookie("pong_token")
-        response.delete_cookie("refresh_token")
+        response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE"])
+        response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"])
 
         return response
 
@@ -43,7 +45,7 @@ class LogoutView(APIView):
 class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         logger = logging.getLogger("authentication.TokenRefreshView")
-        refresh_token = request.COOKIES.get("refresh_token")
+        refresh_token = request.COOKIES.get(settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"])
         if not refresh_token:
             raise CustomError("Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
 
@@ -53,9 +55,15 @@ class CustomTokenRefreshView(TokenRefreshView):
             token = response.data["access"]
             response.data = None
             response.set_cookie(
-                "pong_token", token, httponly=True, samesite="Strict", path="/"
-            )  # remove samesite=strict for development
-            logger.debug(f"refreshed token: {token}")
+                settings.SIMPLE_JWT["AUTH_COOKIE"],
+                token,
+                httponly=True,
+                samesite="Strict",
+                path="/",
+            )
+            user = User.objects.get(intra_id=AccessToken(token).payload["intra_id"])
+            response.data = get_response_data(user)
+            logger.debug(f"refreshed token: {AccessToken(token).payload}")
             return response
         except Exception as e:
             raise CustomError("Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
@@ -71,25 +79,8 @@ class CustomTokenVerifyView(TokenVerifyView):
         if not request.user.is_authenticated:
             response = Response(status=status.HTTP_401_UNAUTHORIZED)
             return response
-        user = UserSerializer(request.user).data
-        profile = ProfileSerializer(request.user.profile).data
-        user.update(profile)
-        return Response(wrap_data(user=user), status=status.HTTP_200_OK)
-
-
-# Token 유효성 검증 view
-class TokenValidationView(APIView):
-    authentication_classes = [CookieTokenAuthentication]
-
-    def get(self, request):
-        if not request.user.is_authenticated:
-            response = Response(status=status.HTTP_401_UNAUTHORIZED)
-            response.delete_cookie("pong_token")
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-        user = UserSerializer(request.user).data
-        profile = ProfileSerializer(request.user.profile).data
-        user.update(profile)
-        return Response(wrap_data(user=user), status=status.HTTP_200_OK)
+        data = get_response_data(request.user)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class TwoFactorAuthView(APIView):

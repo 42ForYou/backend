@@ -17,6 +17,7 @@ from livegame.SubGameSession.PaddleStatus import Player
 from livegame.SubGameResult import SubGameResult
 from livegame.SubGameConfig import get_default_subgame_config
 from livegame.SubGameSession.SIOAdapter import serialize_subgame_config
+import pong.settings as settings
 
 
 def is_power_of_two(n: int) -> bool:
@@ -68,7 +69,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             cookie_dict = dict(
                 item.split("=") for item in cookies.split("; ") if "=" in item
             )
-            token = cookie_dict.get("pong_token", None)
+            token = cookie_dict.get(settings.SIMPLE_JWT["AUTH_COOKIE"], None)
 
             if not token:
                 self.logger.warn("No token")

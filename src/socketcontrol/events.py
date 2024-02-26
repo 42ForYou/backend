@@ -91,7 +91,7 @@ async def connect(sid: str, environ: dict) -> None:
         cookie_dict = dict(
             item.split("=") for item in cookies.split("; ") if "=" in item
         )
-        token = cookie_dict.get("pong_token", None)
+        token = cookie_dict.get(settings.SIMPLE_JWT["AUTH_COOKIE"], None)
         if token:
             user = await get_user_by_token(token)
             session = await get_session(user, sid)
