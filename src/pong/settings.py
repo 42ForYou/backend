@@ -276,10 +276,10 @@ SIMPLE_JWT = {
     'ALGORITHM': 'HS256',
 
     # 액세스 토큰의 유효 기간
-    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=30),
+    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(days=1),
 
     # 리프레시 토큰의 유효 기간
-    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=2),
 
     # 회전(refresh) 시 새 리프레시 토큰의 유효 기간을 리셋할지 여부
     'ROTATE_REFRESH_TOKENS': False,
@@ -287,21 +287,15 @@ SIMPLE_JWT = {
     # 리프레시 토큰이 만료될 때 새로운 토큰 발급을 거부할지 여부
     'BLACKLIST_AFTER_ROTATION': True,
 
-    # 토큰의 `aud` 클레임 검증에 사용할 값
-    'AUDIENCE': None,
-
-    # 토큰의 `iss` 클레임 검증에 사용할 값
-    'ISSUER': None,
-
     # 토큰에 포함될 사용자 정의 클레임
     'USER_ID_FIELD': 'intra_id',
 
     # 사용자 정의 클레임의 필드 이름
     'USER_ID_CLAIM': 'intra_id',
 
-    'AUTH_COOKIE': 'pong_token',
+    'AUTH_COOKIE': 'pp_access_token',
 
-    'AUTH_COOKIE_REFRESH': 'refresh_token',
+    'AUTH_COOKIE_REFRESH': 'pp_refresh_token',
 
     # 사용자 모델의 필드를 통해 사용자를 인증할 때 사용할 필드
     'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
@@ -313,19 +307,13 @@ SIMPLE_JWT = {
     'VERIFYING_KEY': '',
 
     # 토큰에 포함될 헤더
-    'TOKEN_TYPE_CLAIM': 'JWT',
+    'TOKEN_TYPE_CLAIM': 'Type',
 
     # 토큰에 포함될 타입
     'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
 
     # JTI (JWT ID) 클레임을 사용할지 여부
     'JTI_CLAIM': 'jti',
-
-    # 슬라이딩 토큰의 유효 기간
-    'SLIDING_TOKEN_LIFETIME': datetime.timedelta(minutes=30),
-
-    # 슬라이딩 토큰 리프레시 유효 기간
-    'SLIDING_TOKEN_REFRESH_LIFETIME': datetime.timedelta(days=1),
 }
 
 
