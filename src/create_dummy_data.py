@@ -7,7 +7,6 @@ django.setup()
 from accounts.models import User, Profile
 from game.models import Game, GameRoom, GamePlayer
 from friends.models import Friend
-from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.tokens import RefreshToken
 from authentication.models import OAuth
 
@@ -32,8 +31,6 @@ def create_dummy_users(num_users=100):
             avatar="",
             two_factor_auth=False,
         )
-
-        Token.objects.create(user=user)
 
 
 def create_friends():
