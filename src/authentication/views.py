@@ -1,40 +1,23 @@
-from django.shortcuts import redirect
+from urllib.parse import quote
+
 from django.conf import settings
+
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth import logout
-from django.db.models import Prefetch
-from urllib.parse import quote
-from pong.utils import CustomError, wrap_data, CookieTokenAuthentication, send_email
+
+from pong.utils import CustomError, wrap_data, CookieTokenAuthentication
+
 from accounts.serializers import UserSerializer, ProfileSerializer
-from .models import TwoFactorAuth
-from accounts.models import User, Profile
+from accounts.models import User
 
 
-# TODO: Add check token when login
-# if request.COOKIES.get("pong_token"):
-#     token = request.COOKIES.get("pong_token")
-#     try:
-#         token = Token.objects.get(key=token)
-#         user = token.user
-#         user_serializer = UserSerializer(user).data
-#         profile_serializer = ProfileSerializer(user.profile).data
-#         return Response(
-#             wrap_data(user=user_serializer, profile=profile_serializer),
-#             status=status.HTTP_200_OK,
-#         )
-#     except Exception as e:
-#         response = Response(status=status.HTTP_400_BAD_REQUEST)
-#         response.delete_cookie("pong_token")
-#         return response
 class LoginView(APIView):
     authentication_classes = ()
     permission_classes = ()
 
     def get(self, request):
-        # TODO: Add check token when login
         redirect_url = quote(settings.CALLBACK_URL)
         url = f"{settings.OAUTH_URL}?client_id={settings.CLIENT_ID}&redirect_uri={redirect_url}&response_type=code"
         return Response(wrap_data(url=url), status=status.HTTP_200_OK)

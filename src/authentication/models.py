@@ -11,9 +11,9 @@ import pong.settings as settings
 
 class OAuth(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    access_token = models.CharField(max_length=100, unique=True)
-    refresh_token = models.CharField(max_length=100, unique=True)
-    token_type = models.CharField(max_length=100)
+    access_token = models.CharField(unique=True)
+    refresh_token = models.CharField(unique=True)
+    token_type = models.CharField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -22,7 +22,7 @@ class TwoFactorAuth(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, primary_key=True, related_name="two_factor_auth"
     )
-    secret_code = models.CharField(max_length=100, null=True)
+    secret_code = models.CharField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

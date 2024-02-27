@@ -1,20 +1,23 @@
 import requests
 import json
-from django.contrib.auth import login
+
 from django.conf import settings
-from django.forms import ValidationError
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
+
+from pong.utils import CustomError, wrap_data
+from pong.utils import CookieTokenAuthentication
+
 from accounts.models import User, Profile
 from accounts.serializers import (
     UserSerializer,
     ProfileSerializer,
 )
-from pong.utils import custom_exception_handler, CustomError, wrap_data, send_email
+
 from .models import OAuth, TwoFactorAuth
-from pong.utils import CookieTokenAuthentication
 
 
 class OAuthView(APIView):
