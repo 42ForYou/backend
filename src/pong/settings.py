@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure--tx=7@tvtt)n%fb-l*l-mp-xf(60x9o)&09z2lu%@@5#e-0ys0"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 APPEND_SLASH = True
 
@@ -51,9 +51,7 @@ INSTALLED_APPS = [
     "django_filters",
     "authentication",
     "game",
-    "drf_yasg",
     "socketcontrol",
-    "livechat",
     "livegame",
     "friends",
 ]
@@ -155,9 +153,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 
 REST_FRAMEWORK = {
-    # "DEFAULT_AUTHENTICATION_CLASSES": [
-    #     "pong.utils.CookieTokenAuthentication",
-    # ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 6,
     "PAGE_SIZE_QUERY_PARAM": "page_size",
