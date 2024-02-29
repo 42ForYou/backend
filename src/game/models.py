@@ -39,7 +39,9 @@ class GamePlayer(models.Model):
     )
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="game_player")
     nickname = models.CharField(max_length=50, default="anonymous")
-    rank = models.PositiveIntegerField(default=1)
+    rank = models.IntegerField(
+        default=-1
+    )  # -1: 우승, 0: 결승에서 탈락, 1: 4강에서 탈락 ...
 
     class Meta:
         unique_together = [["game", "user"]]
