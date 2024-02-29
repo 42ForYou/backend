@@ -274,6 +274,7 @@ class HistoryViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = Game.objects.all()
     lookup_field = "user__intra_id"
     lookup_url_kwarg = "intra_id"
+    serializer_class = GameSerializer
     authentication_classes = [CookieTokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -294,6 +295,7 @@ class StatsViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = Game.objects.all()
     lookup_field = "user__intra_id"
     lookup_url_kwarg = "intra_id"
+    serializer_class = GameSerializer
     authentication_classes = [CookieTokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
