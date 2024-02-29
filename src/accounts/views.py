@@ -18,12 +18,19 @@ from drf_yasg.utils import swagger_auto_schema
 from pong.utils import CookieTokenAuthentication, CustomError, wrap_data
 import hashlib
 import os
+import logging
 from django.core.files.storage import default_storage
 from rest_framework.parsers import MultiPartParser, JSONParser
 import json
 import pong.settings as settings
 from datetime import datetime
 from pong.utils import CustomPageNumberPagination
+from game.models import Game, GamePlayer, SubGame
+from game.serializers import GameSerializer, GamePlayerSerializer, SubGameSerializer
+from accounts.models import User
+
+
+logger = logging.getLogger(f"{__package__}.{__name__}")
 
 
 class IsOwner(permissions.BasePermission):
@@ -173,5 +180,53 @@ class UserSearchViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
             page = paginator.paginate_queryset(filtered_queryset, request)
             serializer = self.get_serializer(page, many=True)
             return paginator.get_paginated_response(serializer.data)
+        except Exception as e:
+            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
+
+
+def get_subgame_history_of_user(user: User):
+    result = []
+
+    for game in user.games.all():
+        game_player = GamePlayer.objects.filter(user=user, game=game).first()
+
+        if not game_player:
+            continue
+
+        result.append({})
+
+        result[-1]["game"] = GameSerializer(game).data
+        result[-1]["game_player"] = GamePlayerSerializer(game_player).data
+
+        all_sub_games = game.sub_games.all()
+        result[-1]["subgames"] = []
+
+        for sub_game in all_sub_games:
+            if not (
+                sub_game.player_a == game_player or sub_game.player_b == game_player
+            ):
+                continue
+
+            result[-1]["subgames"].append(SubGameSerializer(sub_game).data)
+
+    return result
+
+
+class HistoryViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    logger = logging.getLogger("HistoryViewSet")
+    queryset = Game.objects.all()
+    lookup_field = "user__intra_id"
+    lookup_url_kwarg = "intra_id"
+    authentication_classes = [CookieTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            user = User.objects.get(intra_id=kwargs["intra_id"])
+            self.logger.debug(f"got User: {user}")
+
+            result = get_subgame_history_of_user(user)
+            self.logger.debug(f"result {result}")
+            return Response(data=result, status=status.HTTP_200_OK)
         except Exception as e:
             raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
