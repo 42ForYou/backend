@@ -29,7 +29,7 @@ from pong.utils import CustomPageNumberPagination
 from game.models import Game, GamePlayer, SubGame
 from game.serializers import GameSerializer, GamePlayerSerializer, SubGameSerializer
 from accounts.models import User
-from accounts.GameHistory import get_subgame_history_of_user
+from accounts.GameHistory import get_game_histories_of_user
 
 
 logger = logging.getLogger(f"{__package__}.{__name__}")
@@ -256,9 +256,11 @@ class HistoryViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             user = User.objects.get(intra_id=kwargs["intra_id"])
             self.logger.debug(f"got User: {user}")
 
-            result = get_subgame_history_of_user(user)
-            self.logger.debug(f"result {result}")
-            return Response(data=result, status=status.HTTP_200_OK)
+            histories = get_game_histories_of_user(user)
+            self.logger.debug(f"result {histories}")
+
+            dict_histories = [history.to_dict() for history in histories]
+            return Response(data=dict_histories, status=status.HTTP_200_OK)
         except Exception as e:
             raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -277,10 +279,10 @@ class StatsViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             user = User.objects.get(intra_id=kwargs["intra_id"])
             self.logger.debug(f"got User: {user}")
 
-            result = get_subgame_history_of_user(user)
-            self.logger.debug(f"result {result}")
+            histories = get_game_histories_of_user(user)
+            self.logger.debug(f"result {histories}")
 
-            stats = subgame_history_to_stats(result)
+            stats = subgame_history_to_stats(histories)
             self.logger.debug(f"stats {stats}")
 
             return Response(data=stats, status=status.HTTP_200_OK)

@@ -24,8 +24,8 @@ class GameHistory:
         }
 
 
-def get_subgame_history_of_user(user: User):
-    result = []
+def get_game_histories_of_user(user: User):
+    result: List[GameHistory] = []
 
     for game in user.games.all():
         game_player = GamePlayer.objects.filter(user=user, game=game).first()
@@ -33,6 +33,6 @@ def get_subgame_history_of_user(user: User):
         if not game_player:
             continue
 
-        result.append(GameHistory(game, game_player).to_dict())
+        result.append(GameHistory(game, game_player))
 
     return result
