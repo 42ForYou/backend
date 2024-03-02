@@ -81,11 +81,8 @@ class GameRoomViewSet(
                         exception='Invalid filter value. Expected "tournament" or "dual"',
                         status_code=status.HTTP_400_BAD_REQUEST,
                     )
-                is_tournament = False
-                if filter == "tournament":
-                    is_tournament = True
                 game_rooms = GameRoom.objects.filter(
-                    game__is_tournament=is_tournament
+                    game__is_tournament=filter == "tournament"
                 ).order_by("id")
             else:
                 game_rooms = GameRoom.objects.all().order_by("id")
