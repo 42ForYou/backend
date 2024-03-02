@@ -203,20 +203,20 @@ class SubGameSession(socketio.AsyncNamespace):
             )
 
             return TurnResult.DEFENDED
-        else:
-            # fail to defend, scoring, reset
-            self.paddle_offense.score += 1
-            self.logger.debug(f"Player {self.paddle_offense.player} scored")
-            await self.emit_update_scores()
-            self.logger.debug(
-                f"Player {self.paddle_offense.player.name} scores to {self.paddle_offense.score}"
-            )
-            new_dx, new_dy = self.balltrack.next_dx_dy
-            self.balltrack = BallTrack(self.config, 0, 0, new_dx, new_dy, new_t)
-            if self.paddle_offense.player == Player.A:
-                return TurnResult.A_SCORED
-            else:
-                return TurnResult.B_SCORED
+
+        # fail to defend, scoring, reset
+        self.paddle_offense.score += 1
+        self.logger.debug(f"Player {self.paddle_offense.player} scored")
+        await self.emit_update_scores()
+        self.logger.debug(
+            f"Player {self.paddle_offense.player.name} scores to {self.paddle_offense.score}"
+        )
+        new_dx, new_dy = self.balltrack.next_dx_dy
+        self.balltrack = BallTrack(self.config, 0, 0, new_dx, new_dy, new_t)
+        if self.paddle_offense.player == Player.A:
+            return TurnResult.A_SCORED
+
+        return TurnResult.B_SCORED
 
     async def emit_start(self) -> None:
         event = "start"

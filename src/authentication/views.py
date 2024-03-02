@@ -80,10 +80,10 @@ class TwoFactorAuthView(APIView):
                     "pong_token", token.key, httponly=True, samesite=None
                 )  # remove samesite=strict for development
                 return response
-            else:
-                return Response(
-                    data={"error": "Invalid Code"}, status=status.HTTP_401_UNAUTHORIZED
-                )
+
+            return Response(
+                data={"error": "Invalid Code"}, status=status.HTTP_401_UNAUTHORIZED
+            )
         except Exception as e:
             raise CustomError(
                 exception=e, model_name="user", status_code=status.HTTP_400_BAD_REQUEST
