@@ -51,16 +51,16 @@ class FriendViewSet(
         try:
             paginator = CustomPageNumberPagination()
             user = request.user
-            filter = request.query_params.get("filter", None)
-            if filter in ["pending", "friend"]:
-                if filter == "pending":
+            filter_val = request.query_params.get("filter", None)
+            if filter_val in ["pending", "friend"]:
+                if filter_val == "pending":
                     queryset = self.get_queryset().filter(
                         receiver=user, status="pending"
                     )
-                elif filter == "friend":
+                elif filter_val == "friend":
                     queryset = self.get_queryset().filter(
                         Q(requester=request.user) | Q(receiver=request.user),
-                        status=filter,
+                        status=filter_val,
                     )
             else:
                 raise CustomError(
@@ -68,7 +68,7 @@ class FriendViewSet(
                 )
             context = paginator.paginate_queryset(queryset, request)
             friends = FriendSerializer(
-                context, many=True, context={"request": request, "filter": filter}
+                context, many=True, context={"request": request, "filter": filter_val}
             )
             return paginator.get_paginated_response(friends.data)
         except Exception as e:

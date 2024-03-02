@@ -24,7 +24,7 @@ class FriendSerializer(serializers.ModelSerializer):
 
         # context에서 request를 가져옵니다.
         request = self.context.get("request")
-        filter = self.context.get("filter", None)
+        filter_val = self.context.get("filter", None)
 
         # 현재 요청 사용자가 requester인지 receiver인지 확인합니다.
         if request and hasattr(request, "user"):
@@ -39,7 +39,7 @@ class FriendSerializer(serializers.ModelSerializer):
             # 결과 데이터를 "me"와 "friend"로 구성합니다.
             ret["me"] = me
             ret["friend"] = friend
-            if filter == "friend" and instance.status == "friend":
+            if filter_val == "friend" and instance.status == "friend":
                 ret["friend"].update(
                     {
                         "is_online": User.objects.get(

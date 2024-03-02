@@ -24,9 +24,9 @@ from .serializers import (
 from .databaseio import get_single_game_room, create_game
 
 
-def get_game_room(id):
+def get_game_room(gameroom_id):
     try:
-        return GameRoom.objects.get(id=id)
+        return GameRoom.objects.get(id=gameroom_id)
     except GameRoom.DoesNotExist:
         return None
 
@@ -62,15 +62,15 @@ class GameRoomViewSet(
     def list(self, request):
         try:
             paginator = CustomPageNumberPagination()
-            filter = request.query_params.get("filter", None)
-            if filter:
-                if filter not in ["tournament", "dual"]:
+            filter_val = request.query_params.get("filter", None)
+            if filter_val:
+                if filter_val not in ["tournament", "dual"]:
                     raise CustomError(
                         exception='Invalid filter value. Expected "tournament" or "dual"',
                         status_code=status.HTTP_400_BAD_REQUEST,
                     )
                 is_tournament = False
-                if filter == "tournament":
+                if filter_val == "tournament":
                     is_tournament = True
                 game_rooms = GameRoom.objects.filter(
                     game__is_tournament=is_tournament
