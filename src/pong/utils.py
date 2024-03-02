@@ -66,7 +66,9 @@ class CookieTokenAuthentication(BaseAuthentication):
         try:
             token = Token.objects.get(key=token_key)
         except Token.DoesNotExist:
-            raise CustomError("Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
+            raise CustomError(
+                "Invalid token", status_code=status.HTTP_401_UNAUTHORIZED
+            ) from e
 
         return (token.user, token)
 
