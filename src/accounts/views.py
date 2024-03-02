@@ -29,6 +29,7 @@ from pong.utils import CustomPageNumberPagination
 from game.models import Game, GamePlayer, SubGame
 from game.serializers import GameSerializer, GamePlayerSerializer, SubGameSerializer
 from accounts.models import User
+from accounts.GameHistory import get_subgame_history_of_user
 
 
 logger = logging.getLogger(f"{__package__}.{__name__}")
@@ -183,34 +184,6 @@ class UserSearchViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
             return paginator.get_paginated_response(serializer.data)
         except Exception as e:
             raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
-
-
-def get_subgame_history_of_user(user: User):
-    result = []
-
-    for game in user.games.all():
-        game_player = GamePlayer.objects.filter(user=user, game=game).first()
-
-        if not game_player:
-            continue
-
-        result.append({})
-
-        result[-1]["game"] = GameSerializer(game).data
-        result[-1]["game_player"] = GamePlayerSerializer(game_player).data
-
-        all_sub_games = game.sub_games.all()
-        result[-1]["subgames"] = []
-
-        for sub_game in all_sub_games:
-            if not (
-                sub_game.player_a == game_player or sub_game.player_b == game_player
-            ):
-                continue
-
-            result[-1]["subgames"].append(SubGameSerializer(sub_game).data)
-
-    return result
 
 
 def subgame_history_to_stats(history):
