@@ -2,7 +2,7 @@ import time
 import math
 import asyncio
 import logging
-from typing import Dict
+from typing import Dict, Union
 from enum import Enum
 import socketio
 
@@ -37,6 +37,11 @@ class SubGameSession(socketio.AsyncNamespace):
         self.logger = logging.getLogger(
             f"{__package__}.{self.__class__.__name__}.{idx_rank}.{idx_in_rank}"
         )
+
+        self.t_start: Union[None, float] = None
+        self.balltrack: Union[None, BallTrack] = None
+        self.paddle_offense: Union[None, PaddleStatus] = None
+        self.paddle_defense: Union[None, PaddleStatus] = None
 
         self.config = config
         if self.config.flt_eq(ball_init_dx, 0.0):
