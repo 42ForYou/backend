@@ -40,12 +40,12 @@ def create_dummy_users(num_users=100):
 def create_friends():
     users = User.objects.exclude(username="admin")
 
-    for i in range(len(users)):
-        for j in range(i + 1, len(users)):
+    for i, user_req in enumerate(users):
+        for j, user_recv in enumerate(i + 1, users):
             status = "friend" if (i + j) % 2 == 0 else "pending"
             Friend.objects.create(
-                requester=users[i],
-                receiver=users[j],
+                requester=user_req,
+                receiver=user_recv,
                 status=status,
             )
 
