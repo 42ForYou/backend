@@ -88,7 +88,7 @@ class GameRoomSession(socketio.AsyncNamespace):
     async def on_disconnect(self, sid):
         self.logger.debug(f"disconnect from sid {self.sid_to_user_data[sid].intra_id}")
 
-        if self.is_playing == False:
+        if not self.is_playing:
             del self.sid_to_user_data[sid]
             return
 

@@ -33,7 +33,7 @@ def get_game_room(id):
 
 def delete_game_room(game_room):
     try:
-        if game_room.is_playing == False:
+        if not game_room.is_playing:
             game = game_room.game
             game.delete()
         else:
@@ -218,7 +218,7 @@ class PlayerViewSet(
                 )
             game = Game.objects.get(game_id=game_id)
             game_room = game.game_room
-            if game_room.is_playing == True:
+            if game_room.is_playing:
                 raise CustomError(
                     "The game room is already started",
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -276,7 +276,7 @@ class PlayerViewSet(
                     {"message": "The host left the game room"},
                     status=status.HTTP_204_NO_CONTENT,
                 )
-            if game_room.is_playing == False:
+            if not game_room.is_playing:
                 player = GamePlayer.objects.get(game=game, user=user)
                 player.delete()
                 game_room.join_players -= 1
@@ -296,7 +296,7 @@ class PlayerViewSet(
     def user_already_in_same_game_room(self, user, game):
         if (
             GamePlayer.objects.filter(user=user, game=game).exists()
-            and game.game_room.is_playing == False
+            and not game.game_room.is_playing
         ):
             return True
         return False
@@ -304,7 +304,7 @@ class PlayerViewSet(
     def user_already_in_other_game_room(self, user, game):
         if GamePlayer.objects.filter(user=user, game=game).exists():
             return True
-        if game.game_room.is_playing == True:
+        if game.game_room.is_playing:
             return True
         return False
 
