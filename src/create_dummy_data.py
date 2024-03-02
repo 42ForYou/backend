@@ -5,10 +5,10 @@ import django
 django.setup()
 
 # pylint: disable=wrong-import-position
+from rest_framework.authtoken.models import Token
 from accounts.models import User, Profile
 from game.models import Game, GameRoom, GamePlayer
 from friends.models import Friend
-from rest_framework.authtoken.models import Token
 
 # pylint: enable=wrong-import-position
 

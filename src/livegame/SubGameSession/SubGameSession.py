@@ -1,17 +1,17 @@
 import time
 import math
 import asyncio
-import socketio
 import logging
 from typing import Dict
 from enum import Enum
+import socketio
 
 from accounts.models import User
 from socketcontrol.events import sio, get_user_by_token
-from livegame.SubGameConfig import SubGameConfig
-from livegame.SubGameSession.PaddleStatus import PaddleStatus, KeyInput, Player
-from livegame.SubGameSession.BallTrack import BallTrack
-from livegame.SubGameSession.SIOAdapter import serialize_balltrack
+from ..SubGameConfig import SubGameConfig
+from .PaddleStatus import PaddleStatus, KeyInput, Player
+from .BallTrack import BallTrack
+from .SIOAdapter import serialize_balltrack
 
 
 class TurnResult(Enum):
