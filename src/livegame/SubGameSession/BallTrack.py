@@ -83,4 +83,8 @@ class BallTrack:
         pts = [f"({seg.x_start}, {seg.y_start})" for seg in self.segments]
         pts.append(f"({self.segments[-1].x_end}, {self.segments[-1].y_end})")
         pts_str = " > ".join(pts)
-        return f"BallTrack {self.heading.name}, dt={self.t_duration}, t={self.t_start}...{self.t_end}, v={self.v}, {pts_str}"
+        return (
+            f"BallTrack {self.heading.name}, "
+            f"dt={self.t_duration}, t={self.t_start}...{self.t_end}, "
+            f"v={self.v}, {pts_str}"
+        )

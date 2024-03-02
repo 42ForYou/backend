@@ -63,7 +63,8 @@ class PaddleStatus:
         elif key_input.action == KeyInput.Action.RELEASE:
             self.key_pressed[key_input.key] = False
 
-            # When releasing, if other key remains being pressed, update dy according to remaining key
+            # When releasing, if other key remains being pressed,
+            # update dy according to remaining key
             # if no key is pressed, update dy to 0
             if key_input.key == KeyInput.Key.UP:
                 if self.key_pressed[KeyInput.Key.DOWN]:

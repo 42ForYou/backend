@@ -53,4 +53,8 @@ class SubGameResult:
             raise ValueError(f"Invalid winner value: {self.winner}")
 
     def __str__(self) -> str:
-        return f"SubGameResult({self.session}, a = {self.user_data_a.intra_id}, b = {self.user_data_b.intra_id}, winner = {self.winner})"
+        return (
+            f"SubGameResult({self.session}, "
+            f"a = {self.user_data_a.intra_id}, b = {self.user_data_b.intra_id}, "
+            f"winner = {self.winner})"
+        )

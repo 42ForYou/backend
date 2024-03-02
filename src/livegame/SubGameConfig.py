@@ -29,7 +29,23 @@ class SubGameConfig:
         delay_time_after_rank_end: float,
     ) -> None:
         logger.info(
-            f"Create SubGameConfig with args: width: {width}, height: {height}, match_point: {match_point}, player_a_init_point: {player_a_init_point}, player_b_init_point: {player_b_init_point}, paddle_len: {paddle_len}, paddle_speed: {paddle_speed}, epsilon: {epsilon}, ball_init_x: {ball_init_x}, ball_init_y: {ball_init_y}, ball_speed: {ball_speed}, time_limit: {time_limit}, time_before_start: {delay_time_before_rank_start}"
+            f"Created SubGameConfig with args: "
+            f"width: {width}, "
+            f"height: {height}, "
+            f"match_point: {match_point}, "
+            f"player_a_init_point: {player_a_init_point}, "
+            f"player_b_init_point: {player_b_init_point}, "
+            f"paddle_len: {paddle_len}, "
+            f"paddle_speed: {paddle_speed}, "
+            f"paddle_init_y: {paddle_init_y}, "
+            f"epsilon: {epsilon}, "
+            f"ball_init_x: {ball_init_x}, "
+            f"ball_init_y: {ball_init_y}, "
+            f"ball_speed: {ball_speed}, "
+            f"time_limit: {time_limit}, "
+            f"delay_time_before_rank_start: {delay_time_before_rank_start}, "
+            f"delay_time_before_subgame_start: {delay_time_before_subgame_start}, "
+            f"delay_time_after_rank_end: {delay_time_after_rank_end}, "
         )
         self.width = width
         self.height = height
@@ -53,7 +69,11 @@ class SubGameConfig:
         self.t_delay_rank_end = delay_time_after_rank_end
 
     def __str__(self) -> str:
-        return f"SubGameConfig {self.width} * {self.height} (e={self.e}), v_paddle={self.v_paddle}, l_paddle={self.l_paddle}, {self.x_min} <= x <= {self.x_max}, {self.y_min} <= y <= {self.y_max}"
+        return (
+            f"SubGameConfig {self.width} * {self.height} (e={self.e}), "
+            f"v_paddle={self.v_paddle}, l_paddle={self.l_paddle}, "
+            f"{self.x_min} <= x <= {self.x_max}, {self.y_min} <= y <= {self.y_max}"
+        )
 
     # Checks whether two numbers can be considered equal (difference is within epsilon)
     def flt_eq(self, a: float, b: float) -> bool:

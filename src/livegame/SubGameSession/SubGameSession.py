@@ -112,7 +112,8 @@ class SubGameSession(socketio.AsyncNamespace):
         self.paddles[player].update_key(key_input)
         self.paddles[player].update(time.time())
         self.logger.debug(
-            f"Update player {player.name} key to {key_input}, y={self.paddles[player].y} dy={self.paddles[player].dy}"
+            f"Update player {player.name} key to {key_input}, "
+            f"y={self.paddles[player].y} dy={self.paddles[player].dy}"
         )
 
         self.emit_update_track_paddle(self.paddles[player])

@@ -17,7 +17,10 @@ class LoginView(APIView):
 
     def get(self, request):
         redirect_url = quote(settings.CALLBACK_URL)
-        url = f"{settings.OAUTH_URL}?client_id={settings.CLIENT_ID}&redirect_uri={redirect_url}&response_type=code"
+        url = (
+            f"{settings.OAUTH_URL}?client_id={settings.CLIENT_ID}"
+            f"&redirect_uri={redirect_url}&response_type=code"
+        )
         return Response(wrap_data(url=url), status=status.HTTP_200_OK)
 
 

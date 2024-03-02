@@ -283,7 +283,9 @@ class GameRoomSession(socketio.AsyncNamespace):
 
         if int(math.pow(2, self.n_ranks - 1)) != self.n_players / 2:
             raise ValueError(
-                f"Error while building tournament tree: n_players / 2 {self.n_players / 2} != int(math.pow(2, self.n_ranks - 1)) {int(math.pow(2, self.n_ranks - 1))}"
+                f"Error while building tournament tree: "
+                f"n_players / 2 {self.n_players / 2} != int(math.pow(2, self.n_ranks - 1)) "
+                f"{int(math.pow(2, self.n_ranks - 1))}"
             )
 
         # fill actual determined values for subgames in the lowest rank
