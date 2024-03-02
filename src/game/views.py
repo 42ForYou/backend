@@ -189,7 +189,7 @@ class PlayerViewSet(
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieTokenAuthentication]
 
-    def list(self, request, game_id, *_, **__):
+    def list(self, request, *_, **__):
         try:
             game_id = request.query_params.get("game_id", None)
             if not game_id:
