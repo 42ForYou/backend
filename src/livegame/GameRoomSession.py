@@ -3,7 +3,6 @@ import math
 import time
 import asyncio
 import logging
-from datetime import datetime
 from typing import Dict, List
 
 import socketio
@@ -184,12 +183,8 @@ class GameRoomSession(socketio.AsyncNamespace):
 
             for subgame_result in self.tournament_tree[self.rank_ongoing]:
                 # 시작 - 종료 시간 반영
-                subgame_result.t_start = datetime.fromtimestamp(
-                    subgame_result.session.t_start
-                )
-                subgame_result.t_end = datetime.fromtimestamp(
-                    subgame_result.session.t_end
-                )
+                subgame_result.t_start = subgame_result.session.t_start
+                subgame_result.t_end = subgame_result.session.t_end
                 # 이번 rank의 SubGameResult들 un-register
                 sio.namespace_handlers.pop(subgame_result.session.namespace)
 

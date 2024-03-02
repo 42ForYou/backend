@@ -73,8 +73,8 @@ class SubGame(models.Model):
 
     winner = models.CharField(max_length=1)  # "A" or "B"
 
-    t_start = models.TimeField(auto_now=False, auto_now_add=False)
-    t_end = models.TimeField(auto_now=False, auto_now_add=False)
+    t_start = models.FloatField(default=0.0)
+    t_end = models.FloatField(default=0.0)
 
     def __str__(self):
         return f"SubGame rank {self.rank}, [{self.idx_in_rank}] in Game {self.game_id}"

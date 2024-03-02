@@ -1,5 +1,4 @@
 from typing import Dict, Union
-from datetime import datetime
 
 from accounts.models import UserDataCache
 from livegame.SubGameSession.SubGameSession import SubGameSession
@@ -13,8 +12,8 @@ class SubGameResult:
         self.user_data_a: Union[UserDataCache, None] = None
         self.user_data_b: Union[UserDataCache, None] = None
         self.winner: Union[str, None] = None
-        self.t_start: Union[datetime, None] = None
-        self.t_end: Union[datetime, None] = None
+        self.t_start: Union[float, None] = None
+        self.t_end: Union[float, None] = None
 
     def to_dict(self) -> dict:
         result = {
