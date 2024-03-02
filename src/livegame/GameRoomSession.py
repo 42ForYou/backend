@@ -72,7 +72,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             token = cookie_dict.get("pong_token", None)
 
             if not token:
-                self.logger.warn("No token")
+                self.logger.warning("No token")
                 await self.disconnect(sid)
 
             user: User = await get_user_by_token(token)
@@ -108,7 +108,7 @@ class GameRoomSession(socketio.AsyncNamespace):
         self.logger.debug(f"exited from sid {sid}")
 
         if self.is_playing:
-            self.logger.warn(
+            self.logger.warning(
                 f"Player exiting while game is playing: {sid} ({self.sid_to_user_data[sid]})"
             )
             return
@@ -130,7 +130,7 @@ class GameRoomSession(socketio.AsyncNamespace):
     async def on_start(self, sid, data):
         self.logger.info(f"start from sid {sid}")
         if not self.is_host(sid):
-            self.logger.warn(
+            self.logger.warning(
                 f"Player pressing start button is not host: {sid} ({self.sid_to_user_data[sid]})"
             )
             return
