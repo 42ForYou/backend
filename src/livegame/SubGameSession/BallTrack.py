@@ -67,7 +67,7 @@ class BallTrack:
             raise ValueError("Error while calculating ball's movement")
 
         self.y_impact = self.segments[-1].y_end
-        len_total = sum([seg.len for seg in self.segments])
+        len_total = sum(seg.len for seg in self.segments)
         self.t_duration = len_total / self.v  # v * t = d, t = d / v
         self.t_end = self.t_start + self.t_duration
 
