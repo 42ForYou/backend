@@ -30,6 +30,7 @@ from game.models import Game, GamePlayer, SubGame
 from game.serializers import GameSerializer, GamePlayerSerializer, SubGameSerializer
 from accounts.models import User
 from accounts.GameHistory import get_game_histories_of_user
+from accounts.GameStats import GameStats
 
 
 logger = logging.getLogger(f"{__package__}.{__name__}")
@@ -186,62 +187,6 @@ class UserSearchViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
             raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
 
 
-def subgame_history_to_stats(history):
-    result = {
-        "n_dual_match": 0,  # 총 1대1 대전 횟수
-        "n_dual_wins": 0,  # 1대1 대전 승리 횟수
-        "n_dual_looses": 0,  # 1대1 대전 패배 횟수
-        "n_tournaments": 0,  # 토너먼트 참가 횟수
-        "tournament_stats": [],  # 토너먼트 기록
-    }
-
-    def find_tournament_stat(n_players):
-        n_ranks = int(math.log2(n_players))
-        for stat in result["tournament_stats"]:
-            if stat["n_ranks"] == n_ranks:
-                return stat
-
-        result["tournament_stats"].append(
-            {
-                "n_ranks": n_ranks,
-                "n_plays": 0,
-                "stats": [
-                    {"final_rank": i, "n_tournaments": 0} for i in range(-1, n_ranks)
-                ],
-            }
-        )
-        return result["tournament_stats"][-1]
-
-    def find_final_rank_stat(tournament_stat: dict, final_rank):
-        for rank_data in tournament_stat["stats"]:
-            if rank_data["final_rank"] == final_rank:
-                return rank_data
-        raise Exception(f"{final_rank} not found in {tournament_stat}")
-
-    for game_history in history:
-        game = game_history["game"]
-        player = game_history["game_player"]
-        player_id = player["id"]
-        subgames = game_history["subgames"]
-
-        if game["is_tournament"]:
-            result["n_tournaments"] += 1
-            tournament_stat = find_tournament_stat(game["n_players"])
-            final_rank_stat = find_final_rank_stat(tournament_stat, player["rank"])
-            final_rank_stat["n_tournaments"] += 1
-        else:
-            result["n_dual_match"] += 1
-            subgame = subgames[0]
-            winner = subgame["winner"]
-            winner_id = subgame["player_a"] if winner == "A" else subgame["player_b"]
-            if winner_id == player_id:
-                result["n_dual_wins"] += 1
-            else:
-                result["n_dual_looses"] += 1
-
-    return result
-
-
 class HistoryViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     logger = logging.getLogger("HistoryViewSet")
     queryset = Game.objects.all()
@@ -282,9 +227,9 @@ class StatsViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             histories = get_game_histories_of_user(user)
             self.logger.debug(f"result {histories}")
 
-            stats = subgame_history_to_stats(histories)
+            stats = GameStats(histories)
             self.logger.debug(f"stats {stats}")
 
-            return Response(data=stats, status=status.HTTP_200_OK)
+            return Response(data=stats.to_dict(), status=status.HTTP_200_OK)
         except Exception as e:
             raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
