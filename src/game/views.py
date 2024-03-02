@@ -47,6 +47,7 @@ class IsPlayerInGameRoom(permissions.BasePermission):
         return obj.game.game_player.filter(user=request.user).exists()
 
 
+# pylint: disable=too-many-ancestors
 class GameRoomViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
@@ -349,3 +350,6 @@ class SubGameViewSet(
 ):
     queryset = SubGame.objects.all()
     serializer_class = SubGameSerializer
+
+
+# pylint: enable=too-many-ancestors

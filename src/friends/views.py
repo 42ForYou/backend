@@ -15,6 +15,7 @@ from .models import Friend
 from .serializers import FriendSerializer
 
 
+# pylint: disable=too-many-ancestors
 class FriendViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
@@ -72,7 +73,9 @@ class FriendViewSet(
             )
             return paginator.get_paginated_response(friends.data)
         except Exception as e:
-            raise CustomError(e, "Friend", status_code=status.HTTP_400_BAD_REQUEST) from e
+            raise CustomError(
+                e, "Friend", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
     def update(self, request, *args, **kwargs):
         try:
@@ -89,7 +92,9 @@ class FriendViewSet(
             )
             return Response({"data": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
-            raise CustomError(e, "Friend", status_code=status.HTTP_400_BAD_REQUEST) from e
+            raise CustomError(
+                e, "Friend", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
     def destroy(self, request, *args, **kwargs):
         try:
@@ -107,4 +112,9 @@ class FriendViewSet(
             friend_instance.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
-            raise CustomError(e, "Friend", status_code=status.HTTP_400_BAD_REQUEST) from e
+            raise CustomError(
+                e, "Friend", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
+
+
+# pylint: enable=too-many-ancestors
