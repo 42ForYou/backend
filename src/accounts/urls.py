@@ -1,5 +1,6 @@
 from django.urls import path, include
 from rest_framework import routers
+
 from .views import ProfileViewSet, UserSearchViewset
 
 router = routers.DefaultRouter()

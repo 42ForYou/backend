@@ -1,7 +1,8 @@
+from rest_framework import status
+
+from pong.utils import CustomError
 from .models import GameRoom
 from .serializers import GameRoomSerializer, GameSerializer, GamePlayerSerializer
-from pong.utils import CustomError, wrap_data
-from rest_framework import status
 
 
 def get_single_game_room(game_room_id):

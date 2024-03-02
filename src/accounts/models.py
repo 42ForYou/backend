@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from asgiref.sync import sync_to_async
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from asgiref.sync import sync_to_async
 
 
 class User(AbstractUser):

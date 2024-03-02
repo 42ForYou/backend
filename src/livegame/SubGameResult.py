@@ -1,7 +1,7 @@
 from typing import Dict, Union
 
 from accounts.models import UserDataCache
-from livegame.SubGameSession.SubGameSession import SubGameSession
+from .SubGameSession.SubGameSession import SubGameSession
 
 
 class SubGameResult:

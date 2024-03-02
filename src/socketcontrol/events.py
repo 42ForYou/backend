@@ -1,13 +1,14 @@
 import socketio
 import logging
 
-from asgiref.sync import sync_to_async
 from django.db.models import Q
+from asgiref.sync import sync_to_async
 from rest_framework.authtoken.models import Token
-from .models import SocketSession
+
+from pong.settings import CORS_ALLOWED_ORIGINS
 from friends.serializers import FriendUserSerializer
 from friends.models import Friend
-import pong.settings as settings
+from .models import SocketSession
 
 
 """
@@ -18,7 +19,7 @@ connect, disconnect 는 socketio 라이브러리에서 자동으로 등록된다
 
 sio = socketio.AsyncServer(
     async_mode="asgi",
-    cors_allowed_origins=settings.CORS_ALLOWED_ORIGINS,
+    cors_allowed_origins=CORS_ALLOWED_ORIGINS,
     logger=logging.getLogger("socketio.server"),
     engineio_logger=logging.getLogger("socketio.engineio"),
 )
