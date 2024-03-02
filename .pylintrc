@@ -1,5 +1,6 @@
 [MASTER]
 load-plugins=pylint_django
+ignore=migrations,tests
 
 [MESSAGES CONTROL]
 disable=
