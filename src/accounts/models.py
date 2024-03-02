@@ -19,7 +19,7 @@ class UserDataCache:
     nickname: str
     avatar: str
 
-    def to_json(self) -> dict:
+    def to_dict(self) -> dict:
         return {
             "intra_id": self.intra_id,
             "nickname": self.nickname,

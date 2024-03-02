@@ -4,3 +4,4 @@
 .env.dev
 *.pyc
 .DS_Store
+logs/*

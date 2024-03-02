@@ -143,12 +143,12 @@ class GameRoomSession(socketio.AsyncNamespace):
         await self.emit_update_tournament()
 
         while self.rank_ongoing >= 0:
-            for idx_in_rank, subgame_item in enumerate(
+            for idx_in_rank, subgame_result in enumerate(
                 self.tournament_tree[self.rank_ongoing]  # 이번 rank의 SubGameResult들
             ):
-                player_data_a = self.sid_to_user_data[subgame_item.sid_a]
-                player_data_b = self.sid_to_user_data[subgame_item.sid_b]
-                subgame_item.session = SubGameSession(
+                player_data_a = self.sid_to_user_data[subgame_result.sid_a]
+                player_data_b = self.sid_to_user_data[subgame_result.sid_b]
+                subgame_result.session = SubGameSession(
                     config=self.config,
                     gameroom_session=self,
                     intra_id_a=player_data_a.intra_id,
@@ -159,7 +159,7 @@ class GameRoomSession(socketio.AsyncNamespace):
                     ball_init_dx=math.sqrt(2) * self.config.v_ball,
                     ball_init_dy=math.sqrt(2) * self.config.v_ball,
                 )
-                sio.register_namespace(subgame_item.session)
+                sio.register_namespace(subgame_result.session)
 
             self.logger.debug(f"sleeping {self.config.t_delay_rank_start} seconds...")
             await asyncio.sleep(self.config.t_delay_rank_start)
@@ -181,9 +181,12 @@ class GameRoomSession(socketio.AsyncNamespace):
             self.logger.debug(f"sleeping {self.config.t_delay_rank_end} seconds...")
             await asyncio.sleep(self.config.t_delay_rank_end)
 
-            # 이번 rank의 SubGameResult들 un-register
-            for subgame_item in self.tournament_tree[self.rank_ongoing]:
-                sio.namespace_handlers.pop(subgame_item.session.namespace)
+            for subgame_result in self.tournament_tree[self.rank_ongoing]:
+                # 시작 - 종료 시간 반영
+                subgame_result.t_start = subgame_result.session.t_start
+                subgame_result.t_end = subgame_result.session.t_end
+                # 이번 rank의 SubGameResult들 un-register
+                sio.namespace_handlers.pop(subgame_result.session.namespace)
 
             self.update_tournament_tree(self.rank_ongoing, self.rank_ongoing - 1)
 
@@ -222,6 +225,8 @@ class GameRoomSession(socketio.AsyncNamespace):
                     point_a=subgame_result.session.paddles[Player.A].score,
                     point_b=subgame_result.session.paddles[Player.B].score,
                     winner=subgame_result.winner,
+                    t_start=subgame_result.t_start,
+                    t_end=subgame_result.t_end,
                 )
                 if subgame_result.winner == "A":
                     player_a.rank -= 1 if player_a.rank != 0 else 0
@@ -353,7 +358,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             "n_ranks": self.n_ranks,
             "rank_ongoing": self.rank_ongoing,
             "subgames": [
-                [subgame.to_json() for subgame in subgame_in_rank]
+                [subgame.to_dict() for subgame in subgame_in_rank]
                 for subgame_in_rank in self.tournament_tree
             ],
         }

@@ -150,6 +150,7 @@ class SubGameSession(socketio.AsyncNamespace):
             self.determine_winner(result)
 
             if self.winner != Player.NOBODY:
+                self.t_end = time.time()
                 await self.emit_ended()
                 await self.gr_session.report_winner_of_subgame(
                     self.idx_rank, self.idx_in_rank, self.winner
@@ -267,13 +268,7 @@ class SubGameSession(socketio.AsyncNamespace):
 
     async def emit_update_track_ball(self):
         event = "update_track_ball"
-        data = {
-            "t_event": self.balltrack.t_start,
-            "t_end": self.balltrack.t_end,
-            "heading": self.balltrack.heading.name,
-            "velocity": self.balltrack.v,
-            "segments": serialize_balltrack(self.balltrack),
-        }
+        data = serialize_balltrack(self.balltrack)
         # SIO: B>F update_track_ball
         await sio.emit(event, data=data, namespace=self.namespace)
         self.logger.debug(
@@ -296,7 +291,7 @@ class SubGameSession(socketio.AsyncNamespace):
 
     async def emit_ended(self):
         event = "ended"
-        data = {"t_event": time.time(), "winner": self.winner.name}
+        data = {"t_event": self.t_end, "winner": self.winner.name}
         # SIO: B>F ended
         await sio.emit(event, data=data, namespace=self.namespace)
         self.logger.debug(
