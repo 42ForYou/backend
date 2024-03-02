@@ -33,7 +33,7 @@ class OAuthView(APIView):
                 "pong_token", token.key, httponly=True, samesite=None
             )  # remove samesite=strict for development
             return response
-        except Exception as e:
+        except Exception as _:
             pass
 
         try:
@@ -57,7 +57,7 @@ class OAuthView(APIView):
             raise CustomError(e)
 
     def do_2fa(self, user):
-        two_factor_auth, created = TwoFactorAuth.objects.get_or_create(user=user)
+        two_factor_auth, _ = TwoFactorAuth.objects.get_or_create(user=user)
         two_factor_auth.send_secret_code()
 
     def request42OAuth(self, code):

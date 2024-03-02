@@ -69,7 +69,7 @@ def get_user_by_sid(sid):
 
 @sync_to_async
 def get_session(user, sid):
-    session, created = SocketSession.objects.update_or_create(
+    session, _ = SocketSession.objects.update_or_create(
         user=user, defaults={"session_id": sid}
     )
     return session
@@ -90,7 +90,7 @@ async def connect(sid: str, environ: dict) -> None:
         token = cookie_dict.get("pong_token", None)
         if token:
             user = await get_user_by_token(token)
-            session = await get_session(user, sid)
+            _ = await get_session(user, sid)
             user.is_online = True
             await sync_to_async(user.save)()
             friends_users = await get_friends(user)
