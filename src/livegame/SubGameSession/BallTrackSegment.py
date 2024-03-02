@@ -165,7 +165,7 @@ class BallTrackSegment:
             return
 
         if self.p_start == PointCategory.INVALID or self.p_end == PointCategory.INVALID:
-            raise ValueError(f"p_start or p_end is invalid")
+            raise ValueError("p_start or p_end is invalid")
         self.is_valid = True
 
 

@@ -177,7 +177,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
             # TODO: delete in production
             if not self.is_current_rank_done():
-                raise Exception(f"Logic error: current rank is not done...")
+                raise Exception("Logic error: current rank is not done...")
 
             self.logger.debug(f"sleeping {self.config.t_delay_rank_end} seconds...")
             await asyncio.sleep(self.config.t_delay_rank_end)
@@ -194,10 +194,10 @@ class GameRoomSession(socketio.AsyncNamespace):
 
             await self.emit_update_tournament()
 
-        self.logger.debug(f"Update database...")
+        self.logger.debug("Update database...")
         await self.update_database()
 
-        self.logger.info(f"GameRoom finished.")
+        self.logger.info("GameRoom finished.")
 
     @sync_to_async
     def update_database(self):
