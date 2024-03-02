@@ -1,11 +1,16 @@
+import random
+
 import django
 
 django.setup()
 
+# pylint: disable=wrong-import-position
 from accounts.models import User, Profile
 from game.models import Game, GameRoom, GamePlayer
 from friends.models import Friend
 from rest_framework.authtoken.models import Token
+
+# pylint: enable=wrong-import-position
 
 
 def create_dummy_users(num_users=100):
@@ -75,9 +80,6 @@ def create_game_room(num_games=50):
             nickname=profile.nickname,
             rank=0,
         )
-
-
-import random
 
 
 def assign_remaining_users_to_games(user_num):
