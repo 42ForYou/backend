@@ -268,13 +268,7 @@ class SubGameSession(socketio.AsyncNamespace):
 
     async def emit_update_track_ball(self):
         event = "update_track_ball"
-        data = {
-            "t_event": self.balltrack.t_start,
-            "t_end": self.balltrack.t_end,
-            "heading": self.balltrack.heading.name,
-            "velocity": self.balltrack.v,
-            "segments": serialize_balltrack(self.balltrack),
-        }
+        data = serialize_balltrack(self.balltrack)
         # SIO: B>F update_track_ball
         await sio.emit(event, data=data, namespace=self.namespace)
         self.logger.debug(

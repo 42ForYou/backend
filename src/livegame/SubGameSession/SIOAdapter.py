@@ -15,7 +15,13 @@ def serialize_balltracksegment(seg: BallTrackSegment):
 
 
 def serialize_balltrack(balltrack: BallTrack):
-    return [serialize_balltracksegment(seg) for seg in balltrack.segments]
+    return {
+        "t_event": balltrack.t_start,
+        "t_end": balltrack.t_end,
+        "heading": balltrack.heading.name,
+        "velocity": balltrack.v,
+        "segments": [serialize_balltracksegment(seg) for seg in balltrack.segments],
+    }
 
 
 def serialize_subgame_config(config: SubGameConfig):
