@@ -73,6 +73,7 @@ class OAuthView(APIView):
             settings.TOKEN_URL,
             data=json.dumps(data),
             headers=headers,
+            timeout=10,  # TODO: set timeout by envvar
         )
         if response.status_code != 200:
             raise CustomError(response.text, status_code=response.status_code)
@@ -82,6 +83,7 @@ class OAuthView(APIView):
         userData = requests.get(
             "https://api.intra.42.fr/v2/me",
             headers={"Authorization": "Bearer " + access_token},
+            timeout=10,  # TODO: set timeout by envvar
         )
         if userData.status_code != 200:
             raise CustomError(userData.text, status_code=userData.status_code)
@@ -99,6 +101,9 @@ class OAuthView(APIView):
         except User.DoesNotExist:
             pass
 
+        user = None
+        profile = None
+        oauth = None
         try:
             serializer = UserSerializer(data=data)
             serializer.is_valid(raise_exception=True)
