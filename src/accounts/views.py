@@ -198,6 +198,10 @@ class HistoryViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         # Override to satisfy DRF requirements, but not used for custom actions.
         pass
 
+    def get_serializer_class(self):
+        # Override to satisfy DRF requirements, but not used for custom actions.
+        pass
+
     def retrieve(self, request, *args, **kwargs):
         try:
             user = User.objects.get(intra_id=kwargs["intra_id"])
