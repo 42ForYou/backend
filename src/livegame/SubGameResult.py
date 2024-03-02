@@ -1,4 +1,5 @@
 from typing import Dict, Union
+from datetime import datetime
 
 from accounts.models import UserDataCache
 from livegame.SubGameSession.SubGameSession import SubGameSession
@@ -7,26 +8,22 @@ from livegame.SubGameSession.SubGameSession import SubGameSession
 class SubGameResult:
     def __init__(self, session: Union[SubGameSession, None]) -> None:
         self.session = session
-        self.sid_a = None
-        self.sid_b = None
-        self.user_data_a = None
-        self.user_data_b = None
-        self.winner = None
+        self.sid_a: Union[str, None] = None
+        self.sid_b: Union[str, None] = None
+        self.user_data_a: Union[UserDataCache, None] = None
+        self.user_data_b: Union[UserDataCache, None] = None
+        self.winner: Union[str, None] = None
+        self.t_start: Union[datetime, None] = None
+        self.t_end: Union[datetime, None] = None
 
-    def to_json(self) -> dict:
-        result = {}
-
-        if self.sid_a is None:
-            result["player_a"] = None
-        else:
-            result["player_a"] = self.user_data_a.to_json()
-
-        if self.sid_b is None:
-            result["player_b"] = None
-        else:
-            result["player_b"] = self.user_data_b.to_json()
-
-        result["winner"] = self.winner
+    def to_dict(self) -> dict:
+        result = {
+            "player_a": None if self.sid_a is None else self.user_data_a.to_dict(),
+            "player_b": None if self.sid_b is None else self.user_data_b.to_dict(),
+            "winner": self.winner,
+            "t_start": self.t_start,
+            "t_end": self.t_end,
+        }
 
         return result
 
