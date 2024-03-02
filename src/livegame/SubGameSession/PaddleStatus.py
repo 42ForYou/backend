@@ -42,10 +42,8 @@ class PaddleStatus:
         time_elapsed = time_now - self.t_last_updated
 
         new_y = self.y + self.dy * time_elapsed
-        if new_y > self.config.y_max:
-            new_y = self.config.y_max
-        if new_y < self.config.y_min:
-            new_y = self.config.y_min
+        new_y = min(new_y, self.config.y_max)
+        new_y = max(new_y, self.config.y_min)
         self.y = new_y
 
         self.t_last_updated = time_now
