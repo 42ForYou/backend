@@ -1,5 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import send_mail, EmailMessage
+from django.core.mail import EmailMessage
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authtoken.models import Token
