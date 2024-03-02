@@ -16,11 +16,20 @@ class GameHistory:
             if subgame.player_a == game_player or subgame.player_b == game_player
         ]
 
+    def serialize_subgame(self, subgame: SubGame) -> dict:
+        result = SubGameSerializer(subgame).data
+
+        result["game_player_won"] = (
+            subgame.winner == "A" and subgame.player_a.id == self.game_player.id
+        ) or (subgame.winner == "B" and subgame.player_b.id == self.game_player.id)
+
+        return result
+
     def to_dict(self):
         return {
             "game": GameSerializer(self.game).data,
             "game_player": GamePlayerSerializer(self.game_player).data,
-            "subgames": [SubGameSerializer(subgame).data for subgame in self.subgames],
+            "subgames": [self.serialize_subgame(subgame) for subgame in self.subgames],
         }
 
 
