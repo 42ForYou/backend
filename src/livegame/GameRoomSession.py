@@ -127,7 +127,7 @@ class GameRoomSession(socketio.AsyncNamespace):
         await self.emit_update_room(data, player_id_list, sid_list, am_i_host_list)
 
     # SIO: F>B start
-    async def on_start(self, sid, data):
+    async def on_start(self, sid, _):
         self.logger.info(f"start from sid {sid}")
         if not self.is_host(sid):
             self.logger.warning(
