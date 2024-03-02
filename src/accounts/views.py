@@ -189,12 +189,14 @@ class UserSearchViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 class HistoryViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     logger = logging.getLogger("HistoryViewSet")
-    queryset = Game.objects.all()
     lookup_field = "user__intra_id"
     lookup_url_kwarg = "intra_id"
-    serializer_class = GameSerializer
     authentication_classes = [CookieTokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Override to satisfy DRF requirements, but not used for custom actions.
+        pass
 
     def retrieve(self, request, *args, **kwargs):
         try:
