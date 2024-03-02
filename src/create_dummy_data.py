@@ -56,7 +56,7 @@ def create_game_room(num_games=50):
     ]  # 1부터 30까지의 사용자만 선택
 
     for i, user in enumerate(users):
-        is_tournament = True if (i + 1) % 3 == 0 else False
+        is_tournament = (i + 1) % 3 == 0
         n_players = 4 if is_tournament else 2
         game = Game.objects.create(
             is_tournament=is_tournament,
