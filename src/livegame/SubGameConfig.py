@@ -26,6 +26,7 @@ class SubGameConfig:
         time_limit: float,
         delay_time_before_rank_start: float,
         delay_time_before_subgame_start: float,
+        delay_time_after_scoring: float,
         delay_time_after_rank_end: float,
     ) -> None:
         logger.info(
@@ -50,6 +51,7 @@ class SubGameConfig:
         self.t_limit = time_limit
         self.t_delay_rank_start = delay_time_before_rank_start
         self.t_delay_subgame_start = delay_time_before_subgame_start
+        self.t_delay_scoring = delay_time_after_scoring
         self.t_delay_rank_end = delay_time_after_rank_end
 
     def __str__(self) -> str:
@@ -77,6 +79,9 @@ sgc_delay_time_before_rank_start = os.environ.get(
 sgc_delay_time_before_subgame_start = os.environ.get(
     "SUBGAMECONFIG_DELAY_TIME_BEFORE_SUBGAME_START", "3"
 )
+sgc_delay_time_after_scoring = os.environ.get(
+    "SUBGAMECONFIG_DELAY_TIME_AFTER_SCORING", "3"
+)
 sgc_delay_time_after_rank_end = os.environ.get(
     "SUBGAMECONFIG_DELAY_TIME_AFTER_RANK_END", "5"
 )
@@ -99,5 +104,6 @@ def get_default_subgame_config(game: Game) -> SubGameConfig:
         time_limit=game.time_limit,
         delay_time_before_rank_start=float(sgc_delay_time_before_rank_start),
         delay_time_before_subgame_start=float(sgc_delay_time_before_subgame_start),
+        delay_time_after_scoring=float(sgc_delay_time_after_scoring),
         delay_time_after_rank_end=float(sgc_delay_time_after_rank_end),
     )

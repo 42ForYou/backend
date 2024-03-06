@@ -44,6 +44,8 @@ def serialize_subgame_config(config: SubGameConfig):
         "delay_rank_start": config.t_delay_rank_start,
         # 각 서브게임 시작시, /subgame @start 부터 게임 시뮬레이션 개시까지 딜레이 시간
         "delay_subgame_start": config.t_delay_subgame_start,
+        # 한 플레이어가 득점 시 다음 턴 시작까지 딜레이 시간
+        "delay_scoring": config.t_delay_scoring,
         # 각 "강" 내부의 서브게임이 모두 끝난 후 다음 "강" 시작 /gameroom @update_tournament까지 딜레이 시간
         "delay_rank_end": config.t_delay_rank_end,
     }

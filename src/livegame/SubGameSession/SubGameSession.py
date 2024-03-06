@@ -146,11 +146,13 @@ class SubGameSession(socketio.AsyncNamespace):
 
         # run until score reaches matchpoint
         while True:
+            # emit balltrack
+            await self.emit_update_track_ball()
             # assign offense/defense players/paddles
-            result = await self.update_balltrack()
+            result = await self.wait_ball_travel()
             self.determine_winner(result)
 
-            if self.winner != Player.NOBODY:
+            if self.winner != Player.NOBODY:  # winner determined
                 self.t_end = time.time()
                 await self.emit_ended()
                 await self.gr_session.report_winner_of_subgame(
@@ -160,8 +162,30 @@ class SubGameSession(socketio.AsyncNamespace):
                 # TODO: disconnect all clients?
                 return
 
-            # emit balltrack
-            await self.emit_update_track_ball()
+            # winner not determined
+
+            if result == TurnResult.DEFENDED:
+                # success to defend, create reflection
+                new_x_start, new_y_start = self.balltrack.next_xy_start
+                new_dx, new_dy = self.balltrack.next_dx_dy
+                self.balltrack = BallTrack(
+                    self.config,
+                    new_x_start,
+                    new_y_start,
+                    new_dx,
+                    new_dy,
+                    time.time(),
+                )
+                continue
+
+            # scoring happens
+            self.logger.debug(
+                f"Scoring happened({result.name}), "
+                f"sleeping {self.config.t_delay_scoring} seconds"
+            )
+            await asyncio.sleep(self.config.t_delay_scoring)
+            new_dx, new_dy = self.balltrack.next_dx_dy
+            self.balltrack = BallTrack(self.config, 0, 0, new_dx, new_dy, time.time())
 
     def update_turns(self) -> None:
         if self.balltrack.heading == BallTrack.Heading.LEFT:
@@ -175,15 +199,16 @@ class SubGameSession(socketio.AsyncNamespace):
             f"Attack: {self.paddle_offense.player.name} -> {self.paddle_defense.player.name}"
         )
 
-    async def update_balltrack(self) -> TurnResult:
+    async def wait_ball_travel(self) -> TurnResult:
         self.update_turns()
 
         # await until ball hits the other side
-        await asyncio.sleep(self.balltrack.t_duration)
+        await asyncio.sleep(self.balltrack.t_end - time.time())
         new_t = time.time()
 
-        if new_t - self.t_start > self.config.t_limit:
+        if new_t > self.t_end:
             self.logger.debug("time is up")
+            self.time_over = True
 
         # only update defending paddle
         self.paddle_defense.update(new_t)
@@ -192,17 +217,6 @@ class SubGameSession(socketio.AsyncNamespace):
             self.logger.debug(
                 f"Player {self.paddle_defense.player.name} reflects the ball"
             )
-            new_x_start, new_y_start = self.balltrack.next_xy_start
-            new_dx, new_dy = self.balltrack.next_dx_dy
-            self.balltrack = BallTrack(
-                self.config,
-                new_x_start,
-                new_y_start,
-                new_dx,
-                new_dy,
-                new_t,
-            )
-
             return TurnResult.DEFENDED
         else:
             # fail to defend, scoring, reset
@@ -212,8 +226,6 @@ class SubGameSession(socketio.AsyncNamespace):
             self.logger.debug(
                 f"Player {self.paddle_offense.player.name} scores to {self.paddle_offense.score}"
             )
-            new_dx, new_dy = self.balltrack.next_dx_dy
-            self.balltrack = BallTrack(self.config, 0, 0, new_dx, new_dy, new_t)
             if self.paddle_offense.player == Player.A:
                 return TurnResult.A_SCORED
             else:
