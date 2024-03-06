@@ -15,6 +15,8 @@ from pathlib import Path
 import os
 import datetime
 import urllib.parse
+import logging
+import time
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -191,6 +193,15 @@ OAUTH_URL = os.environ.get("42OAUTH_URL")
 CALLBACK_URL = f"{MAIN_URL}/login/callback"
 AVATAR_LOCATION = os.environ.get("AVATAR_LOCATION")
 
+
+class EpochFormatter(logging.Formatter):
+    """Custom formatter to add epoch time to log records."""
+    def format(self, record):
+        # Add the current epoch time to the record
+        record.epoch = time.time()
+        # Call the original formatter to use the modified record
+        return super().format(record)
+
 DIR_LOG = os.path.join(BASE_DIR.parent, "logs")
 os.system(f"mkdir -p {DIR_LOG}")
 
@@ -211,7 +222,8 @@ LOGGING = {
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
         "precise": {
-            "format": "[%(levelname)s][%(asctime)s.%(msecs)03d] %(name)s: %(message)s",
+            "()": EpochFormatter,
+            "format": "[%(levelname)s][%(epoch)f] %(name)s: %(message)s",
             "datefmt": "%H:%M:%S",
         },
     },
