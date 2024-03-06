@@ -134,7 +134,7 @@ class SubGameSession(socketio.AsyncNamespace):
         await self.emit_start()
         await asyncio.sleep(self.config.t_delay_subgame_start)
 
-        self.emit_update_time_left_until_end()
+        await self.emit_update_time_left_until_end()
         self.running = True
         self.logger.debug(f"start simulation of SubGameSession at {self.t_start}")
 
