@@ -115,7 +115,7 @@ class SubGameSession(socketio.AsyncNamespace):
             f"Update player {player.name} key to {key_input}, y={self.paddles[player].y} dy={self.paddles[player].dy}"
         )
 
-        self.emit_update_track_paddle(self.paddles[player])
+        await self.emit_update_track_paddle(self.paddles[player])
 
     def determine_winner(self, turn_result: TurnResult) -> None:
         if self.time_over:  # sudden death
