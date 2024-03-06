@@ -131,10 +131,11 @@ class SubGameSession(socketio.AsyncNamespace):
     # start simulation. start accepting key press.
     async def start(self) -> None:
         self.t_start = time.time() + self.config.t_delay_subgame_start
+        self.t_end = self.t_start + self.config.t_limit
         await self.emit_start()
         await asyncio.sleep(self.config.t_delay_subgame_start)
 
-        await self.emit_update_time_left_until_end()
+        asyncio.create_task(self.emit_update_time_left_until_end())
         self.running = True
         self.logger.debug(f"start simulation of SubGameSession at {self.t_start}")
 
@@ -227,9 +228,8 @@ class SubGameSession(socketio.AsyncNamespace):
             f"Emit event {event} data {data} to namespace {self.namespace}"
         )
 
-    async def emit_update_time_left(self) -> int:
+    async def emit_update_time_left(self, time_left: int) -> int:
         event = "update_time_left"
-        time_left = self.get_time_left()
         data = {
             "t_event": time.time(),
             "time_left": time_left,
@@ -242,13 +242,15 @@ class SubGameSession(socketio.AsyncNamespace):
         return time_left
 
     async def emit_update_time_left_until_end(self) -> None:
-        while await self.emit_update_time_left() != 0:
-            t_emit = time.time()
-            t_next_emit = self.t_start
-            while t_next_emit <= t_emit:
-                t_next_emit += 1.0
+        for time_elapsed in range(int(self.config.t_limit) + 1):
+            if not self.running:
+                return
 
-            await asyncio.sleep(t_next_emit - t_emit)
+            time_left = int(self.config.t_limit) - time_elapsed
+            await self.emit_update_time_left(time_left)
+
+            next_emit_t = self.t_start + time_elapsed + 1
+            await asyncio.sleep(next_emit_t - time.time())
 
     async def emit_update_scores(self):
         self.logger.debug(
@@ -297,10 +299,6 @@ class SubGameSession(socketio.AsyncNamespace):
         self.logger.debug(
             f"Emit event {event} data {data} to namespace {self.namespace}"
         )
-
-    def get_time_left(self) -> int:
-        time_now = time.time()
-        return math.ceil(time_now - self.t_start)
 
     def __str__(self) -> str:
         return f"GameSession t_start={self.t_start}"
