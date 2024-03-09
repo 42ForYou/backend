@@ -1,21 +1,17 @@
-from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework import mixins
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import status
 
-from pong.utils import (
-    CustomError,
-    CookieTokenAuthentication,
-    CustomPageNumberPagination,
-)
-from accounts.models import Profile
 from .models import Friend
-from .serializers import FriendSerializer
+from .serializers import *
+
+from pong.utils import CustomError, CookieTokenAuthentication
+from django.db.models import Q
+from pong.utils import CustomPageNumberPagination
 
 
-# pylint: disable=too-many-ancestors
 class FriendViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
@@ -45,23 +41,23 @@ class FriendViewSet(
             serializer = FriendSerializer(instance, context={"request": request})
             return Response({"data": serializer.data}, status=status.HTTP_201_CREATED)
         except Exception as e:
-            raise CustomError(e, status.HTTP_400_BAD_REQUEST) from e
+            raise CustomError(e, status.HTTP_400_BAD_REQUEST)
 
     # 친구 목록
     def list(self, request, *args, **kwargs):
         try:
             paginator = CustomPageNumberPagination()
             user = request.user
-            filter_val = request.query_params.get("filter", None)
-            if filter_val in ["pending", "friend"]:
-                if filter_val == "pending":
+            filter = request.query_params.get("filter", None)
+            if filter in ["pending", "friend"]:
+                if filter == "pending":
                     queryset = self.get_queryset().filter(
                         receiver=user, status="pending"
                     )
-                elif filter_val == "friend":
+                elif filter == "friend":
                     queryset = self.get_queryset().filter(
                         Q(requester=request.user) | Q(receiver=request.user),
-                        status=filter_val,
+                        status=filter,
                     )
             else:
                 raise CustomError(
@@ -69,13 +65,11 @@ class FriendViewSet(
                 )
             context = paginator.paginate_queryset(queryset, request)
             friends = FriendSerializer(
-                context, many=True, context={"request": request, "filter": filter_val}
+                context, many=True, context={"request": request, "filter": filter}
             )
             return paginator.get_paginated_response(friends.data)
         except Exception as e:
-            raise CustomError(
-                e, "Friend", status_code=status.HTTP_400_BAD_REQUEST
-            ) from e
+            raise CustomError(e, "Friend", status_code=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
         try:
@@ -92,9 +86,7 @@ class FriendViewSet(
             )
             return Response({"data": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
-            raise CustomError(
-                e, "Friend", status_code=status.HTTP_400_BAD_REQUEST
-            ) from e
+            raise CustomError(e, "Friend", status_code=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, *args, **kwargs):
         try:
@@ -112,9 +104,4 @@ class FriendViewSet(
             friend_instance.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
-            raise CustomError(
-                e, "Friend", status_code=status.HTTP_400_BAD_REQUEST
-            ) from e
-
-
-# pylint: enable=too-many-ancestors
+            raise CustomError(e, "Friend", status_code=status.HTTP_400_BAD_REQUEST)

@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+from dotenv import load_dotenv
 from pathlib import Path
 import os
 import datetime
@@ -195,7 +196,6 @@ LOGLEVEL_PONG = os.environ.get("LOGLEVEL_PONG", "WARNING")
 LOGLEVEL_LIVEGAME = os.environ.get("LOGLEVEL_LIVEGAME", "WARNING")
 
 
-log_suffix = datetime.datetime.now().strftime("%Y-%m-%d")
 
 LOGGING = {
     "version": 1,
@@ -216,7 +216,7 @@ LOGGING = {
             "class": "logging.handlers.RotatingFileHandler",
             "filename": os.path.join(
                 DIR_LOG,
-                f"log_{log_suffix}.log",
+                f"log_{datetime.datetime.now().strftime("%Y-%m-%d")}.log",
             ),
             "encoding": "UTF-8",
             "maxBytes": 1024 * 1024 * 5,  # 5 MB
@@ -256,9 +256,9 @@ LOGGING = {
         },
         "livegame": {
             "handlers": ["consolePrecise"],
-            "level": LOGLEVEL_LIVEGAME,
+            "level":LOGLEVEL_LIVEGAME,
             "propagate": False,
-        },
+        }
     },
 }
 
@@ -269,4 +269,4 @@ EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS")
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

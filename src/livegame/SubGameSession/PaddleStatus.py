@@ -42,8 +42,10 @@ class PaddleStatus:
         time_elapsed = time_now - self.t_last_updated
 
         new_y = self.y + self.dy * time_elapsed
-        new_y = min(new_y, self.config.y_max)
-        new_y = max(new_y, self.config.y_min)
+        if new_y > self.config.y_max:
+            new_y = self.config.y_max
+        if new_y < self.config.y_min:
+            new_y = self.config.y_min
         self.y = new_y
 
         self.t_last_updated = time_now
@@ -61,8 +63,7 @@ class PaddleStatus:
         elif key_input.action == KeyInput.Action.RELEASE:
             self.key_pressed[key_input.key] = False
 
-            # When releasing, if other key remains being pressed,
-            # update dy according to remaining key
+            # When releasing, if other key remains being pressed, update dy according to remaining key
             # if no key is pressed, update dy to 0
             if key_input.key == KeyInput.Key.UP:
                 if self.key_pressed[KeyInput.Key.DOWN]:

@@ -5,6 +5,7 @@ from datetime import datetime
 
 from django.db.models import Q
 from django.core.files.storage import default_storage
+
 from rest_framework import mixins, viewsets
 from rest_framework.response import Response
 from rest_framework import status
@@ -12,9 +13,10 @@ from rest_framework import permissions
 from rest_framework import serializers
 from rest_framework.parsers import MultiPartParser, JSONParser
 
-from pong.settings import AVATAR_LOCATION
+import pong.settings as settings
 from pong.utils import CookieTokenAuthentication, CustomError, wrap_data
 from pong.utils import CustomPageNumberPagination
+
 from friends.models import Friend
 from .models import Profile
 from .serializers import (
@@ -73,9 +75,7 @@ class ProfileViewSet(
                 status=status.HTTP_200_OK,
             )
         except Exception as e:
-            raise CustomError(
-                e, "Profile", status_code=status.HTTP_400_BAD_REQUEST
-            ) from e
+            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
         try:
@@ -104,11 +104,9 @@ class ProfileViewSet(
                 data=wrap_data(user=serializer.data), status=status.HTTP_200_OK
             )
         except serializers.ValidationError as e:
-            raise CustomError(e.detail, status_code=status.HTTP_409_CONFLICT) from e
+            raise CustomError(e.detail, status_code=status.HTTP_409_CONFLICT)
         except Exception as e:
-            raise CustomError(
-                e, "Profile", status_code=status.HTTP_400_BAD_REQUEST
-            ) from e
+            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
 
     def save_image(self, image_obj, intra_id, profile):
         extension = self.get_extension(image_obj.content_type)
@@ -123,10 +121,12 @@ class ProfileViewSet(
             + extension
         )
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        file_path = os.path.join(base_dir, AVATAR_LOCATION, hashed_filename)
+        file_path = os.path.join(base_dir, settings.AVATAR_LOCATION, hashed_filename)
 
         if profile.avatar and profile.avatar != "":
-            pre_file_path = os.path.join(base_dir, AVATAR_LOCATION, profile.avatar)
+            pre_file_path = os.path.join(
+                base_dir, settings.AVATAR_LOCATION, profile.avatar
+            )
             if default_storage.exists(pre_file_path):
                 default_storage.delete(pre_file_path)
 
@@ -162,6 +162,4 @@ class UserSearchViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
             serializer = self.get_serializer(page, many=True)
             return paginator.get_paginated_response(serializer.data)
         except Exception as e:
-            raise CustomError(
-                e, "Profile", status_code=status.HTTP_400_BAD_REQUEST
-            ) from e
+            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)

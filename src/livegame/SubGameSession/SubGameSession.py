@@ -1,17 +1,17 @@
 import time
 import math
 import asyncio
-import logging
-from typing import Dict, Union
-from enum import Enum
 import socketio
+import logging
+from typing import Dict
+from enum import Enum
 
 from accounts.models import User
 from socketcontrol.events import sio, get_user_by_token
-from ..SubGameConfig import SubGameConfig
-from .PaddleStatus import PaddleStatus, KeyInput, Player
-from .BallTrack import BallTrack
-from .SIOAdapter import serialize_balltrack
+from livegame.SubGameConfig import SubGameConfig
+from livegame.SubGameSession.PaddleStatus import PaddleStatus, KeyInput, Player
+from livegame.SubGameSession.BallTrack import BallTrack
+from livegame.SubGameSession.SIOAdapter import serialize_balltrack
 
 
 class TurnResult(Enum):
@@ -37,11 +37,6 @@ class SubGameSession(socketio.AsyncNamespace):
         self.logger = logging.getLogger(
             f"{__package__}.{self.__class__.__name__}.{idx_rank}.{idx_in_rank}"
         )
-
-        self.t_start: Union[None, float] = None
-        self.balltrack: Union[None, BallTrack] = None
-        self.paddle_offense: Union[None, PaddleStatus] = None
-        self.paddle_defense: Union[None, PaddleStatus] = None
 
         self.config = config
         if self.config.flt_eq(ball_init_dx, 0.0):
@@ -76,7 +71,7 @@ class SubGameSession(socketio.AsyncNamespace):
             )
             token = cookie_dict.get("pong_token", None)
             if not token:
-                self.logger.warning("No token")
+                self.logger.warn("No token")
                 await self.disconnect(sid)
 
             user: User = await get_user_by_token(token)
@@ -86,7 +81,7 @@ class SubGameSession(socketio.AsyncNamespace):
             elif user.intra_id == self.intra_id_b:
                 self.sid_to_player[sid] = Player.B
             else:
-                self.logger.warning(f"connected {user.intra_id} is not assigned player")
+                self.logger.warn(f"connected {user.intra_id} is not assigned player")
                 await self.disconnect(sid)
 
         except Exception as e:
@@ -104,11 +99,11 @@ class SubGameSession(socketio.AsyncNamespace):
         self.logger.debug(f"keyboard_input from sid {sid}, data={data}")
 
         if not self.running:
-            self.logger.debug("SubGameSession is not running")
+            self.logger.debug(f"SubGameSession is not running")
             return
 
         if not sid in self.sid_to_player:
-            self.logger.warning(f"sid {sid} is not connected player")
+            self.logger.warn(f"sid {sid} is not connected player")
             return
 
         player: Player = self.sid_to_player[sid]
@@ -117,8 +112,7 @@ class SubGameSession(socketio.AsyncNamespace):
         self.paddles[player].update_key(key_input)
         self.paddles[player].update(time.time())
         self.logger.debug(
-            f"Update player {player.name} key to {key_input}, "
-            f"y={self.paddles[player].y} dy={self.paddles[player].dy}"
+            f"Update player {player.name} key to {key_input}, y={self.paddles[player].y} dy={self.paddles[player].dy}"
         )
 
         self.emit_update_track_paddle(self.paddles[player])
@@ -208,20 +202,20 @@ class SubGameSession(socketio.AsyncNamespace):
             )
 
             return TurnResult.DEFENDED
-
-        # fail to defend, scoring, reset
-        self.paddle_offense.score += 1
-        self.logger.debug(f"Player {self.paddle_offense.player} scored")
-        await self.emit_update_scores()
-        self.logger.debug(
-            f"Player {self.paddle_offense.player.name} scores to {self.paddle_offense.score}"
-        )
-        new_dx, new_dy = self.balltrack.next_dx_dy
-        self.balltrack = BallTrack(self.config, 0, 0, new_dx, new_dy, new_t)
-        if self.paddle_offense.player == Player.A:
-            return TurnResult.A_SCORED
-
-        return TurnResult.B_SCORED
+        else:
+            # fail to defend, scoring, reset
+            self.paddle_offense.score += 1
+            self.logger.debug(f"Player {self.paddle_offense.player} scored")
+            await self.emit_update_scores()
+            self.logger.debug(
+                f"Player {self.paddle_offense.player.name} scores to {self.paddle_offense.score}"
+            )
+            new_dx, new_dy = self.balltrack.next_dx_dy
+            self.balltrack = BallTrack(self.config, 0, 0, new_dx, new_dy, new_t)
+            if self.paddle_offense.player == Player.A:
+                return TurnResult.A_SCORED
+            else:
+                return TurnResult.B_SCORED
 
     async def emit_start(self) -> None:
         event = "start"

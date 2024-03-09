@@ -1,7 +1,8 @@
-import json
 import requests
+import json
 
 from django.conf import settings
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,6 +10,7 @@ from rest_framework.authtoken.models import Token
 
 from pong.utils import CustomError, wrap_data
 from pong.utils import CookieTokenAuthentication
+
 from accounts.models import User, Profile
 from accounts.serializers import (
     UserSerializer,
@@ -33,7 +35,7 @@ class OAuthView(APIView):
                 "pong_token", token.key, httponly=True, samesite=None
             )  # remove samesite=strict for development
             return response
-        except Exception as _:
+        except Exception as e:
             pass
 
         try:
@@ -54,10 +56,10 @@ class OAuthView(APIView):
             )  # remove samesite=strict for development
             return response
         except Exception as e:
-            raise CustomError(e) from e
+            raise CustomError(e)
 
     def do_2fa(self, user):
-        two_factor_auth, _ = TwoFactorAuth.objects.get_or_create(user=user)
+        two_factor_auth, created = TwoFactorAuth.objects.get_or_create(user=user)
         two_factor_auth.send_secret_code()
 
     def request42OAuth(self, code):
@@ -73,7 +75,6 @@ class OAuthView(APIView):
             settings.TOKEN_URL,
             data=json.dumps(data),
             headers=headers,
-            timeout=10,  # TODO: set timeout by envvar
         )
         if response.status_code != 200:
             raise CustomError(response.text, status_code=response.status_code)
@@ -83,7 +84,6 @@ class OAuthView(APIView):
         userData = requests.get(
             "https://api.intra.42.fr/v2/me",
             headers={"Authorization": "Bearer " + access_token},
-            timeout=10,  # TODO: set timeout by envvar
         )
         if userData.status_code != 200:
             raise CustomError(userData.text, status_code=userData.status_code)
@@ -101,9 +101,6 @@ class OAuthView(APIView):
         except User.DoesNotExist:
             pass
 
-        user = None
-        profile = None
-        oauth = None
         try:
             serializer = UserSerializer(data=data)
             serializer.is_valid(raise_exception=True)
@@ -128,4 +125,4 @@ class OAuthView(APIView):
                 profile.delete()
             if oauth:
                 oauth.delete()
-            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST) from e
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)

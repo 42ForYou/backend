@@ -1,12 +1,11 @@
 # create_superuser.py
+import os
 import django
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pong.settings")
 django.setup()
 
-# pylint: disable=wrong-import-position
 from accounts.models import User
-
-# pylint: enable=wrong-import-position
 
 
 def create_superuser():

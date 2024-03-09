@@ -1,14 +1,12 @@
 import random
 import string
-
 from django.db import models
 from django.utils import timezone
 from rest_framework import status
-
+from accounts.models import User, Profile
 from pong.utils import CustomError
 from pong.utils import send_email
-from pong.settings import EMAIL_HOST_USER
-from accounts.models import User
+import pong.settings as settings
 
 
 class OAuth(models.Model):
@@ -39,7 +37,7 @@ class TwoFactorAuth(models.Model):
         send_email(
             "PlanetPong 2FA Code",
             f"Your Code is [ {self.secret_code} ]",
-            EMAIL_HOST_USER,
+            settings.EMAIL_HOST_USER,
             [self.user.profile.email],
         )
 

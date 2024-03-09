@@ -1,24 +1,24 @@
-import logging
 import socketio
+import logging
 
-from django.db.models import Q
 from asgiref.sync import sync_to_async
+from django.db.models import Q
 from rest_framework.authtoken.models import Token
-
-from pong.settings import CORS_ALLOWED_ORIGINS
+from .models import SocketSession
 from friends.serializers import FriendUserSerializer
 from friends.models import Friend
-from .models import SocketSession
+import pong.settings as settings
 
 
-# connect, disconnect 에 액세스할 수 없음 에러는 문제없다.
-# 이벤트를 등록하면 자동으로 connect, disconnect 가 등록된다.
-# connect, disconnect 는 socketio 라이브러리에서 자동으로 등록된다.
-
+"""
+connect, disconnect 에 액세스할 수 없음 에러는 문제없다.
+이벤트를 등록하면 자동으로 connect, disconnect 가 등록된다.
+connect, disconnect 는 socketio 라이브러리에서 자동으로 등록된다.
+"""
 
 sio = socketio.AsyncServer(
     async_mode="asgi",
-    cors_allowed_origins=CORS_ALLOWED_ORIGINS,
+    cors_allowed_origins=settings.CORS_ALLOWED_ORIGINS,
     logger=logging.getLogger("socketio.server"),
     engineio_logger=logging.getLogger("socketio.engineio"),
 )
@@ -68,7 +68,7 @@ def get_user_by_sid(sid):
 
 @sync_to_async
 def get_session(user, sid):
-    session, _ = SocketSession.objects.update_or_create(
+    session, created = SocketSession.objects.update_or_create(
         user=user, defaults={"session_id": sid}
     )
     return session
@@ -89,7 +89,7 @@ async def connect(sid: str, environ: dict) -> None:
         token = cookie_dict.get("pong_token", None)
         if token:
             user = await get_user_by_token(token)
-            _ = await get_session(user, sid)
+            session = await get_session(user, sid)
             user.is_online = True
             await sync_to_async(user.save)()
             friends_users = await get_friends(user)

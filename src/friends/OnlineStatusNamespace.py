@@ -1,8 +1,7 @@
 import logging
-
 import socketio
 from asgiref.sync import sync_to_async
-
+from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
 
 
@@ -30,7 +29,7 @@ class OnlineStatusNamespace(socketio.AsyncNamespace):
                 user = await get_user_by_token(token)
                 await update_online_sid(user, sid)
             else:
-                self.logger.warning("No token")
+                self.logger.warn("No token")
                 await self.disconnect(sid)
         except Exception as e:
             self.logger.error(f"Error in connect: {e}")

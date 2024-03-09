@@ -1,10 +1,8 @@
 import json
 import unittest
-
 from django.urls import reverse
 from django.test import AsyncClient
 from asgiref.sync import sync_to_async
-
 from accounts.models import User
 
 

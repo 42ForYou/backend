@@ -1,7 +1,7 @@
-from typing import Union
+from typing import Dict, Union
 
 from accounts.models import UserDataCache
-from .SubGameSession.SubGameSession import SubGameSession
+from livegame.SubGameSession.SubGameSession import SubGameSession
 
 
 class SubGameResult:
@@ -36,9 +36,10 @@ class SubGameResult:
 
         if self.winner == "A":
             return self.sid_a
-        if self.winner == "B":
+        elif self.winner == "B":
             return self.sid_b
-        raise ValueError(f"Invalid winner value: {self.winner}")
+        else:
+            raise ValueError(f"Invalid winner value: {self.winner}")
 
     def get_user_data_of_winner(self) -> UserDataCache:
         if not self.winner:
@@ -46,13 +47,10 @@ class SubGameResult:
 
         if self.winner == "A":
             return self.user_data_a
-        if self.winner == "B":
+        elif self.winner == "B":
             return self.user_data_b
-        raise ValueError(f"Invalid winner value: {self.winner}")
+        else:
+            raise ValueError(f"Invalid winner value: {self.winner}")
 
     def __str__(self) -> str:
-        return (
-            f"SubGameResult({self.session}, "
-            f"a = {self.user_data_a.intra_id}, b = {self.user_data_b.intra_id}, "
-            f"winner = {self.winner})"
-        )
+        return f"SubGameResult({self.session}, a = {self.user_data_a.intra_id}, b = {self.user_data_b.intra_id}, winner = {self.winner})"

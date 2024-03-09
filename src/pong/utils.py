@@ -1,5 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import EmailMessage
+from django.core.mail import send_mail, EmailMessage
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -65,10 +65,8 @@ class CookieTokenAuthentication(BaseAuthentication):
 
         try:
             token = Token.objects.get(key=token_key)
-        except Token.DoesNotExist as e:
-            raise CustomError(
-                "Invalid token", status_code=status.HTTP_401_UNAUTHORIZED
-            ) from e
+        except Token.DoesNotExist:
+            raise CustomError("Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
 
         return (token.user, token)
 

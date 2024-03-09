@@ -1,12 +1,14 @@
 from urllib.parse import quote
 
 from django.conf import settings
+
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from pong.utils import CustomError, wrap_data, CookieTokenAuthentication
+
 from accounts.serializers import UserSerializer, ProfileSerializer
 from accounts.models import User
 
@@ -17,10 +19,7 @@ class LoginView(APIView):
 
     def get(self, request):
         redirect_url = quote(settings.CALLBACK_URL)
-        url = (
-            f"{settings.OAUTH_URL}?client_id={settings.CLIENT_ID}"
-            f"&redirect_uri={redirect_url}&response_type=code"
-        )
+        url = f"{settings.OAUTH_URL}?client_id={settings.CLIENT_ID}&redirect_uri={redirect_url}&response_type=code"
         return Response(wrap_data(url=url), status=status.HTTP_200_OK)
 
 
@@ -80,14 +79,14 @@ class TwoFactorAuthView(APIView):
                     "pong_token", token.key, httponly=True, samesite=None
                 )  # remove samesite=strict for development
                 return response
-
-            return Response(
-                data={"error": "Invalid Code"}, status=status.HTTP_401_UNAUTHORIZED
-            )
+            else:
+                return Response(
+                    data={"error": "Invalid Code"}, status=status.HTTP_401_UNAUTHORIZED
+                )
         except Exception as e:
             raise CustomError(
                 exception=e, model_name="user", status_code=status.HTTP_400_BAD_REQUEST
-            ) from e
+            )
 
     def patch(self, request, *args, **kwargs):
         try:
@@ -98,4 +97,4 @@ class TwoFactorAuthView(APIView):
         except Exception as e:
             raise CustomError(
                 exception=e, model_name="user", status_code=status.HTTP_400_BAD_REQUEST
-            ) from e
+            )

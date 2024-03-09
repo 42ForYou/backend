@@ -4,20 +4,19 @@ import time
 import asyncio
 import logging
 from typing import Dict, List
+
 import socketio
-
-from asgiref.sync import sync_to_async
-
 from accounts.models import User, UserDataCache, fetch_user_data_cache
 from game.models import Game, GamePlayer, GameRoom, SubGame
+from .databaseio import left_game_room, get_room_data
 from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
-from .databaseio import left_game_room, get_room_data
-from .SubGameSession.SubGameSession import SubGameSession
-from .SubGameSession.PaddleStatus import Player
-from .SubGameResult import SubGameResult
-from .SubGameConfig import get_default_subgame_config
-from .SubGameSession.SIOAdapter import serialize_subgame_config
+from asgiref.sync import sync_to_async
+from livegame.SubGameSession.SubGameSession import SubGameSession
+from livegame.SubGameSession.PaddleStatus import Player
+from livegame.SubGameResult import SubGameResult
+from livegame.SubGameConfig import get_default_subgame_config
+from livegame.SubGameSession.SIOAdapter import serialize_subgame_config
 
 
 def is_power_of_two(n: int) -> bool:
@@ -72,7 +71,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             token = cookie_dict.get("pong_token", None)
 
             if not token:
-                self.logger.warning("No token")
+                self.logger.warn("No token")
                 await self.disconnect(sid)
 
             user: User = await get_user_by_token(token)
@@ -88,7 +87,7 @@ class GameRoomSession(socketio.AsyncNamespace):
     async def on_disconnect(self, sid):
         self.logger.debug(f"disconnect from sid {self.sid_to_user_data[sid].intra_id}")
 
-        if not self.is_playing:
+        if self.is_playing == False:
             del self.sid_to_user_data[sid]
             return
 
@@ -108,7 +107,7 @@ class GameRoomSession(socketio.AsyncNamespace):
         self.logger.debug(f"exited from sid {sid}")
 
         if self.is_playing:
-            self.logger.warning(
+            self.logger.warn(
                 f"Player exiting while game is playing: {sid} ({self.sid_to_user_data[sid]})"
             )
             return
@@ -127,10 +126,10 @@ class GameRoomSession(socketio.AsyncNamespace):
         await self.emit_update_room(data, player_id_list, sid_list, am_i_host_list)
 
     # SIO: F>B start
-    async def on_start(self, sid, _):
+    async def on_start(self, sid, data):
         self.logger.info(f"start from sid {sid}")
         if not self.is_host(sid):
-            self.logger.warning(
+            self.logger.warn(
                 f"Player pressing start button is not host: {sid} ({self.sid_to_user_data[sid]})"
             )
             return
@@ -177,7 +176,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
             # TODO: delete in production
             if not self.is_current_rank_done():
-                raise Exception("Logic error: current rank is not done...")
+                raise Exception(f"Logic error: current rank is not done...")
 
             self.logger.debug(f"sleeping {self.config.t_delay_rank_end} seconds...")
             await asyncio.sleep(self.config.t_delay_rank_end)
@@ -194,10 +193,10 @@ class GameRoomSession(socketio.AsyncNamespace):
 
             await self.emit_update_tournament()
 
-        self.logger.debug("Update database...")
+        self.logger.debug(f"Update database...")
         await self.update_database()
 
-        self.logger.info("GameRoom finished.")
+        self.logger.info(f"GameRoom finished.")
 
     @sync_to_async
     def update_database(self):
@@ -236,7 +235,7 @@ class GameRoomSession(socketio.AsyncNamespace):
     # TODO: delete in production
     def is_current_rank_done(self) -> bool:
         winners = [item.winner for item in self.tournament_tree[self.rank_ongoing]]
-        return all(winner_val is not None for winner_val in winners)
+        return all([winner_val is not None for winner_val in winners])
 
     def get_sid_from_intra_id(self, intra_id) -> str:
         for sid_key, user_data in self.sid_to_user_data.items():
@@ -283,9 +282,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
         if int(math.pow(2, self.n_ranks - 1)) != self.n_players / 2:
             raise ValueError(
-                f"Error while building tournament tree: "
-                f"n_players / 2 {self.n_players / 2} != int(math.pow(2, self.n_ranks - 1)) "
-                f"{int(math.pow(2, self.n_ranks - 1))}"
+                f"Error while building tournament tree: n_players / 2 {self.n_players / 2} != int(math.pow(2, self.n_ranks - 1)) {int(math.pow(2, self.n_ranks - 1))}"
             )
 
         # fill actual determined values for subgames in the lowest rank

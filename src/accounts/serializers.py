@@ -26,21 +26,21 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ("intra_id", "nickname", "email", "avatar", "two_factor_auth")
 
-    def validate(self, attrs):
+    def validate(self, data):
         errors = {}
-        if "nickname" in attrs:
-            nickname = attrs.get("nickname")
+        if "nickname" in data:
+            nickname = data.get("nickname")
             if not (self.instance and self.instance.nickname == nickname):
-                if Profile.objects.filter(nickname=attrs["nickname"]).exists():
+                if Profile.objects.filter(nickname=data["nickname"]).exists():
                     errors["nickname"] = ["This nickname is already taken."]
-        if "email" in attrs:
-            email = attrs.get("email")
+        if "email" in data:
+            email = data.get("email")
             if not (self.instance and self.instance.email == email):
-                if Profile.objects.filter(email=attrs["email"]).exists():
+                if Profile.objects.filter(email=data["email"]).exists():
                     errors["email"] = ["This email is already taken."]
         if errors:
             raise serializers.ValidationError(errors)
-        return attrs
+        return data
 
 
 class ProfileNotOwnerSerializer(serializers.ModelSerializer):

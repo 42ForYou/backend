@@ -1,16 +1,13 @@
-import random
-
+import os
 import django
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pong.settings")
 django.setup()
 
-# pylint: disable=wrong-import-position
-from rest_framework.authtoken.models import Token
 from accounts.models import User, Profile
 from game.models import Game, GameRoom, GamePlayer
 from friends.models import Friend
-
-# pylint: enable=wrong-import-position
+from rest_framework.authtoken.models import Token
 
 
 def create_dummy_users(num_users=100):
@@ -40,12 +37,12 @@ def create_dummy_users(num_users=100):
 def create_friends():
     users = User.objects.exclude(username="admin")
 
-    for i, user_req in enumerate(users):
-        for j, user_recv in enumerate(i + 1, users):
+    for i in range(len(users)):
+        for j in range(i + 1, len(users)):
             status = "friend" if (i + j) % 2 == 0 else "pending"
             Friend.objects.create(
-                requester=user_req,
-                receiver=user_recv,
+                requester=users[i],
+                receiver=users[j],
                 status=status,
             )
 
@@ -56,7 +53,7 @@ def create_game_room(num_games=50):
     ]  # 1부터 30까지의 사용자만 선택
 
     for i, user in enumerate(users):
-        is_tournament = (i + 1) % 3 == 0
+        is_tournament = True if (i + 1) % 3 == 0 else False
         n_players = 4 if is_tournament else 2
         game = Game.objects.create(
             is_tournament=is_tournament,
@@ -65,7 +62,7 @@ def create_game_room(num_games=50):
             n_players=n_players,
         )
 
-        GameRoom.objects.create(
+        game_room = GameRoom.objects.create(
             host=user,
             game=game,
             title=f"GameRoom {i + 1}",
@@ -80,6 +77,9 @@ def create_game_room(num_games=50):
             nickname=profile.nickname,
             rank=0,
         )
+
+
+import random
 
 
 def assign_remaining_users_to_games(user_num):
