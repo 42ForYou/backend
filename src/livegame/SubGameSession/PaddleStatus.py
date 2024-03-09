@@ -29,7 +29,7 @@ class PaddleStatus:
     def __init__(self, config: SubGameConfig, player: Player, time_now: float) -> None:
         self.config = config
         self.player = player
-        self.y: float = 0.0
+        self.y = self.config.y_paddle_init
         self.dy: float = 0.0
         self.score = 0
         self.key_pressed: Dict[KeyInput.Key, bool] = {
