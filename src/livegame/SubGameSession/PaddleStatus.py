@@ -50,7 +50,9 @@ class PaddleStatus:
 
         self.t_last_updated = time_now
 
-    def update_key(self, key_input: KeyInput) -> None:
+    def update_key(self, key_input: KeyInput, time_now: float) -> None:
+        self.update(time_now)
+
         if key_input.action == KeyInput.Action.PRESS:
             self.key_pressed[key_input.key] = True
 
