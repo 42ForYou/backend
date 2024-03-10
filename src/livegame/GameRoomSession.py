@@ -229,11 +229,16 @@ class GameRoomSession(socketio.AsyncNamespace):
                     t_end=subgame_result.t_end,
                 )
                 if subgame_result.winner == "A":
-                    player_a.rank -= 1 if player_a.rank != 0 else 0
-                    player_a.save()
+                    player_a.rank = subgame_result.session.idx_rank - 1
+                    player_b.rank = subgame_result.session.idx_rank
                 else:
-                    player_b.rank -= 1 if player_a.rank != 0 else 0
-                    player_b.save()
+                    player_a.rank = subgame_result.session.idx_rank
+                    player_b.rank = subgame_result.session.idx_rank - 1
+                self.logger.debug(
+                    f"subgame rank {subgame_result.session.idx_rank}, winner: {subgame_result.winner} , player_a: {player_a.rank}, player_b: {player_b.rank}"
+                )
+                player_a.save()
+                player_b.save()
                 self.game.users.add(player_a.user)
                 self.game.users.add(player_b.user)
 
