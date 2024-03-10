@@ -1,7 +1,9 @@
+import logging
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict
 
+from pong.settings import LOGLEVEL_TRACE_ENABLE
 from livegame.SubGameConfig import SubGameConfig
 
 
@@ -28,6 +30,9 @@ class KeyInput:
 class PaddleStatus:
     def __init__(self, config: SubGameConfig, player: Player, time_now: float) -> None:
         self.config = config
+        self.logger = logging.getLogger(
+            f"{__package__}.{self.__class__.__name__}.{player.name}"
+        )
         self.player = player
         self.y = self.config.y_paddle_init
         self.dy: float = 0.0
@@ -37,6 +42,10 @@ class PaddleStatus:
             KeyInput.Key.DOWN: False,
         }
         self.t_last_updated = time_now
+
+    def trace(self, msg: str) -> None:
+        if LOGLEVEL_TRACE_ENABLE != "0":
+            self.logger.debug(msg)
 
     def update(self, time_now: float) -> None:
         time_elapsed = time_now - self.t_last_updated

@@ -1,7 +1,9 @@
 import math
+import logging
 from typing import Tuple
 from enum import Enum
 
+from pong.settings import LOGLEVEL_TRACE_ENABLE
 from livegame.SubGameConfig import SubGameConfig
 
 
@@ -27,6 +29,7 @@ class BallTrackSegment:
         dy: float,
     ) -> None:
         self.config = config
+        self.logger = logging.getLogger(f"{__package__}.{self.__class__.__name__}")
         self.x_start = x_start
         self.y_start = y_start
         self.x_end = x_end
@@ -38,6 +41,10 @@ class BallTrackSegment:
         self.p_end = PointCategory.INVALID
         self.is_valid = False
         self.calculate_validity()
+
+    def trace(self, msg: str) -> None:
+        if LOGLEVEL_TRACE_ENABLE != "0":
+            self.logger.debug(msg)
 
     def __str__(self) -> str:
         result = f"{self.__class__.__name__} "

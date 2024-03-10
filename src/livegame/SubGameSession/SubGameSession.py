@@ -6,6 +6,7 @@ import logging
 from typing import Dict
 from enum import Enum
 
+from pong.settings import LOGLEVEL_TRACE_ENABLE
 from accounts.models import User
 from socketcontrol.events import sio, get_user_by_token
 from livegame.SubGameConfig import SubGameConfig
@@ -60,6 +61,10 @@ class SubGameSession(socketio.AsyncNamespace):
         self.sid_to_player = {}
         self.logger.info(f"Created SubGameSession with {self.config}")
         self.logger.debug(f"A: {intra_id_a}, B: {intra_id_b}")
+
+    def trace(self, msg: str) -> None:
+        if LOGLEVEL_TRACE_ENABLE != "0":
+            self.logger.debug(msg)
 
     # SIO: F>B connect
     async def on_connect(self, sid, environ):

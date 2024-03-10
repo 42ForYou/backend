@@ -1,7 +1,9 @@
 import math
+import logging
 from typing import List, Tuple
 from enum import Enum
 
+from pong.settings import LOGLEVEL_TRACE_ENABLE
 from livegame.SubGameConfig import SubGameConfig
 from livegame.SubGameSession.BallTrackSegment import (
     BallTrackSegment,
@@ -27,6 +29,7 @@ class BallTrack:
         if config.flt_eq(dx_start, 0.0):
             raise ValueError("Cannot construct BallTrack because dx is 0.0")
         self.config = config
+        self.logger = logging.getLogger(f"{__package__}.{self.__class__.__name__}")
         self.t_start = t_start
         self.v = math.hypot(dx_start, dy_start)
         self.heading = (
@@ -38,6 +41,10 @@ class BallTrack:
         self.t_duration: float = 0.0
         self.t_end: float = 0.0
         self.calculate_segments(x_start, y_start, dx_start, dy_start)
+
+    def trace(self, msg: str) -> None:
+        if LOGLEVEL_TRACE_ENABLE != "0":
+            self.logger.debug(msg)
 
     # Calculates the all ball track segments based on initial (x, y) and (dx, dy)
     # until the ball gets out of the game
