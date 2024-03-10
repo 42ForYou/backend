@@ -6,7 +6,7 @@ from livegame.SubGameConfig import SubGameConfig
 def serialize_balltracksegment(seg: BallTrackSegment):
     return {
         "x_s": seg.x_start,
-        "y_s": seg.x_start,
+        "y_s": seg.y_start,
         "x_e": seg.x_end,
         "y_e": seg.y_end,
         "dx": seg.dx,
