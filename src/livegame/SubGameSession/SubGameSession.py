@@ -11,7 +11,7 @@ from accounts.models import User
 from socketcontrol.events import sio, get_user_by_token
 from livegame.SubGameConfig import SubGameConfig
 from livegame.SubGameSession.PaddleStatus import PaddleStatus, KeyInput, Player
-from livegame.SubGameSession.BallTrack import BallTrack
+from livegame.SubGameSession.BallTrack import BallTrack, get_random_dx_dy
 from livegame.SubGameSession.SIOAdapter import serialize_balltrack
 
 
@@ -30,8 +30,6 @@ class SubGameSession(socketio.AsyncNamespace):
         intra_id_b: str,
         idx_rank: int,
         idx_in_rank: int,
-        ball_init_dx: float,
-        ball_init_dy: float,
     ):
         super().__init__(f"{gameroom_session.namespace}/{idx_rank}/{idx_in_rank}")
 
@@ -40,8 +38,6 @@ class SubGameSession(socketio.AsyncNamespace):
         )
 
         self.config = config
-        if self.config.flt_eq(ball_init_dx, 0.0):
-            raise ValueError(f"SubGameSession got invalid dx {ball_init_dx}")
 
         self.gr_session = gameroom_session
         self.idx_rank = idx_rank
@@ -53,8 +49,6 @@ class SubGameSession(socketio.AsyncNamespace):
         }
         self.intra_id_a = intra_id_a
         self.intra_id_b = intra_id_b
-        self.ball_init_dx = ball_init_dx
-        self.ball_init_dy = ball_init_dy
         self.running = False
         self.time_over = False
         self.winner = Player.NOBODY
@@ -142,8 +136,14 @@ class SubGameSession(socketio.AsyncNamespace):
         self.running = True
         self.logger.debug(f"start simulation of SubGameSession at {self.t_start}")
 
+        new_x, new_y = get_random_dx_dy(self.config.v_ball, 20)
         self.balltrack = BallTrack(
-            self.config, 0, 0, self.ball_init_dx, self.ball_init_dy, self.t_start
+            self.config,
+            self.config.x_ball_init,
+            self.config.y_ball_init,
+            new_x,
+            new_y,
+            self.t_start,
         )
         self.logger.debug(f"start balltrack: {self.balltrack}")
 
@@ -191,8 +191,16 @@ class SubGameSession(socketio.AsyncNamespace):
                 f"sleeping {self.config.t_delay_scoring} seconds"
             )
             await asyncio.sleep(self.config.t_delay_scoring)
-            new_dx, new_dy = self.balltrack.next_dx_dy
-            self.balltrack = BallTrack(self.config, 0, 0, new_dx, new_dy, time.time())
+            new_heading = BallTrack.Heading.opposite(self.balltrack.heading)
+            new_dx, new_dy = get_random_dx_dy(self.config.v_ball, 20, new_heading)
+            self.balltrack = BallTrack(
+                self.config,
+                self.config.x_ball_init,
+                self.config.y_ball_init,
+                new_dx,
+                new_dy,
+                time.time(),
+            )
 
     def update_turns(self) -> None:
         if self.balltrack.heading == BallTrack.Heading.LEFT:

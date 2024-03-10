@@ -155,9 +155,6 @@ class GameRoomSession(socketio.AsyncNamespace):
                     intra_id_b=player_data_b.intra_id,
                     idx_rank=self.rank_ongoing,
                     idx_in_rank=idx_in_rank,
-                    # TODO: implement random ball direction
-                    ball_init_dx=math.sqrt(2) * self.config.v_ball,
-                    ball_init_dy=math.sqrt(2) * self.config.v_ball,
                 )
                 sio.register_namespace(subgame_result.session)
 

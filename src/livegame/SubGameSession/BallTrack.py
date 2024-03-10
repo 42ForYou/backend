@@ -1,4 +1,5 @@
 import math
+import random
 import logging
 from typing import List, Tuple
 from enum import Enum
@@ -16,6 +17,14 @@ class BallTrack:
     class Heading(Enum):
         LEFT = 1
         RIGHT = 2
+
+        @staticmethod
+        def opposite(heading):
+            opposite_map = {
+                BallTrack.Heading.LEFT: BallTrack.Heading.RIGHT,
+                BallTrack.Heading.RIGHT: BallTrack.Heading.LEFT,
+            }
+            return opposite_map[heading]
 
     def __init__(
         self,
@@ -102,3 +111,42 @@ class BallTrack:
         pts.append(f"({self.segments[-1].x_end}, {self.segments[-1].y_end})")
         pts_str = " > ".join(pts)
         return f"BallTrack {self.heading.name}, dt={self.t_duration}, t={self.t_start}...{self.t_end}, v={self.v}, {pts_str}"
+
+
+def get_random_dx_dy(
+    v: float, excluded_angle_scope: float, heading=None
+) -> Tuple[float, float]:
+    if heading is None:
+        heading = random.choice([BallTrack.Heading.LEFT, BallTrack.Heading.RIGHT])
+
+    # Convert excluded_angle_scope from degrees to radians
+    exc = math.radians(excluded_angle_scope)
+
+    # Function to check if an angle is within the excluded scope near the x or y axes
+    def is_excluded(angle):
+        # Check proximity to the x-axis
+        if (angle < exc or angle > math.pi - exc) or (
+            angle > math.pi + exc and angle < 2 * math.pi - exc
+        ):
+            return True
+        # Check proximity to the y-axis
+        if (angle > math.pi / 2 - exc and angle < math.pi / 2 + exc) or (
+            angle > 3 * math.pi / 2 - exc and angle < 3 * math.pi / 2 + exc
+        ):
+            return True
+        return False
+
+    while True:
+        angle = random.uniform(0, 2 * math.pi)
+        if not is_excluded(angle):
+            break
+
+    dx = v * math.cos(angle)
+    dy = v * math.sin(angle)
+
+    if (heading == BallTrack.Heading.LEFT and dx >= 0) or (
+        heading == BallTrack.Heading.RIGHT and dx <= 0
+    ):
+        dx = -dx
+
+    return dx, dy
