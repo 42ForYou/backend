@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict
+from typing import Dict, Union
 
 from pong.settings import LOGLEVEL_TRACE_ENABLE
 from livegame.SubGameConfig import SubGameConfig
@@ -42,6 +42,7 @@ class PaddleStatus:
             KeyInput.Key.DOWN: False,
         }
         self.t_last_updated = time_now
+        self.last_key_input: Union[None, KeyInput] = None
 
     def trace(self, msg: str) -> None:
         if LOGLEVEL_TRACE_ENABLE != "0":
@@ -64,7 +65,13 @@ class PaddleStatus:
         self.t_last_updated = time_now
         self.trace(f"t_last_updated {self.t_last_updated}")
 
-    def update_key(self, key_input: KeyInput, time_now: float) -> None:
+    def update_key(self, key_input: KeyInput, time_now: float) -> bool:
+        if self.last_key_input == key_input:
+            self.trace(f"ignore key input same with last input: {key_input}")
+            return False
+
+        self.trace(f"update_key {key_input}")
+        self.last_key_input = key_input
         self.update(time_now)
 
         if key_input.action == KeyInput.Action.PRESS:
