@@ -44,7 +44,7 @@ class BallTrack:
 
     def trace(self, msg: str) -> None:
         if LOGLEVEL_TRACE_ENABLE != "0":
-            self.logger.debug(msg)
+            self.logger.debug(f"[TRACE] {msg}")
 
     # Calculates the all ball track segments based on initial (x, y) and (dx, dy)
     # until the ball gets out of the game

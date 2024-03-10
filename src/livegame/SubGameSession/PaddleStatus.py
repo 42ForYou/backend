@@ -45,7 +45,7 @@ class PaddleStatus:
 
     def trace(self, msg: str) -> None:
         if LOGLEVEL_TRACE_ENABLE != "0":
-            self.logger.debug(msg)
+            self.logger.debug(f"[TRACE] {msg}")
 
     def update(self, time_now: float) -> None:
         time_elapsed = time_now - self.t_last_updated

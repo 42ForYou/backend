@@ -6,6 +6,13 @@ from enum import Enum
 from pong.settings import LOGLEVEL_TRACE_ENABLE
 from livegame.SubGameConfig import SubGameConfig
 
+logger = logging.getLogger(f"{__package__}.{__name__}")
+
+
+def logger_trace(msg: str) -> None:
+    if LOGLEVEL_TRACE_ENABLE != "0":
+        logger.debug(msg)
+
 
 class PointCategory(Enum):
     INVALID = 0
@@ -44,7 +51,7 @@ class BallTrackSegment:
 
     def trace(self, msg: str) -> None:
         if LOGLEVEL_TRACE_ENABLE != "0":
-            self.logger.debug(msg)
+            self.logger.debug(f"[TRACE] {msg}")
 
     def __str__(self) -> str:
         result = f"{self.__class__.__name__} "

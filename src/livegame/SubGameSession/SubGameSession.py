@@ -64,7 +64,7 @@ class SubGameSession(socketio.AsyncNamespace):
 
     def trace(self, msg: str) -> None:
         if LOGLEVEL_TRACE_ENABLE != "0":
-            self.logger.debug(msg)
+            self.logger.debug(f"[TRACE] {msg}")
 
     # SIO: F>B connect
     async def on_connect(self, sid, environ):
