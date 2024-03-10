@@ -52,22 +52,30 @@ class BallTrack:
         self, x_start: float, y_start: float, dx: float, dy: float
     ) -> None:
         while True:
+            self.trace(f"calculate_segments loop start")
+            self.trace(f"call get_ball_track_segment_to_wall")
             next_track = get_ball_track_segment_to_wall(
                 self.config, x_start, y_start, dx, dy
             )
             if next_track.is_valid:
+                self.trace(f"next track is valid")
                 self.segments.append(next_track)
                 x_start = next_track.x_end
                 y_start = next_track.y_end
                 dx, dy = next_track.next_dx_dy
+                self.trace(f"x_start {x_start} y_start {y_start} dx {dx} dy {dy}")
+                self.trace(f"continue...")
                 continue
 
             # ball doesn't hit the wall, thus must hit paddle side
             next_track = get_ball_track_segment_to_paddle(
                 self.config, x_start, y_start, dx, dy
             )
+            self.trace(f"call get_ball_track_segment_to_paddle")
             if next_track.is_valid:
+                self.trace(f"next track is valid")
                 self.segments.append(next_track)
+                self.trace("break")
                 break
 
             # ball doesn't hit walls neither paddles?
@@ -77,6 +85,9 @@ class BallTrack:
         len_total = sum([seg.len for seg in self.segments])
         self.t_duration = len_total / self.v  # v * t = d, t = d / v
         self.t_end = self.t_start + self.t_duration
+        self.trace(
+            f"self.y_impact {self.y_impact} len_total {len_total} self.t_end {self.t_end}"
+        )
 
     @property
     def next_dx_dy(self) -> Tuple[float, float]:

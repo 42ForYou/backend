@@ -67,6 +67,7 @@ class BallTrackSegment:
         )
         if result:
             self.p_start = PointCategory.CENTER
+            self.trace(f"{self} starts from center")
         return result
 
     def is_inside_line(
@@ -100,8 +101,10 @@ class BallTrackSegment:
         if result:
             if self.y_start > 0:
                 self.p_start = PointCategory.WALL_TOP
+                self.trace(f"{self} starts from top wall")
             else:
                 self.p_start = PointCategory.WALL_BOTTOM
+                self.trace(f"{self} starts from bottom wall")
         return result
 
     @property
@@ -117,8 +120,10 @@ class BallTrackSegment:
         if result:
             if self.y_end > 0:
                 self.p_end = PointCategory.WALL_TOP
+                self.trace(f"{self} ends at top wall")
             else:
                 self.p_end = PointCategory.WALL_BOTTOM
+                self.trace(f"{self} ends at bottom wall")
         return result
 
     @property
@@ -134,8 +139,10 @@ class BallTrackSegment:
         if result:
             if self.x_start > 0:
                 self.p_start = PointCategory.PADDLE_RIGHT
+                self.trace(f"{self} starts from right paddle")
             else:
                 self.p_start = PointCategory.PADDLE_LEFT
+                self.trace(f"{self} starts from left paddle")
         return result
 
     @property
@@ -151,20 +158,25 @@ class BallTrackSegment:
         if result:
             if self.x_end > 0:
                 self.p_end = PointCategory.PADDLE_RIGHT
+                self.trace(f"{self} ends from right paddle")
             else:
                 self.p_end = PointCategory.PADDLE_LEFT
+                self.trace(f"{self} ends from left paddle")
         return result
 
     @property
     def next_dx_dy(self) -> Tuple[float, float]:
         if self.end_at_walls:  # vertical reflection
+            self.trace(f"{self} next dx, dy: {self.dx}, {-self.dy}")
             return (self.dx, -self.dy)
         if self.end_at_paddles:  # horizontal reflection
+            self.trace(f"{self} next dx, dy: {-self.dx}, {self.dy}")
             return (-self.dx, self.dy)
         raise ValueError("BallTrackSegment doesn't end at either walls or paddles")
 
     @property
     def next_xy_start(self) -> Tuple[float, float]:
+        self.trace(f"{self} next x, y: {self.x_end}, {self.y_end}")
         return (self.x_end, self.y_end)
 
     def calculate_validity(self) -> None:
@@ -173,13 +185,16 @@ class BallTrackSegment:
         if not (
             self.start_from_center or self.start_from_walls or self.start_from_paddles
         ):
+            self.trace(f"{self} is not valid because start point")
             return
         # end point can be either on walls | on paddles
         if not (self.end_at_walls or self.end_at_paddles):
+            self.trace(f"{self} is not valid because end point")
             return
 
         if self.p_start == PointCategory.INVALID or self.p_end == PointCategory.INVALID:
             raise ValueError(f"p_start or p_end is invalid")
+        self.trace(f"{self} is valid")
         self.is_valid = True
 
 
@@ -194,10 +209,13 @@ def get_ball_track_segment_to_wall(
         raise ValueError("Ball cannot reach the walls (dy == 0.0)")
 
     y_impact = config.y_max if dy > 0 else config.y_min
+    logger_trace(f"y_impact: {y_impact}")
     # Calculate time to reach the wall (y = y_impact | -y_impact)
     t_impact = (y_impact - y_start) / dy
+    logger_trace(f"t_impact: {t_impact}")
     # Calculate the x-coordinate of the impact point
     x_impact = x_start + dx * t_impact
+    logger_trace(f"x_impact: {x_impact}")
     # Determine which wall is hit
 
     return BallTrackSegment(config, x_start, y_start, x_impact, y_impact, dx, dy)
@@ -214,10 +232,13 @@ def get_ball_track_segment_to_paddle(
         raise ValueError("Ball cannot reach the paddles (dx == 0.0)")
 
     x_impact = config.x_max if dx > 0 else config.x_min
+    logger_trace(f"x_impact: {x_impact}")
     # Calculate time to reach the paddles (x = x_impact | -x_impact)
     t_impact = (x_impact - x_start) / dx
+    logger_trace(f"t_impact: {t_impact}")
     # Calculate the y-coordinate of the impact point
     y_impact = y_start + dy * t_impact
+    logger_trace(f"y_impact: {y_impact}")
     # Determine which paddle is hit
 
     return BallTrackSegment(config, x_start, y_start, x_impact, y_impact, dx, dy)

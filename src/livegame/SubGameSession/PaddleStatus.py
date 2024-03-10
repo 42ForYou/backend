@@ -49,15 +49,20 @@ class PaddleStatus:
 
     def update(self, time_now: float) -> None:
         time_elapsed = time_now - self.t_last_updated
+        self.trace(f"{time_elapsed} seconds passed")
 
         new_y = self.y + self.dy * time_elapsed
+        self.trace(f"new_y: {new_y}")
         if new_y > self.config.y_max:
             new_y = self.config.y_max
+            self.trace(f"new_y clipped to max {new_y}")
         if new_y < self.config.y_min:
             new_y = self.config.y_min
+            self.trace(f"new_y clipped to min {new_y}")
         self.y = new_y
 
         self.t_last_updated = time_now
+        self.trace(f"t_last_updated {self.t_last_updated}")
 
     def update_key(self, key_input: KeyInput, time_now: float) -> None:
         self.update(time_now)
@@ -90,7 +95,13 @@ class PaddleStatus:
         else:
             raise ValueError(f"Invalid KeyInput Action: {key_input}")
 
+        self.trace(f"self.dy {self.dy}")
+        return True
+
     def hit(self, y_ball: float) -> bool:
+        self.trace(
+            f"y_ball {y_ball} => hit: {self.y - self.config.l_paddle / 2 <= y_ball <= self.y + self.config.l_paddle}"
+        )
         return (
             self.y - self.config.l_paddle / 2 <= y_ball <= self.y + self.config.l_paddle
         )
