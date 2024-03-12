@@ -172,7 +172,7 @@ class SubGameSession(socketio.AsyncNamespace):
                 # success to defend, create reflection
                 self.logger.debug(f"{self.paddle_defense.player.name} defense success")
                 new_x_start, new_y_start = self.balltrack.next_xy_start
-                new_dx, new_dy = self.balltrack.next_dx_dy
+                new_dx, new_dy = self.balltrack.next_dx_dy(self.paddle_defense.dy)
                 self.trace(
                     f"new x, y: {new_x_start}, {new_y_start}, dx, dy: {new_dx}, {new_dy}"
                 )

@@ -98,9 +98,10 @@ class BallTrack:
             f"self.y_impact {self.y_impact} len_total {len_total} self.t_end {self.t_end}"
         )
 
-    @property
-    def next_dx_dy(self) -> Tuple[float, float]:
-        return self.segments[-1].next_dx_dy
+    def next_dx_dy(self, paddle_dy: float) -> Tuple[float, float]:
+        new_dx, new_dy = self.segments[-1].next_dx_dy
+        new_dy += paddle_dy * self.config.u_paddle
+        return new_dx, new_dy
 
     @property
     def next_xy_start(self) -> Tuple[float, float]:

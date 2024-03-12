@@ -39,6 +39,7 @@ def serialize_subgame_config(config: SubGameConfig):
         "y_init_paddle": config.y_paddle_init,  # 패들의 최초 y 좌표
         "v_paddle": config.v_paddle,  # 패들의 속력
         "len_paddle": config.l_paddle,  # 패들의 길이
+        "u_paddle": config.u_paddle,  # 패들의 마찰계수
         "v_ball": config.v_ball,  # 공의 초기 속력
         # 각 "강" 시작시, /gameroom @update_tournament 부터 /subgame @start 까지 딜레이 시간
         "delay_rank_start": config.t_delay_rank_start,
