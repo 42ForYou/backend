@@ -1,10 +1,13 @@
+import logging
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail, EmailMessage
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.authtoken.models import Token
-from rest_framework.authentication import BaseAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import PageNumberPagination
+from rest_framework_simplejwt.tokens import Token
+import pong.settings as settings
 
 
 class CustomError(Exception):
@@ -55,20 +58,19 @@ def wrap_data(**kwargs):
     return {"data": kwargs}
 
 
-class CookieTokenAuthentication(BaseAuthentication):
+class CookieTokenAuthentication(JWTAuthentication):
     def authenticate(self, request):
-        token_key = request.COOKIES.get("pong_token")
-        if not token_key:
+        raw_token = request.COOKIES.get(settings.SIMPLE_JWT["AUTH_COOKIE"])
+        if raw_token is None:
             raise CustomError(
                 "Token not provided", status_code=status.HTTP_403_FORBIDDEN
             )
 
         try:
-            token = Token.objects.get(key=token_key)
-        except Token.DoesNotExist:
+            validated_token = AccessToken(raw_token)
+            return self.get_user(validated_token), validated_token
+        except Exception as e:
             raise CustomError("Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
-
-        return (token.user, token)
 
 
 class CustomPageNumberPagination(PageNumberPagination):

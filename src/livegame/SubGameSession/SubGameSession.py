@@ -13,6 +13,7 @@ from livegame.SubGameConfig import SubGameConfig
 from livegame.SubGameSession.PaddleStatus import PaddleStatus, KeyInput, Player
 from livegame.SubGameSession.BallTrack import BallTrack, get_random_dx_dy
 from livegame.SubGameSession.SIOAdapter import serialize_balltrack
+import pong.settings as settings
 
 
 class TurnResult(Enum):
@@ -68,7 +69,7 @@ class SubGameSession(socketio.AsyncNamespace):
             cookie_dict = dict(
                 item.split("=") for item in cookies.split("; ") if "=" in item
             )
-            token = cookie_dict.get("pong_token", None)
+            token = cookie_dict.get(settings.SIMPLE_JWT["AUTH_COOKIE"], None)
             if not token:
                 self.logger.warn("No token")
                 await self.disconnect(sid)
