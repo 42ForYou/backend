@@ -54,13 +54,7 @@ class CustomTokenRefreshView(TokenRefreshView):
             response = super().post(request, *args, **kwargs)
             token = response.data["access"]
             response.data = None
-            response.set_cookie(
-                settings.SIMPLE_JWT["AUTH_COOKIE"],
-                token,
-                httponly=True,
-                samesite="Strict",
-                path="/",
-            )
+            response = set_cookie_response(response, access=token)
             user = User.objects.get(intra_id=AccessToken(token).payload["intra_id"])
             response.data = get_response_data(user)
             logger.debug(f"refreshed token: {AccessToken(token).payload}")
