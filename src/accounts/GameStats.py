@@ -50,7 +50,7 @@ class GameStats:
             self.n_dual_match += 1
             subgame = history.subgames[0]
             winner = subgame.winner
-            winner_id = subgame.player_a if winner == "A" else subgame.player_b
+            winner_id = subgame.player_a.id if winner == "A" else subgame.player_b.id
             if winner_id == history.game_player.id:
                 self.n_dual_wins += 1
             else:
