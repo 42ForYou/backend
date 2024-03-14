@@ -136,6 +136,7 @@ class SubGameSession(socketio.AsyncNamespace):
         await asyncio.sleep(self.config.t_delay_subgame_start)
 
         asyncio.create_task(self.emit_update_time_left_until_end())
+        asyncio.create_task(self.ensure_time_limit())
         self.running = True
         self.logger.debug(f"start simulation of SubGameSession at {self.t_start}")
 
@@ -151,7 +152,7 @@ class SubGameSession(socketio.AsyncNamespace):
         self.logger.debug(f"start balltrack: {self.balltrack}")
 
         # run until score reaches matchpoint
-        while True:
+        while self.running:
             # emit balltrack
             await self.emit_update_track_ball()
             # assign offense/defense players/paddles
@@ -159,13 +160,7 @@ class SubGameSession(socketio.AsyncNamespace):
             self.determine_winner()
 
             if self.winner != Player.NOBODY:  # winner determined
-                self.t_end = time.time()
-                await self.emit_ended()
-                await self.gr_session.report_winner_of_subgame(
-                    self.idx_rank, self.idx_in_rank, self.winner
-                )
-                self.running = False
-                # TODO: disconnect all clients?
+                await self.end()
                 return
 
             # winner not determined
@@ -205,6 +200,23 @@ class SubGameSession(socketio.AsyncNamespace):
                 time.time(),
             )
 
+    async def end(self) -> None:
+        self.t_end = time.time()
+        await self.emit_ended()
+        await self.gr_session.report_winner_of_subgame(
+            self.idx_rank, self.idx_in_rank, self.winner
+        )
+        self.running = False
+        # TODO: disconnect all clients?
+
+    async def ensure_time_limit(self) -> None:
+        await asyncio.sleep(self.t_start + self.config.t_limit - time.time())
+        self.time_over = True
+        self.determine_winner()
+
+        if self.winner != Player.NOBODY:  # winner determined
+            await self.end()
+
     def update_turns(self) -> None:
         if self.balltrack.heading == BallTrack.Heading.LEFT:
             self.paddle_offense = self.paddles[Player.B]
@@ -223,10 +235,6 @@ class SubGameSession(socketio.AsyncNamespace):
         # await until ball hits the other side
         await asyncio.sleep(self.balltrack.t_end - time.time())
         new_t = time.time()
-
-        if new_t > self.t_end:
-            self.logger.debug("time is up")
-            self.time_over = True
 
         # only update defending paddle
         self.paddle_defense.update(new_t)
@@ -258,7 +266,10 @@ class SubGameSession(socketio.AsyncNamespace):
             f"Emit event {event} data {data} to namespace {self.namespace}"
         )
 
-    async def emit_update_time_left(self, time_left: int) -> int:
+    async def emit_update_time_left(self, time_left: int) -> None:
+        if not self.running:
+            return
+
         event = "update_time_left"
         data = {
             "t_event": time.time(),
@@ -269,7 +280,7 @@ class SubGameSession(socketio.AsyncNamespace):
         self.logger.debug(
             f"Emit event {event} data {data} to namespace {self.namespace}"
         )
-        return time_left
+        return
 
     async def emit_update_time_left_until_end(self) -> None:
         for time_elapsed in range(int(self.config.t_limit) + 1):
@@ -282,7 +293,10 @@ class SubGameSession(socketio.AsyncNamespace):
             next_emit_t = self.t_start + time_elapsed + 1
             await asyncio.sleep(next_emit_t - time.time())
 
-    async def emit_update_scores(self):
+    async def emit_update_scores(self) -> None:
+        if not self.running:
+            return
+
         self.logger.debug(
             f"Emit score: A {self.paddles[Player.A].score} : {self.paddles[Player.B].score} B"
         )
@@ -299,6 +313,9 @@ class SubGameSession(socketio.AsyncNamespace):
         )
 
     async def emit_update_track_ball(self):
+        if not self.running:
+            return
+
         event = "update_track_ball"
         data = serialize_balltrack(self.balltrack)
         # SIO: B>F update_track_ball
@@ -308,6 +325,9 @@ class SubGameSession(socketio.AsyncNamespace):
         )
 
     async def emit_update_track_paddle(self, paddle: PaddleStatus):
+        if not self.running:
+            return
+
         event = "update_track_paddle"
         data = {
             "t_event": paddle.t_last_updated,
