@@ -115,11 +115,13 @@ class SubGameSession(socketio.AsyncNamespace):
             )
             await self.emit_update_track_paddle(self.paddles[player])
 
-    def determine_winner(self, turn_result: TurnResult) -> None:
+    def determine_winner(self) -> None:
         if self.time_over:  # sudden death
-            if turn_result == TurnResult.A_SCORED:
+            if self.paddles[Player.A].score == self.paddles[Player.B].score:
+                return  # play until someone scores
+            elif self.paddles[Player.A].score > self.paddles[Player.B].score:
                 self.winner = Player.A
-            else:
+            elif self.paddles[Player.A].score < self.paddles[Player.B].score:
                 self.winner = Player.B
         elif self.paddles[Player.A].score == self.config.match_point:
             self.winner = Player.A
@@ -154,7 +156,7 @@ class SubGameSession(socketio.AsyncNamespace):
             await self.emit_update_track_ball()
             # assign offense/defense players/paddles
             result = await self.wait_ball_travel()
-            self.determine_winner(result)
+            self.determine_winner()
 
             if self.winner != Player.NOBODY:  # winner determined
                 self.t_end = time.time()
