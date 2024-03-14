@@ -273,6 +273,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             for game_player in players
         ]
         self.n_players = len(self.users_cache)
+        random.seed()
         random.shuffle(self.users_cache)
 
         if not is_power_of_two(self.n_players):
