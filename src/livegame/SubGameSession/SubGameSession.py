@@ -19,7 +19,7 @@ import pong.settings as settings
 class TurnResult(Enum):
     DEFENDED = 0
     A_SCORED = 1
-    B_SCORED = 1
+    B_SCORED = 2
 
 
 class SubGameSession(socketio.AsyncNamespace):
