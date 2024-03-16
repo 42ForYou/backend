@@ -149,6 +149,9 @@ class SubGameSession(socketio.AsyncNamespace):
         self.paddles[player].ack_status = PaddleAckStatus.STARTED
 
     async def ensure_start(self) -> None:
+        self.running = True
+        self.logger.debug(f"start simulation of SubGameSession at {self.t_start}")
+
         max_retry = 5
         for _ in range(max_retry):  # FIXME: not hardcode 5 times
             self.t_start = time.time() + self.config.t_delay_subgame_start
@@ -170,8 +173,6 @@ class SubGameSession(socketio.AsyncNamespace):
 
         asyncio.create_task(self.emit_update_time_left_until_end())
         asyncio.create_task(self.ensure_time_limit())
-        self.running = True
-        self.logger.debug(f"start simulation of SubGameSession at {self.t_start}")
 
         new_x, new_y = get_random_dx_dy(self.config.v_ball, 20)
         self.balltrack = BallTrack(
