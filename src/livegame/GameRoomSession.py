@@ -382,6 +382,7 @@ class GameRoomSession(socketio.AsyncNamespace):
     def game_start(self):
         game_room = self.game.game_room
         game_room.is_playing = True
+        game_room.join_players = self.game.n_players
         game_room.save()
         self.is_playing = True
 
