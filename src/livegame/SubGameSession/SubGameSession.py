@@ -233,14 +233,36 @@ class SubGameSession(socketio.AsyncNamespace):
                 time.time(),
             )
 
+    # SIO: F>B ended_ack
+    async def on_ended_ack(self, sid, data):
+        self.logger.debug(f"ended_ack from sid {sid}, data={data}")
+
+        if not sid in self.sid_to_player:
+            self.logger.warn(f"sid {sid} is not connected player")
+            return
+
+        player: Player = self.sid_to_player[sid]
+        self.paddles[player].ack_status = PaddleAckStatus.ENDED
+
     async def end(self) -> None:
-        self.t_end = time.time()
-        await self.emit_ended()
-        await self.gr_session.report_winner_of_subgame(
-            self.idx_rank, self.idx_in_rank, self.winner
-        )
         self.running = False
-        # TODO: disconnect all clients?
+
+        max_retry = 5
+        for _ in range(max_retry):  # FIXME: not hardcode 5 times
+            self.t_end = time.time()
+            await self.emit_ended()
+            await self.gr_session.report_winner_of_subgame(
+                self.idx_rank, self.idx_in_rank, self.winner
+            )
+            await asyncio.sleep(3)  # FIXME: not hardcode 3 seconds
+
+            if all(
+                paddle.ack_status == PaddleAckStatus.ENDED
+                for _, paddle in self.paddles.items()
+            ):
+                return
+
+        raise TimeoutError(f"Max retry ({max_retry}) of emiting ended event reached")
 
     async def ensure_time_limit(self) -> None:
         await asyncio.sleep(self.t_start + self.config.t_limit - time.time())
