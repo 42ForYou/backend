@@ -124,7 +124,7 @@ class GameRoomViewSet(
         game = None
         try:
             request_data = request.data.get("data")
-            game = create_game(request_data.get("game"))
+            game = create_game(request.user, request_data.get("game"))
             game_room = self.create_room(request, request_data, game)
             GAMEROOMSESSION_REGISTRY[game_room.id] = GameRoomSession(game)
             sio.register_namespace(GAMEROOMSESSION_REGISTRY[game_room.id])
