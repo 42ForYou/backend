@@ -13,6 +13,12 @@ class Player(Enum):
     B = 2  # RIGHT
 
 
+class PaddleAckStatus(Enum):
+    CREATED = 0
+    STARTED = 1
+    ENDED = 2
+
+
 @dataclass
 class KeyInput:
     class Key(Enum):
@@ -43,6 +49,7 @@ class PaddleStatus:
         }
         self.t_last_updated = time_now
         self.last_key_input: Union[None, KeyInput] = None
+        self.ack_status = PaddleAckStatus.CREATED
 
     def trace(self, msg: str) -> None:
         if LOGLEVEL_TRACE_ENABLE != "0":
