@@ -194,7 +194,7 @@ class SubGameSession(socketio.AsyncNamespace):
             self.determine_winner()
 
             if self.winner != Player.NOBODY:  # winner determined
-                await self.end()
+                await self.ensure_ended()
                 return
 
             # winner not determined
@@ -245,7 +245,7 @@ class SubGameSession(socketio.AsyncNamespace):
         player: Player = self.sid_to_player[sid]
         self.paddles[player].ack_status = PaddleAckStatus.ENDED
 
-    async def end(self) -> None:
+    async def ensure_ended(self) -> None:
         self.running = False
 
         max_retry = 5
@@ -271,7 +271,7 @@ class SubGameSession(socketio.AsyncNamespace):
         self.determine_winner()
 
         if self.winner != Player.NOBODY:  # winner determined
-            await self.end()
+            await self.ensure_ended()
 
     def update_turns(self) -> None:
         if self.balltrack.heading == BallTrack.Heading.LEFT:
