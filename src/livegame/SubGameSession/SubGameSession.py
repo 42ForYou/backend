@@ -10,7 +10,12 @@ from pong.settings import LOGLEVEL_TRACE_ENABLE
 from accounts.models import User
 from socketcontrol.events import sio, get_user_by_token
 from livegame.SubGameConfig import SubGameConfig
-from livegame.SubGameSession.PaddleStatus import PaddleStatus, KeyInput, Player
+from livegame.SubGameSession.PaddleStatus import (
+    PaddleStatus,
+    KeyInput,
+    Player,
+    PaddleAckStatus,
+)
 from livegame.SubGameSession.BallTrack import BallTrack, get_random_dx_dy
 from livegame.SubGameSession.SIOAdapter import serialize_balltrack
 import pong.settings as settings
@@ -128,12 +133,40 @@ class SubGameSession(socketio.AsyncNamespace):
         elif self.paddles[Player.B].score == self.config.match_point:
             self.winner = Player.B
 
+    # SIO: F>B start_ack
+    async def on_start_ack(self, sid, data):
+        self.logger.debug(f"start_ack from sid {sid}, data={data}")
+
+        if not self.running:
+            self.logger.debug(f"SubGameSession is not running")
+            return
+
+        if not sid in self.sid_to_player:
+            self.logger.warn(f"sid {sid} is not connected player")
+            return
+
+        player: Player = self.sid_to_player[sid]
+        self.paddles[player].ack_status = PaddleAckStatus.STARTED
+
+    async def ensure_start(self) -> None:
+        max_retry = 5
+        for _ in range(max_retry):  # FIXME: not hardcode 5 times
+            self.t_start = time.time() + self.config.t_delay_subgame_start
+            self.t_end = self.t_start + self.config.t_limit
+            await self.emit_start()
+            await asyncio.sleep(self.config.t_delay_subgame_start)
+
+            if all(
+                paddle.ack_status == PaddleAckStatus.STARTED
+                for _, paddle in self.paddles.items()
+            ):
+                return
+
+        raise TimeoutError(f"Max retry ({max_retry}) of emiting start event reached")
+
     # start simulation. start accepting key press.
     async def start(self) -> None:
-        self.t_start = time.time() + self.config.t_delay_subgame_start
-        self.t_end = self.t_start + self.config.t_limit
-        await self.emit_start()
-        await asyncio.sleep(self.config.t_delay_subgame_start)
+        await self.ensure_start()
 
         asyncio.create_task(self.emit_update_time_left_until_end())
         asyncio.create_task(self.ensure_time_limit())
