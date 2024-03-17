@@ -272,7 +272,9 @@ class SubGameSession(socketio.AsyncNamespace):
         self.time_over = True
         self.determine_winner()
 
-        if self.winner != Player.NOBODY:  # winner determined
+        if self.winner == Player.NOBODY:  # enter sudden death mode
+            await self.emit_time_up()
+        else:  # winner determined
             await self.ensure_ended()
 
     def update_turns(self) -> None:
@@ -394,6 +396,15 @@ class SubGameSession(socketio.AsyncNamespace):
             "dy": paddle.dy,
         }
         # SIO: B>F update_track_paddle
+        await sio.emit(event, data=data, namespace=self.namespace)
+        self.logger.debug(
+            f"Emit event {event} data {data} to namespace {self.namespace}"
+        )
+
+    async def emit_time_up(self):
+        event = "time_up"
+        data = {"t_event": self.t_end}
+        # SIO: B>F time_up
         await sio.emit(event, data=data, namespace=self.namespace)
         self.logger.debug(
             f"Emit event {event} data {data} to namespace {self.namespace}"
