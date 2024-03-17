@@ -150,7 +150,6 @@ class SubGameSession(socketio.AsyncNamespace):
 
     async def ensure_start(self) -> None:
         self.running = True
-        self.logger.debug(f"start simulation of SubGameSession at {self.t_start}")
 
         max_retry = 5
         for _ in range(max_retry):  # FIXME: not hardcode 5 times
@@ -163,6 +162,9 @@ class SubGameSession(socketio.AsyncNamespace):
                 paddle.ack_status == PaddleAckStatus.STARTED
                 for _, paddle in self.paddles.items()
             ):
+                self.logger.debug(
+                    f"start simulation of SubGameSession at {self.t_start}"
+                )
                 return
 
         raise TimeoutError(f"Max retry ({max_retry}) of emiting start event reached")
