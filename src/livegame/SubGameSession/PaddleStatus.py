@@ -41,6 +41,8 @@ class PaddleStatus:
         )
         self.player = player
         self.y = self.config.y_paddle_init
+        self.y_max = self.config.y_max - self.config.l_paddle / 2
+        self.y_min = self.config.y_min + self.config.l_paddle / 2
         self.dy: float = 0.0
         self.score = 0
         self.key_pressed: Dict[KeyInput.Key, bool] = {
@@ -61,11 +63,11 @@ class PaddleStatus:
 
         new_y = self.y + self.dy * time_elapsed
         self.trace(f"new_y: {new_y}")
-        if new_y > self.config.y_max:
-            new_y = self.config.y_max
+        if new_y > self.y_max:
+            new_y = self.y_max
             self.trace(f"new_y clipped to max {new_y}")
-        if new_y < self.config.y_min:
-            new_y = self.config.y_min
+        if new_y < self.y_min:
+            new_y = self.y_min
             self.trace(f"new_y clipped to min {new_y}")
         self.y = new_y
 
