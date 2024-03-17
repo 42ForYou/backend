@@ -4,6 +4,7 @@ import time
 import asyncio
 import logging
 from typing import Dict, List
+from enum import Enum
 
 import socketio
 from accounts.models import User, UserDataCache, fetch_user_data_cache
@@ -35,6 +36,22 @@ def is_power_of_two(n: int) -> bool:
 def update_game_room_sid(user, sid):
     user.socket_session.game_room_session_id = sid
     user.socket_session.save()
+
+
+class SubGameSessionResult(Enum):
+    OK = 0
+    TIMEOUT = 1
+    INTERNAL_ERROR = 2
+
+
+def get_cause_of_termination(results: List[SubGameSessionResult]) -> str:
+    for result in results:
+        if result == SubGameSessionResult.INTERNAL_ERROR:
+            return "internal_error"
+        elif result == SubGameSessionResult.TIMEOUT:
+            return "connection_lost"
+
+    raise ValueError(f"given results {results} doesn't contain not-ok result")
 
 
 class GameRoomSession(socketio.AsyncNamespace):
@@ -126,6 +143,17 @@ class GameRoomSession(socketio.AsyncNamespace):
 
         await self.emit_update_room(data, player_id_list, sid_list, am_i_host_list)
 
+    async def start_subgame(self, subgame: SubGameSession) -> SubGameSessionResult:
+        try:
+            await subgame.start()
+            return SubGameSessionResult.OK
+        except TimeoutError as e:
+            self.logger.error(f"Connection lost while running subgame {subgame}: {e}")
+            return SubGameSessionResult.TIMEOUT
+        except Exception as e:
+            self.logger.error(f"Exception while running subgame {subgame}: {e}")
+            return SubGameSessionResult.INTERNAL_ERROR
+
     # SIO: F>B start
     async def on_start(self, sid, data):
         self.logger.info(f"start from sid {sid}")
@@ -165,12 +193,18 @@ class GameRoomSession(socketio.AsyncNamespace):
             self.logger.debug(
                 f"wait until all SubGameSession ends in rank {self.rank_ongoing}"
             )
-            await asyncio.gather(
+            session_results = await asyncio.gather(
                 *[  # update winner & emit update tournament happens inside subgameresult
-                    subgameresult.session.start()
+                    self.start_subgame(subgameresult.session)
                     for subgameresult in self.tournament_tree[self.rank_ongoing]
                 ]
             )
+
+            if any(result != SubGameSessionResult.OK for result in session_results):
+                self.logger.warning(f"GameRoomSession terminate")
+                await self.emit_destroyed(get_cause_of_termination(session_results))
+                # TODO: GameRoomSession 종료 처리
+                return
 
             # TODO: delete in production
             if not self.is_current_rank_done():

@@ -409,4 +409,4 @@ class SubGameSession(socketio.AsyncNamespace):
         )
 
     def __str__(self) -> str:
-        return f"GameSession t_start={self.t_start}"
+        return f"SubGameSession[{self.idx_rank}][{self.idx_in_rank}] t_start={self.t_start}"
