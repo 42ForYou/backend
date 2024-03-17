@@ -203,7 +203,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             if any(result != SubGameSessionResult.OK for result in session_results):
                 self.logger.warning(f"GameRoomSession terminate")
                 await self.emit_destroyed(get_cause_of_termination(session_results))
-                # TODO: GameRoomSession 종료 처리
+                await sync_to_async(self.game.delete)()
                 return
 
             # TODO: delete in production
