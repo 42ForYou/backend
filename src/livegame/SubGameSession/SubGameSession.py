@@ -10,8 +10,8 @@ from pong.settings import LOGLEVEL_TRACE_ENABLE
 from accounts.models import User
 from socketcontrol.events import sio, get_user_by_token
 from livegame.SubGameConfig import SubGameConfig
-from livegame.SubGameSession.PaddleStatus import (
-    PaddleStatus,
+from livegame.SubGameSession.Paddle import (
+    Paddle,
     KeyInput,
     Player,
     PaddleAckStatus,
@@ -49,9 +49,9 @@ class SubGameSession(socketio.AsyncNamespace):
         self.idx_rank = idx_rank
         self.idx_in_rank = idx_in_rank
 
-        self.paddles: Dict[Player, PaddleStatus] = {
-            Player.A: PaddleStatus(self.config, Player.A, config.l_paddle),  # LEFT
-            Player.B: PaddleStatus(self.config, Player.B, config.l_paddle),  # RIGHT
+        self.paddles: Dict[Player, Paddle] = {
+            Player.A: Paddle(self.config, Player.A, config.l_paddle),  # LEFT
+            Player.B: Paddle(self.config, Player.B, config.l_paddle),  # RIGHT
         }
         self.intra_id_a = intra_id_a
         self.intra_id_b = intra_id_b
@@ -384,7 +384,7 @@ class SubGameSession(socketio.AsyncNamespace):
             f"Emit event {event} data {data} to namespace {self.namespace}"
         )
 
-    async def emit_update_track_paddle(self, paddle: PaddleStatus):
+    async def emit_update_track_paddle(self, paddle: Paddle):
         if not self.running:
             return
 

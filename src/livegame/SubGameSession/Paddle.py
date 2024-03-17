@@ -33,7 +33,7 @@ class KeyInput:
     action: Action
 
 
-class PaddleStatus:
+class Paddle:
     def __init__(self, config: SubGameConfig, player: Player, time_now: float) -> None:
         self.config = config
         self.logger = logging.getLogger(
