@@ -113,12 +113,13 @@ class PaddleStatus:
         return True
 
     def hit(self, y_ball: float) -> bool:
-        self.trace(
-            f"y_ball {y_ball} => hit: {self.y - self.config.l_paddle / 2 <= y_ball <= self.y + self.config.l_paddle}"
+        result = (
+            self.y - self.config.l_paddle / 2
+            <= y_ball
+            <= self.y + self.config.l_paddle / 2
         )
-        return (
-            self.y - self.config.l_paddle / 2 <= y_ball <= self.y + self.config.l_paddle
-        )
+        self.trace(f"y_ball {y_ball} => hit: {result}")
+        return result
 
     def __str__(self) -> str:
         return f"Paddle(l={self.config.l_paddle}) at y={self.y}, dy={self.dy}"
