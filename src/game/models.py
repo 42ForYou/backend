@@ -22,7 +22,7 @@ class GameRoom(models.Model):
         Game, on_delete=models.CASCADE, related_name="game_room"
     )
     id = models.AutoField(primary_key=True)
-    title = models.CharField(max_length=50, null=False)
+    title = models.CharField(max_length=20, null=False)
     is_playing = models.BooleanField(default=False)
     join_players = models.PositiveIntegerField(default=0)
 
@@ -38,7 +38,7 @@ class GamePlayer(models.Model):
         related_name="game_player",
     )
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="game_player")
-    nickname = models.CharField(max_length=50, default="anonymous")
+    nickname = models.CharField(max_length=32, default="anonymous")
     rank = models.IntegerField(
         default=-1
     )  # -1: 우승, 0: 결승에서 탈락, 1: 4강에서 탈락 ...
