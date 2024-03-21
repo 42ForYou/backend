@@ -12,18 +12,18 @@ def get_time() -> float:
 
 
 def round_time(val: float) -> float:
-    if isinstance(val, float):
+    if not isinstance(val, float):
         return val
     return round(val, prc_time)
 
 
 def round_coord(val: float) -> float:
-    if isinstance(val, float):
+    if not isinstance(val, float):
         return val
     return round(val, prc_coord)
 
 
 def round_speed(val: float) -> float:
-    if isinstance(val, float):
+    if not isinstance(val, float):
         return val
     return round(val, prc_speed)
