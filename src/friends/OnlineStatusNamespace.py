@@ -1,7 +1,7 @@
 import logging
 import socketio
+
 from asgiref.sync import sync_to_async
-from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
 import pong.settings as settings
 
