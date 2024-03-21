@@ -167,7 +167,15 @@ class SubGameSession(socketio.AsyncNamespace):
                 )
                 return
 
-        raise TimeoutError(f"Max retry ({max_retry}) of emiting start event reached")
+        timeout_culprit = []
+        for player, paddle in self.paddles.items():
+            if paddle.ack_status != PaddleAckStatus.STARTED:
+                timeout_culprit.append(player.name)
+
+        raise TimeoutError(
+            f"Max retry ({max_retry}) of emiting start event reached, "
+            f"culprit: {', '.join(timeout_culprit)}"
+        )
 
     # start simulation. start accepting key press.
     async def start(self) -> None:
@@ -265,7 +273,15 @@ class SubGameSession(socketio.AsyncNamespace):
             ):
                 return
 
-        raise TimeoutError(f"Max retry ({max_retry}) of emiting ended event reached")
+        timeout_culprit = []
+        for player, paddle in self.paddles.items():
+            if paddle.ack_status != PaddleAckStatus.ENDED:
+                timeout_culprit.append(player.name)
+
+        raise TimeoutError(
+            f"Max retry ({max_retry}) of emiting ended event reached, "
+            f"culprit: {', '.join(timeout_culprit)}"
+        )
 
     async def ensure_time_limit(self) -> None:
         await asyncio.sleep(self.t_start + self.config.t_limit - time.time())
