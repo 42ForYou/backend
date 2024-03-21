@@ -403,12 +403,7 @@ class SubGameSession(socketio.AsyncNamespace):
             return
 
         event = "update_track_paddle"
-        data = {
-            "t_event": round_time(paddle.t_last_updated),
-            "player": paddle.player.name,
-            "y": round_coord(paddle.y),
-            "dy": round_speed(paddle.dy),
-        }
+        data = paddle.to_dict()
         # SIO: B>F update_track_paddle
         await sio.emit(event, data=data, namespace=self.namespace)
         self.logger.debug(

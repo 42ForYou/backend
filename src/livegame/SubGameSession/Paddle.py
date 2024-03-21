@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Dict, Union
 
 from pong.settings import LOGLEVEL_TRACE_ENABLE
+from livegame.precision_config import round_time, round_coord, round_speed
 from livegame.SubGameConfig import SubGameConfig
 
 
@@ -122,6 +123,14 @@ class Paddle:
         )
         self.trace(f"y_ball {y_ball} => hit: {result}")
         return result
+
+    def to_dict(self) -> dict:
+        return {
+            "t_event": round_time(self.t_last_updated),
+            "player": self.player.name,
+            "y": round_coord(self.y),
+            "dy": round_speed(self.dy),
+        }
 
     def __str__(self) -> str:
         return f"Paddle(l={self.config.l_paddle}) at y={self.y}, dy={self.dy}"
