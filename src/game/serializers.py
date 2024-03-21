@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import Game, GameRoom, GamePlayer, SubGame
+
 from accounts.models import User, Profile
+from .models import Game, GameRoom, GamePlayer, SubGame
 
 
 class GameSerializer(serializers.ModelSerializer):
