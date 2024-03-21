@@ -17,7 +17,7 @@ from livegame.SubGameSession.Paddle import (
     Player,
     PaddleAckStatus,
 )
-from livegame.SubGameSession.BallTrack import BallTrack, get_random_dx_dy
+from livegame.SubGameSession.balltrack import BallTrack, get_random_dx_dy
 from livegame.SubGameSession.sio_adapter import serialize_balltrack
 import pong.settings as settings
 

@@ -14,7 +14,7 @@ from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
 from asgiref.sync import sync_to_async
 from livegame.precision_config import get_time
-from livegame.SubGameSession.SubGameSession import SubGameSession
+from livegame.SubGameSession.subgame_session import SubGameSession
 from livegame.SubGameSession.Paddle import Player
 from livegame.SubGameResult import SubGameResult
 from livegame.SubGameConfig import get_default_subgame_config
