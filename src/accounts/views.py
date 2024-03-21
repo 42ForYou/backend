@@ -1,26 +1,26 @@
 import os
 import json
 import hashlib
+import logging
+
 from datetime import datetime
 
 from django.db.models import Q
 from django.core.files.storage import default_storage
 
+from django.core.files.storage import default_storage
 from rest_framework import mixins, viewsets
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
 from rest_framework import serializers
-import logging
-import math
-from django.core.files.storage import default_storage
 from rest_framework.parsers import MultiPartParser, JSONParser
 
 import pong.settings as settings
 from pong.utils import CookieTokenAuthentication, CustomError, wrap_data
 from pong.utils import CustomPageNumberPagination
-from game.models import Game, GamePlayer, SubGame
-from game.serializers import GameSerializer, GamePlayerSerializer, SubGameSerializer
+from game.models import Game
+from game.serializers import GameSerializer
 from accounts.models import User
 from accounts.GameHistory import get_game_histories_of_user
 from accounts.GameStats import GameStats
