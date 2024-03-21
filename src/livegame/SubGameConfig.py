@@ -17,6 +17,7 @@ class SubGameConfig:
         player_a_init_point: int,
         player_b_init_point: int,
         paddle_len: float,
+        paddle_len_margin: float,
         paddle_speed: float,
         paddle_init_y: float,
         paddle_friction_coef: float,
@@ -40,6 +41,7 @@ class SubGameConfig:
         self.y_max = height / 2
         self.y_min = -height / 2
         self.l_paddle = paddle_len
+        self.l_paddle_m = paddle_len_margin
         self.v_paddle = paddle_speed
         self.y_paddle_init = paddle_init_y
         self.u_paddle = paddle_friction_coef
@@ -69,6 +71,7 @@ sgc_height = os.environ.get("SUBGAMECONFIG_HEIGHT", "600")
 sgc_player_a_init_point = os.environ.get("SUBGAMECONFIG_PLAYER_A_INIT_POINT", "0")
 sgc_player_b_init_point = os.environ.get("SUBGAMECONFIG_PLAYER_B_INIT_POINT", "0")
 sgc_paddle_len = os.environ.get("SUBGAMECONFIG_PADDLE_LENGTH", "50")
+sgc_paddle_len_margin = os.environ.get("SUBGAMECONFIG_PADDLE_MARGIN", "5")
 sgc_paddle_speed = os.environ.get("SUBGAMECONFIG_PADDLE_SPEED", "100")
 sgc_paddle_init_y = os.environ.get("SUBGAMECONFIG_PADDLE_INIT_Y", "0")
 sgc_paddle_friction_coef = os.environ.get("SUBGAMECONFIG_FRICTION_COEF", "0.1")
@@ -98,6 +101,7 @@ def get_default_subgame_config(game: Game) -> SubGameConfig:
         player_a_init_point=int(sgc_player_a_init_point),
         player_b_init_point=int(sgc_player_b_init_point),
         paddle_len=float(sgc_paddle_len),
+        paddle_len_margin=float(sgc_paddle_len_margin),
         paddle_speed=float(sgc_paddle_speed),
         paddle_init_y=float(sgc_paddle_init_y),
         paddle_friction_coef=float(sgc_paddle_friction_coef),
