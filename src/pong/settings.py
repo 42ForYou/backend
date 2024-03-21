@@ -15,6 +15,8 @@ from pathlib import Path
 import os
 import datetime
 import urllib.parse
+import logging
+import time
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,6 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
+# TODO: move to .env
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure--tx=7@tvtt)n%fb-l*l-mp-xf(60x9o)&09z2lu%@@5#e-0ys0"
 
@@ -47,6 +50,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "rest_framework_simplejwt",
+    'rest_framework_simplejwt.token_blacklist',
     "corsheaders",
     "django_filters",
     "authentication",
@@ -186,6 +190,15 @@ OAUTH_URL = os.environ.get("42OAUTH_URL")
 CALLBACK_URL = f"{MAIN_URL}/login/callback"
 AVATAR_LOCATION = os.environ.get("AVATAR_LOCATION")
 
+
+class EpochFormatter(logging.Formatter):
+    """Custom formatter to add epoch time to log records."""
+    def format(self, record):
+        # Add the current epoch time to the record
+        record.epoch = time.time()
+        # Call the original formatter to use the modified record
+        return super().format(record)
+
 DIR_LOG = os.path.join(BASE_DIR.parent, "logs")
 os.system(f"mkdir -p {DIR_LOG}")
 
@@ -194,7 +207,7 @@ LOGLEVEL_DJANGO = os.environ.get("LOGLEVEL_DJANGO", "WARNING")
 LOGLEVEL_SOCKETIO = os.environ.get("LOGLEVEL_SOCKETIO", "WARNING")
 LOGLEVEL_PONG = os.environ.get("LOGLEVEL_PONG", "WARNING")
 LOGLEVEL_LIVEGAME = os.environ.get("LOGLEVEL_LIVEGAME", "WARNING")
-
+LOGLEVEL_TRACE_ENABLE = os.environ.get("LOGLEVEL_TRACE_ENABLE", "0")
 
 
 LOGGING = {
@@ -206,7 +219,8 @@ LOGGING = {
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
         "precise": {
-            "format": "[%(levelname)s][%(asctime)s.%(msecs)03d] %(name)s: %(message)s",
+            "()": EpochFormatter,
+            "format": "[%(levelname)s][%(epoch)f] %(name)s: %(message)s",
             "datefmt": "%H:%M:%S",
         },
     },
@@ -258,9 +272,60 @@ LOGGING = {
             "handlers": ["consolePrecise"],
             "level":LOGLEVEL_LIVEGAME,
             "propagate": False,
-        }
+        },
+        "authenticate": {
+            "handlers": ["consoleBasic"],
+            "level": DEBUG,
+            "propagate": False,
+        },
     },
 }
+
+SIMPLE_JWT = {
+    # 토큰 암호화에 사용할 알고리즘
+    'ALGORITHM': 'HS256',
+
+    # 액세스 토큰의 유효 기간
+    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(days=1),
+
+    # 리프레시 토큰의 유효 기간
+    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=2),
+
+    # 회전(refresh) 시 새 리프레시 토큰의 유효 기간을 리셋할지 여부
+    'ROTATE_REFRESH_TOKENS': False,
+
+    # 리프레시 토큰이 만료될 때 새로운 토큰 발급을 거부할지 여부
+    'BLACKLIST_AFTER_ROTATION': True,
+
+    # 토큰에 포함될 사용자 정의 클레임
+    'USER_ID_FIELD': 'intra_id',
+
+    # 사용자 정의 클레임의 필드 이름
+    'USER_ID_CLAIM': 'intra_id',
+
+    'AUTH_COOKIE': 'pp_access_token',
+
+    'AUTH_COOKIE_REFRESH': 'pp_refresh_token',
+
+    # 사용자 모델의 필드를 통해 사용자를 인증할 때 사용할 필드
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+
+    # 토큰 발급 시 사용할 시크릿 키
+    'SIGNING_KEY': SECRET_KEY,
+
+    # 검증 시 사용할 공개 키 (기본적으로 시크릿 키와 동일)
+    'VERIFYING_KEY': '',
+
+    # 토큰에 포함될 헤더
+    'TOKEN_TYPE_CLAIM': 'Type',
+
+    # 토큰에 포함될 타입
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+
+    # JTI (JWT ID) 클레임을 사용할지 여부
+    'JTI_CLAIM': 'jti',
+}
+
 
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND")
 EMAIL_HOST = os.environ.get("EMAIL_HOST")

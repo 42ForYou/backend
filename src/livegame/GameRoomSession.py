@@ -4,6 +4,7 @@ import time
 import asyncio
 import logging
 from typing import Dict, List
+from enum import Enum
 
 import socketio
 from accounts.models import User, UserDataCache, fetch_user_data_cache
@@ -12,11 +13,13 @@ from .databaseio import left_game_room, get_room_data
 from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
 from asgiref.sync import sync_to_async
+from livegame.precision_config import get_time
 from livegame.SubGameSession.SubGameSession import SubGameSession
-from livegame.SubGameSession.PaddleStatus import Player
+from livegame.SubGameSession.Paddle import Player
 from livegame.SubGameResult import SubGameResult
 from livegame.SubGameConfig import get_default_subgame_config
 from livegame.SubGameSession.SIOAdapter import serialize_subgame_config
+import pong.settings as settings
 
 
 def is_power_of_two(n: int) -> bool:
@@ -34,6 +37,22 @@ def is_power_of_two(n: int) -> bool:
 def update_game_room_sid(user, sid):
     user.socket_session.game_room_session_id = sid
     user.socket_session.save()
+
+
+class SubGameSessionResult(Enum):
+    OK = 0
+    TIMEOUT = 1
+    INTERNAL_ERROR = 2
+
+
+def get_cause_of_termination(results: List[SubGameSessionResult]) -> str:
+    for result in results:
+        if result == SubGameSessionResult.INTERNAL_ERROR:
+            return "internal_error"
+        elif result == SubGameSessionResult.TIMEOUT:
+            return "connection_lost"
+
+    raise ValueError(f"given results {results} doesn't contain not-ok result")
 
 
 class GameRoomSession(socketio.AsyncNamespace):
@@ -68,7 +87,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             cookie_dict = dict(
                 item.split("=") for item in cookies.split("; ") if "=" in item
             )
-            token = cookie_dict.get("pong_token", None)
+            token = cookie_dict.get(settings.SIMPLE_JWT["AUTH_COOKIE"], None)
 
             if not token:
                 self.logger.warn("No token")
@@ -125,6 +144,17 @@ class GameRoomSession(socketio.AsyncNamespace):
 
         await self.emit_update_room(data, player_id_list, sid_list, am_i_host_list)
 
+    async def start_subgame(self, subgame: SubGameSession) -> SubGameSessionResult:
+        try:
+            await subgame.start()
+            return SubGameSessionResult.OK
+        except TimeoutError as e:
+            self.logger.error(f"Connection lost while running subgame {subgame}: {e}")
+            return SubGameSessionResult.TIMEOUT
+        except Exception as e:
+            self.logger.error(f"Exception while running subgame {subgame}: {e}")
+            return SubGameSessionResult.INTERNAL_ERROR
+
     # SIO: F>B start
     async def on_start(self, sid, data):
         self.logger.info(f"start from sid {sid}")
@@ -143,23 +173,20 @@ class GameRoomSession(socketio.AsyncNamespace):
         await self.emit_update_tournament()
 
         while self.rank_ongoing >= 0:
-            for idx_in_rank, subgame_item in enumerate(
+            for idx_in_rank, subgame_result in enumerate(
                 self.tournament_tree[self.rank_ongoing]  # 이번 rank의 SubGameResult들
             ):
-                player_data_a = self.sid_to_user_data[subgame_item.sid_a]
-                player_data_b = self.sid_to_user_data[subgame_item.sid_b]
-                subgame_item.session = SubGameSession(
+                player_data_a = self.sid_to_user_data[subgame_result.sid_a]
+                player_data_b = self.sid_to_user_data[subgame_result.sid_b]
+                subgame_result.session = SubGameSession(
                     config=self.config,
                     gameroom_session=self,
                     intra_id_a=player_data_a.intra_id,
                     intra_id_b=player_data_b.intra_id,
                     idx_rank=self.rank_ongoing,
                     idx_in_rank=idx_in_rank,
-                    # TODO: implement random ball direction
-                    ball_init_dx=math.sqrt(2) * self.config.v_ball,
-                    ball_init_dy=math.sqrt(2) * self.config.v_ball,
                 )
-                sio.register_namespace(subgame_item.session)
+                sio.register_namespace(subgame_result.session)
 
             self.logger.debug(f"sleeping {self.config.t_delay_rank_start} seconds...")
             await asyncio.sleep(self.config.t_delay_rank_start)
@@ -167,12 +194,18 @@ class GameRoomSession(socketio.AsyncNamespace):
             self.logger.debug(
                 f"wait until all SubGameSession ends in rank {self.rank_ongoing}"
             )
-            await asyncio.gather(
+            session_results = await asyncio.gather(
                 *[  # update winner & emit update tournament happens inside subgameresult
-                    subgameresult.session.start()
+                    self.start_subgame(subgameresult.session)
                     for subgameresult in self.tournament_tree[self.rank_ongoing]
                 ]
             )
+
+            if any(result != SubGameSessionResult.OK for result in session_results):
+                self.logger.warning(f"GameRoomSession terminate")
+                await self.emit_destroyed(get_cause_of_termination(session_results))
+                await sync_to_async(self.game.delete)()
+                return
 
             # TODO: delete in production
             if not self.is_current_rank_done():
@@ -181,9 +214,12 @@ class GameRoomSession(socketio.AsyncNamespace):
             self.logger.debug(f"sleeping {self.config.t_delay_rank_end} seconds...")
             await asyncio.sleep(self.config.t_delay_rank_end)
 
-            # 이번 rank의 SubGameResult들 un-register
-            for subgame_item in self.tournament_tree[self.rank_ongoing]:
-                sio.namespace_handlers.pop(subgame_item.session.namespace)
+            for subgame_result in self.tournament_tree[self.rank_ongoing]:
+                # 시작 - 종료 시간 반영
+                subgame_result.t_start = subgame_result.session.t_start
+                subgame_result.t_end = subgame_result.session.t_end
+                # 이번 rank의 SubGameResult들 un-register
+                sio.namespace_handlers.pop(subgame_result.session.namespace)
 
             self.update_tournament_tree(self.rank_ongoing, self.rank_ongoing - 1)
 
@@ -222,13 +258,20 @@ class GameRoomSession(socketio.AsyncNamespace):
                     point_a=subgame_result.session.paddles[Player.A].score,
                     point_b=subgame_result.session.paddles[Player.B].score,
                     winner=subgame_result.winner,
+                    t_start=subgame_result.t_start,
+                    t_end=subgame_result.t_end,
                 )
                 if subgame_result.winner == "A":
-                    player_a.rank -= 1 if player_a.rank != 0 else 0
-                    player_a.save()
+                    player_a.rank = subgame_result.session.idx_rank - 1
+                    player_b.rank = subgame_result.session.idx_rank
                 else:
-                    player_b.rank -= 1 if player_a.rank != 0 else 0
-                    player_b.save()
+                    player_a.rank = subgame_result.session.idx_rank
+                    player_b.rank = subgame_result.session.idx_rank - 1
+                self.logger.debug(
+                    f"subgame rank {subgame_result.session.idx_rank}, winner: {subgame_result.winner} , player_a: {player_a.rank}, player_b: {player_b.rank}"
+                )
+                player_a.save()
+                player_b.save()
                 self.game.users.add(player_a.user)
                 self.game.users.add(player_b.user)
 
@@ -265,6 +308,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             for game_player in players
         ]
         self.n_players = len(self.users_cache)
+        random.seed()
         random.shuffle(self.users_cache)
 
         if not is_power_of_two(self.n_players):
@@ -341,7 +385,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             self.logger.debug(f"emit update_room: {copy_data}")
 
     async def emit_destroyed(self, cause):
-        data = {"t_event": time.time(), "destroyed_because": cause}
+        data = {"t_event": get_time(), "destroyed_because": cause}
         # SIO: B>F destroyed
         await sio.emit("destroyed", data, namespace=self.namespace)
         self.logger.debug(f"emit destroyed: {data}")
@@ -349,11 +393,11 @@ class GameRoomSession(socketio.AsyncNamespace):
     async def emit_update_tournament(self):
         # SIO: B>F update_tournament
         data = {
-            "t_event": time.time(),
+            "t_event": get_time(),
             "n_ranks": self.n_ranks,
             "rank_ongoing": self.rank_ongoing,
             "subgames": [
-                [subgame.to_json() for subgame in subgame_in_rank]
+                [subgame.to_dict() for subgame in subgame_in_rank]
                 for subgame_in_rank in self.tournament_tree
             ],
         }
@@ -362,7 +406,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
     async def emit_config(self) -> None:
         event = "config"
-        data = {"t_event": time.time(), "config": serialize_subgame_config(self.config)}
+        data = {"t_event": get_time(), "config": serialize_subgame_config(self.config)}
         # SIO: B>F config
         await sio.emit(event, data=data, namespace=self.namespace)
         self.logger.debug(
@@ -373,6 +417,7 @@ class GameRoomSession(socketio.AsyncNamespace):
     def game_start(self):
         game_room = self.game.game_room
         game_room.is_playing = True
+        game_room.join_players = self.game.n_players
         game_room.save()
         self.is_playing = True
 

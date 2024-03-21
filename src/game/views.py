@@ -1,5 +1,6 @@
 import time
 import asyncio
+import logging
 
 from rest_framework import viewsets
 from rest_framework import mixins
@@ -68,11 +69,8 @@ class GameRoomViewSet(
                         exception='Invalid filter value. Expected "tournament" or "dual"',
                         status_code=status.HTTP_400_BAD_REQUEST,
                     )
-                is_tournament = False
-                if filter == "tournament":
-                    is_tournament = True
                 game_rooms = GameRoom.objects.filter(
-                    game__is_tournament=is_tournament
+                    game__is_tournament=filter == "tournament"
                 ).order_by("id")
             else:
                 game_rooms = GameRoom.objects.all().order_by("id")
@@ -100,7 +98,7 @@ class GameRoomViewSet(
             game_room = GameRoom.objects.get(id=room_id)
             self.check_object_permissions(request, game_room)
             data = get_single_game_room(room_id)
-            my_player_id = game_room.game.game_player.get(user=request.auth.user).id
+            my_player_id = game_room.game.game_player.get(user=request.user).id
             data["my_player_id"] = my_player_id
             return Response({"data": data}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -110,7 +108,7 @@ class GameRoomViewSet(
         game = None
         try:
             request_data = request.data.get("data")
-            game = create_game(request_data.get("game"))
+            game = create_game(request.user, request_data.get("game"))
             game_room = self.create_room(request, request_data, game)
             GAMEROOMSESSION_REGISTRY[game_room.id] = GameRoomSession(game)
             sio.register_namespace(GAMEROOMSESSION_REGISTRY[game_room.id])
@@ -141,7 +139,7 @@ class GameRoomViewSet(
         try:
             room_data = request_data.get("room")
             room_data["game"] = game.game_id
-            user = request.auth.user
+            user = request.user
             room_data["host"] = user.intra_id
             serializer = GameRoomSerializer(data=room_data)
             serializer.is_valid(raise_exception=True)
@@ -222,19 +220,19 @@ class PlayerViewSet(
                     "The game room is already started",
                     status_code=status.HTTP_400_BAD_REQUEST,
                 )
-            if self.user_already_in_same_game_room(request.auth.user, game):
-                return self.return_response(request.auth.user, game)
+            if self.user_already_in_same_game_room(request.user, game):
+                return self.return_response(request.user, game)
             if game.n_players == game_room.join_players:
                 raise CustomError(
                     "The game room is full",
                     status_code=status.HTTP_400_BAD_REQUEST,
                 )
-            if self.user_already_in_other_game_room(request.auth.user, game):
+            if self.user_already_in_other_game_room(request.user, game):
                 raise CustomError(
                     "The user is already participating",
                     status_code=status.HTTP_400_BAD_REQUEST,
                 )
-            user = request.auth.user
+            user = request.user
             request.data["game"] = game_id
             request.data["user"] = user.intra_id
             serializer = GamePlayerSerializer(data=request.data)
@@ -254,7 +252,7 @@ class PlayerViewSet(
     def destroy(self, request, *args, **kwargs):
         try:
             player_id = kwargs["pk"]
-            user = request.auth.user
+            user = request.user
             if not player_id:
                 raise CustomError(
                     "player_id is required", status_code=status.HTTP_400_BAD_REQUEST

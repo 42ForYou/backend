@@ -11,11 +11,22 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
 from rest_framework import serializers
+import logging
+import math
+from django.core.files.storage import default_storage
 from rest_framework.parsers import MultiPartParser, JSONParser
 
 import pong.settings as settings
 from pong.utils import CookieTokenAuthentication, CustomError, wrap_data
 from pong.utils import CustomPageNumberPagination
+from game.models import Game, GamePlayer, SubGame
+from game.serializers import GameSerializer, GamePlayerSerializer, SubGameSerializer
+from accounts.models import User
+from accounts.GameHistory import get_game_histories_of_user
+from accounts.GameStats import GameStats
+
+
+logger = logging.getLogger(f"{__package__}.{__name__}")
 
 from friends.models import Friend
 from .models import Profile
@@ -161,5 +172,59 @@ class UserSearchViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
             page = paginator.paginate_queryset(filtered_queryset, request)
             serializer = self.get_serializer(page, many=True)
             return paginator.get_paginated_response(serializer.data)
+        except Exception as e:
+            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
+
+
+class HistoryViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    logger = logging.getLogger("HistoryViewSet")
+    lookup_field = "user__intra_id"
+    lookup_url_kwarg = "intra_id"
+    authentication_classes = [CookieTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Override to satisfy DRF requirements, but not used for custom actions.
+        pass
+
+    def get_serializer_class(self):
+        # Override to satisfy DRF requirements, but not used for custom actions.
+        pass
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            user = User.objects.get(intra_id=kwargs["intra_id"])
+            self.logger.debug(f"got User: {user}")
+
+            histories = get_game_histories_of_user(user)
+            self.logger.debug(f"result {histories}")
+
+            dict_histories = [history.to_dict() for history in histories]
+            return Response(data=dict_histories, status=status.HTTP_200_OK)
+        except Exception as e:
+            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
+
+
+class StatsViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    logger = logging.getLogger("StatsViewSet")
+    queryset = Game.objects.all()
+    lookup_field = "user__intra_id"
+    lookup_url_kwarg = "intra_id"
+    serializer_class = GameSerializer
+    authentication_classes = [CookieTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            user = User.objects.get(intra_id=kwargs["intra_id"])
+            self.logger.debug(f"got User: {user}")
+
+            histories = get_game_histories_of_user(user)
+            self.logger.debug(f"result {histories}")
+
+            stats = GameStats(histories)
+            self.logger.debug(f"stats {stats}")
+
+            return Response(data=stats.to_dict(), status=status.HTTP_200_OK)
         except Exception as e:
             raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)

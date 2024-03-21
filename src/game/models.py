@@ -22,7 +22,7 @@ class GameRoom(models.Model):
         Game, on_delete=models.CASCADE, related_name="game_room"
     )
     id = models.AutoField(primary_key=True)
-    title = models.CharField(max_length=50, null=False)
+    title = models.CharField(max_length=20, null=False)
     is_playing = models.BooleanField(default=False)
     join_players = models.PositiveIntegerField(default=0)
 
@@ -38,8 +38,10 @@ class GamePlayer(models.Model):
         related_name="game_player",
     )
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="game_player")
-    nickname = models.CharField(max_length=50, default="anonymous")
-    rank = models.PositiveIntegerField(default=1)
+    nickname = models.CharField(max_length=32, default="anonymous")
+    rank = models.IntegerField(
+        default=-1
+    )  # -1: 우승, 0: 결승에서 탈락, 1: 4강에서 탈락 ...
 
     class Meta:
         unique_together = [["game", "user"]]
@@ -49,7 +51,7 @@ class GamePlayer(models.Model):
 
 
 class SubGame(models.Model):
-    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="sub_game")
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="sub_games")
     rank = models.PositiveIntegerField()  # 0: 결승, 1: 4강, 2: 8강 ...
     idx_in_rank = (
         models.PositiveIntegerField()
@@ -70,6 +72,9 @@ class SubGame(models.Model):
     )  # B 플레이어가 최종적으로 획득한 점수
 
     winner = models.CharField(max_length=1)  # "A" or "B"
+
+    t_start = models.FloatField(default=0.0)
+    t_end = models.FloatField(default=0.0)
 
     def __str__(self):
         return f"SubGame rank {self.rank}, [{self.idx_in_rank}] in Game {self.game_id}"

@@ -3,10 +3,12 @@ import logging
 
 from asgiref.sync import sync_to_async
 from django.db.models import Q
-from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import AccessToken
+from pong.utils import wrap_data
 from .models import SocketSession
 from friends.serializers import FriendUserSerializer
 from friends.models import Friend
+from accounts.models import User
 import pong.settings as settings
 
 
@@ -52,7 +54,10 @@ def filter_online_friends(friends_users):
 
 @sync_to_async
 def get_user_by_token(token):
-    return Token.objects.get(key=token).user
+    validated_token = AccessToken(token)
+    intra_id = validated_token["intra_id"]
+    user = User.objects.get(intra_id=intra_id)
+    return user
 
 
 @sync_to_async
@@ -86,7 +91,7 @@ async def connect(sid: str, environ: dict) -> None:
         cookie_dict = dict(
             item.split("=") for item in cookies.split("; ") if "=" in item
         )
-        token = cookie_dict.get("pong_token", None)
+        token = cookie_dict.get(settings.SIMPLE_JWT["AUTH_COOKIE"], None)
         if token:
             user = await get_user_by_token(token)
             session = await get_session(user, sid)

@@ -19,7 +19,7 @@ class UserDataCache:
     nickname: str
     avatar: str
 
-    def to_json(self) -> dict:
+    def to_dict(self) -> dict:
         return {
             "intra_id": self.intra_id,
             "nickname": self.nickname,
@@ -45,5 +45,5 @@ class Profile(models.Model):
         unique=True,
     )
     email = models.EmailField(unique=True)
-    avatar = models.CharField(default="")
+    avatar = models.CharField(max_length=256, default="")
     two_factor_auth = models.BooleanField(default=False)

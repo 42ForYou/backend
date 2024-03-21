@@ -1,3 +1,4 @@
+import logging
 import requests
 import json
 
@@ -11,13 +12,18 @@ from rest_framework.authtoken.models import Token
 from pong.utils import CustomError, wrap_data
 from pong.utils import CookieTokenAuthentication
 
+from rest_framework_simplejwt.tokens import AccessToken
 from accounts.models import User, Profile
 from accounts.serializers import (
     UserSerializer,
     ProfileSerializer,
 )
-
 from .models import OAuth, TwoFactorAuth
+from .utils import get_token_for_user, set_cookie_response
+import pong.settings as settings
+
+
+logger = logging.getLogger("authenticate.oauth")
 
 
 class OAuthView(APIView):
@@ -28,15 +34,14 @@ class OAuthView(APIView):
         return wrap_data(user=userJson, profile=profileJson)
 
     def get(self, request):
-        try:
-            user, token = CookieTokenAuthentication().authenticate(request)
-            response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
-            response.set_cookie(
-                "pong_token", token.key, httponly=True, samesite=None
-            )  # remove samesite=strict for development
-            return response
-        except Exception as e:
-            pass
+        access_token = request.COOKIES.get(settings.SIMPLE_JWT["AUTH_COOKIE"])
+        if access_token:
+            try:
+                user, validated_token = CookieTokenAuthentication().authenticate(request)
+                response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
+                return response
+            except Exception as e:
+                pass
 
         try:
             code = request.GET.get("code")
@@ -47,13 +52,12 @@ class OAuthView(APIView):
                 self.do_2fa(user)
                 data = wrap_data(email=profile.email, intra_id=user.intra_id)
                 return Response(data=data, status=status.HTTP_428_PRECONDITION_REQUIRED)
-            token, created = Token.objects.get_or_create(user=user)
-            if created:
-                token.save()
+            token = get_token_for_user(user)
+            logger.debug(
+                f"User {user} get token: {AccessToken(token["access"]).payload}"
+            )
             response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
-            response.set_cookie(
-                "pong_token", token.key, httponly=True, samesite=None
-            )  # remove samesite=strict for development
+            response = set_cookie_response(response, token["access"], token["refresh"])
             return response
         except Exception as e:
             raise CustomError(e)
