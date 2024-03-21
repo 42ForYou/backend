@@ -2,8 +2,6 @@ import time
 import asyncio
 import logging
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 from rest_framework import viewsets
 from rest_framework import mixins
 from rest_framework import permissions
@@ -61,17 +59,6 @@ class GameRoomViewSet(
     permission_classes = [permissions.IsAuthenticated, IsPlayerInGameRoom]
     pagination_class = CustomPageNumberPagination
 
-    @swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                "is_tournament",
-                openapi.IN_QUERY,
-                description="Filter game rooms by tournament status",
-                type=openapi.TYPE_BOOLEAN,
-            )
-        ],
-        responses={200: SwaggerGameListSerializer(many=True)},
-    )
     def list(self, request):
         try:
             paginator = CustomPageNumberPagination()
@@ -105,9 +92,6 @@ class GameRoomViewSet(
         except Exception as e:
             raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
 
-    @swagger_auto_schema(
-        responses={200: SwaggerGameRetriveSerializer()},
-    )
     def retrieve(self, request, *args, **kwargs):
         try:
             room_id = kwargs["pk"]
@@ -195,17 +179,6 @@ class PlayerViewSet(
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieTokenAuthentication]
 
-    @swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                "game_id",
-                openapi.IN_PATH,
-                description="ID of the game",
-                type=openapi.TYPE_INTEGER,
-            )
-        ],
-        responses={200: GamePlayerSerializer(many=True)},
-    )
     def list(self, request, game_id=None):
         try:
             game_id = request.query_params.get("game_id", None)
@@ -361,23 +334,3 @@ class SubGameViewSet(
 ):
     queryset = SubGame.objects.all()
     serializer_class = SubGameSerializer
-
-
-# class GameResultViewSet(
-#     mixins.CreateModelMixin,
-#     mixins.RetrieveModelMixin,
-#     mixins.ListModelMixin,
-#     viewsets.GenericViewSet,
-# ):
-#     queryset = GameResult.objects.all()
-#     serializer_class = GameResultSerializer
-
-
-# class GameResultEntryViewSet(
-#     mixins.CreateModelMixin,
-#     mixins.RetrieveModelMixin,
-#     mixins.ListModelMixin,
-#     viewsets.GenericViewSet,
-# ):
-#     queryset = GameResultEntry.objects.all()
-#     serializer_class = GameResultEntrySerializer

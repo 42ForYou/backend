@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import Game, GameRoom, GamePlayer, SubGame
 from accounts.models import User, Profile
-from accounts.serializers import UserSerializer, ProfileNotOwnerSerializer
 
 
 class GameSerializer(serializers.ModelSerializer):
@@ -64,42 +63,3 @@ class SubGameSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubGame
         fields = "__all__"
-
-
-## Swagger를 위한 Serializers
-
-
-class RoomHostSerializer(serializers.Serializer):
-    nickname = serializers.CharField()
-
-
-class RoomSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    title = serializers.CharField()
-    is_playing = serializers.CharField()
-    join_players = serializers.IntegerField()
-    host = RoomHostSerializer()
-
-
-# Page related serializers
-class SwaggerPagesSerializer(serializers.Serializer):
-    total_pages = serializers.IntegerField()
-    count = serializers.IntegerField()
-    current_page = serializers.IntegerField()
-    previous_page = serializers.CharField()
-    next_page = serializers.CharField()
-
-
-# Wrapping serializers
-class SwaggerGameRoomSerizlizer(serializers.Serializer):
-    gmae = GameSerializer()
-    room = RoomSerializer()
-
-
-class SwaggerGameListSerializer(serializers.Serializer):
-    data = SwaggerGameRoomSerizlizer(many=True)
-    pages = SwaggerPagesSerializer()
-
-
-class SwaggerGameRetriveSerializer(serializers.Serializer):
-    data = SwaggerGameRoomSerizlizer()
