@@ -9,6 +9,7 @@ from enum import Enum
 from pong.settings import LOGLEVEL_TRACE_ENABLE
 from accounts.models import User
 from socketcontrol.events import sio, get_user_by_token
+from livegame.precision_config import get_time, round_time, round_coord, round_speed
 from livegame.SubGameConfig import SubGameConfig
 from livegame.SubGameSession.Paddle import (
     Paddle,
@@ -335,7 +336,7 @@ class SubGameSession(socketio.AsyncNamespace):
 
     async def emit_start(self) -> None:
         event = "start"
-        data = {"t_event": self.t_start}
+        data = {"t_event": round_time(self.t_start)}
         # SIO: B>F start
         await sio.emit(event, data=data, namespace=self.namespace)
         self.logger.debug(
@@ -347,10 +348,7 @@ class SubGameSession(socketio.AsyncNamespace):
             return
 
         event = "update_time_left"
-        data = {
-            "t_event": time.time(),
-            "time_left": time_left,
-        }
+        data = {"t_event": get_time(), "time_left": time_left}
         # SIO: B>F update_time_left
         await sio.emit(event, data=data, namespace=self.namespace)
         self.logger.debug(
@@ -378,7 +376,7 @@ class SubGameSession(socketio.AsyncNamespace):
         )
         event = "update_scores"
         data = {
-            "t_event": time.time(),
+            "t_event": get_time(),
             "score_a": self.paddles[Player.A].score,
             "score_b": self.paddles[Player.B].score,
         }
@@ -406,10 +404,10 @@ class SubGameSession(socketio.AsyncNamespace):
 
         event = "update_track_paddle"
         data = {
-            "t_event": paddle.t_last_updated,
+            "t_event": round_time(paddle.t_last_updated),
             "player": paddle.player.name,
-            "y": paddle.y,
-            "dy": paddle.dy,
+            "y": round_coord(paddle.y),
+            "dy": round_speed(paddle.dy),
         }
         # SIO: B>F update_track_paddle
         await sio.emit(event, data=data, namespace=self.namespace)
@@ -419,7 +417,7 @@ class SubGameSession(socketio.AsyncNamespace):
 
     async def emit_time_up(self):
         event = "time_up"
-        data = {"t_event": self.t_end}
+        data = {"t_event": round_time(self.t_end)}
         # SIO: B>F time_up
         await sio.emit(event, data=data, namespace=self.namespace)
         self.logger.debug(
@@ -428,7 +426,7 @@ class SubGameSession(socketio.AsyncNamespace):
 
     async def emit_ended(self):
         event = "ended"
-        data = {"t_event": self.t_end, "winner": self.winner.name}
+        data = {"t_event": round_time(self.t_end), "winner": self.winner.name}
         # SIO: B>F ended
         await sio.emit(event, data=data, namespace=self.namespace)
         self.logger.debug(

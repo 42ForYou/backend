@@ -1,6 +1,7 @@
 from typing import Dict, Union
 
 from accounts.models import UserDataCache
+from livegame.precision_config import round_time
 from livegame.SubGameSession.SubGameSession import SubGameSession
 
 
@@ -20,8 +21,8 @@ class SubGameResult:
             "player_a": None if self.sid_a is None else self.user_data_a.to_dict(),
             "player_b": None if self.sid_b is None else self.user_data_b.to_dict(),
             "winner": self.winner,
-            "t_start": self.t_start,
-            "t_end": self.t_end,
+            "t_start": round_time(self.t_start),
+            "t_end": round_time(self.t_end),
         }
 
         return result

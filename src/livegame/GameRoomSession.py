@@ -13,6 +13,7 @@ from .databaseio import left_game_room, get_room_data
 from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
 from asgiref.sync import sync_to_async
+from livegame.precision_config import get_time
 from livegame.SubGameSession.SubGameSession import SubGameSession
 from livegame.SubGameSession.Paddle import Player
 from livegame.SubGameResult import SubGameResult
@@ -384,7 +385,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             self.logger.debug(f"emit update_room: {copy_data}")
 
     async def emit_destroyed(self, cause):
-        data = {"t_event": time.time(), "destroyed_because": cause}
+        data = {"t_event": get_time(), "destroyed_because": cause}
         # SIO: B>F destroyed
         await sio.emit("destroyed", data, namespace=self.namespace)
         self.logger.debug(f"emit destroyed: {data}")
@@ -392,7 +393,7 @@ class GameRoomSession(socketio.AsyncNamespace):
     async def emit_update_tournament(self):
         # SIO: B>F update_tournament
         data = {
-            "t_event": time.time(),
+            "t_event": get_time(),
             "n_ranks": self.n_ranks,
             "rank_ongoing": self.rank_ongoing,
             "subgames": [
@@ -405,7 +406,7 @@ class GameRoomSession(socketio.AsyncNamespace):
 
     async def emit_config(self) -> None:
         event = "config"
-        data = {"t_event": time.time(), "config": serialize_subgame_config(self.config)}
+        data = {"t_event": get_time(), "config": serialize_subgame_config(self.config)}
         # SIO: B>F config
         await sio.emit(event, data=data, namespace=self.namespace)
         self.logger.debug(
