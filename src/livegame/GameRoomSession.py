@@ -18,7 +18,7 @@ from livegame.SubGameSession.SubGameSession import SubGameSession
 from livegame.SubGameSession.Paddle import Player
 from livegame.SubGameResult import SubGameResult
 from livegame.SubGameConfig import get_default_subgame_config
-from livegame.SubGameSession.SIOAdapter import serialize_subgame_config
+from livegame.SubGameSession.sio_adapter import serialize_subgame_config
 import pong.settings as settings
 
 
