@@ -1,14 +1,16 @@
+from django.db.models import Q
+
 from rest_framework import viewsets
 from rest_framework import mixins
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import status
 
+from accounts.models import Profile
 from .models import Friend
 from .serializers import *
 
 from pong.utils import CustomError, CookieTokenAuthentication
-from django.db.models import Q
 from pong.utils import CustomPageNumberPagination
 
 
