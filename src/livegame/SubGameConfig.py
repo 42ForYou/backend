@@ -30,9 +30,6 @@ class SubGameConfig:
         delay_time_after_scoring: float,
         delay_time_after_rank_end: float,
     ) -> None:
-        logger.info(
-            f"Create SubGameConfig with args: width: {width}, height: {height}, match_point: {match_point}, player_a_init_point: {player_a_init_point}, player_b_init_point: {player_b_init_point}, paddle_len: {paddle_len}, paddle_speed: {paddle_speed}, epsilon: {epsilon}, ball_init_x: {ball_init_x}, ball_init_y: {ball_init_y}, ball_speed: {ball_speed}, time_limit: {time_limit}, time_before_start: {delay_time_before_rank_start}"
-        )
         self.width = width
         self.height = height
         self.match_point = match_point
@@ -55,6 +52,9 @@ class SubGameConfig:
         self.t_delay_subgame_start = delay_time_before_subgame_start
         self.t_delay_scoring = delay_time_after_scoring
         self.t_delay_rank_end = delay_time_after_rank_end
+
+        for key, value in self.__dict__.items():
+            logger.info(f"SubGameConfig {key}: {value}")
 
     def __str__(self) -> str:
         return f"SubGameConfig {self.width} * {self.height} (e={self.e}), v_paddle={self.v_paddle}, l_paddle={self.l_paddle}, {self.x_min} <= x <= {self.x_max}, {self.y_min} <= y <= {self.y_max}"
