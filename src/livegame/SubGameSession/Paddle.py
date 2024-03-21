@@ -5,7 +5,7 @@ from typing import Dict, Union
 
 from pong.settings import LOGLEVEL_TRACE_ENABLE
 from livegame.precision_config import round_time, round_coord, round_speed
-from livegame.SubGameConfig import SubGameConfig
+from livegame.subgame_config import SubGameConfig
 
 
 class Player(Enum):

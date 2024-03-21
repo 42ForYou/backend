@@ -5,7 +5,7 @@ from typing import List, Tuple
 from enum import Enum
 
 from pong.settings import LOGLEVEL_TRACE_ENABLE
-from livegame.SubGameConfig import SubGameConfig
+from livegame.subgame_config import SubGameConfig
 from livegame.SubGameSession.balltrack_segment import (
     BallTrackSegment,
     get_ball_track_segment_to_wall,

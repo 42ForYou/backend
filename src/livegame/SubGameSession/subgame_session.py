@@ -10,7 +10,7 @@ from pong.settings import LOGLEVEL_TRACE_ENABLE
 from accounts.models import User
 from socketcontrol.events import sio, get_user_by_token
 from livegame.precision_config import get_time, round_time, round_coord, round_speed
-from livegame.SubGameConfig import SubGameConfig
+from livegame.subgame_config import SubGameConfig
 from livegame.SubGameSession.Paddle import (
     Paddle,
     KeyInput,
