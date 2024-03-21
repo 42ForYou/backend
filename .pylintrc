@@ -1,0 +1,12 @@
+[MASTER]
+load-plugins=pylint_django
+ignore=migrations,tests
+
+[MESSAGES CONTROL]
+disable=
+    missing-docstring,
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    import-outside-toplevel,
+    logging-fstring-interpolation,

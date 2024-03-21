@@ -10,3 +10,4 @@ python-socketio
 python-dotenv
 requests
 netifaces
+pylint-django
