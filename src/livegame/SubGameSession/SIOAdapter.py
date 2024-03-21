@@ -51,4 +51,5 @@ def serialize_subgame_config(config: SubGameConfig):
         "delay_scoring": round_time(config.t_delay_scoring),
         # 각 "강" 내부의 서브게임이 모두 끝난 후 다음 "강" 시작 /gameroom @update_tournament까지 딜레이 시간
         "delay_rank_end": round_time(config.t_delay_rank_end),
+        "network_max_deviation": round_coord(config.e_net),  # 네트워크간 최대 허용 오차
     }

@@ -22,6 +22,7 @@ class SubGameConfig:
         paddle_init_y: float,
         paddle_friction_coef: float,
         epsilon: float,  # expected floating point error
+        network_max_deviation: float,
         ball_init_x: float,
         ball_init_y: float,
         ball_speed: float,
@@ -46,6 +47,7 @@ class SubGameConfig:
         self.y_paddle_init = paddle_init_y
         self.u_paddle = paddle_friction_coef
         self.e = abs(epsilon)
+        self.e_net = abs(network_max_deviation)
         self.x_ball_init = ball_init_x
         self.y_ball_init = ball_init_y
         self.v_ball = ball_speed
@@ -76,6 +78,7 @@ sgc_paddle_speed = os.environ.get("SUBGAMECONFIG_PADDLE_SPEED", "100")
 sgc_paddle_init_y = os.environ.get("SUBGAMECONFIG_PADDLE_INIT_Y", "0")
 sgc_paddle_friction_coef = os.environ.get("SUBGAMECONFIG_FRICTION_COEF", "0.1")
 sgc_epsilon = os.environ.get("SUBGAMECONFIG_EPSILON", "1")
+sgc_network_max_deviation = os.environ.get("SUBGAMECONFIG_NETWORK_MAX_DEVIATION", "10")
 sgc_ball_init_x = os.environ.get("SUBGAMECONFIG_BALL_INIT_X", "0")
 sgc_ball_init_y = os.environ.get("SUBGAMECONFIG_BALL_INIT_Y", "0")
 sgc_ball_speed = os.environ.get("SUBGAMECONFIG_BALL_SPEED", "200")
@@ -106,6 +109,7 @@ def get_default_subgame_config(game: Game) -> SubGameConfig:
         paddle_init_y=float(sgc_paddle_init_y),
         paddle_friction_coef=float(sgc_paddle_friction_coef),
         epsilon=float(sgc_epsilon),
+        network_max_deviation=float(sgc_network_max_deviation),
         ball_init_x=float(sgc_ball_init_x),
         ball_init_y=float(sgc_ball_init_y),
         ball_speed=float(sgc_ball_speed),
