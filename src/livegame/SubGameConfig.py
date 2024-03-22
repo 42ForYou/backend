@@ -61,11 +61,7 @@ class SubGameConfig:
             logger.info(f"SubGameConfig {key}: {value}")
 
     def __str__(self) -> str:
-        return (
-            f"SubGameConfig {self.width} * {self.height} (e={self.e}), "
-            f"v_paddle={self.v_paddle}, l_paddle={self.l_paddle}, "
-            f"{self.x_min} <= x <= {self.x_max}, {self.y_min} <= y <= {self.y_max}"
-        )
+        return f"SubGameConfig {self.width} * {self.height} (e={self.e}), v_paddle={self.v_paddle}, l_paddle={self.l_paddle}, {self.x_min} <= x <= {self.x_max}, {self.y_min} <= y <= {self.y_max}"
 
     # Checks whether two numbers can be considered equal (difference is within epsilon)
     def flt_eq(self, a: float, b: float) -> bool:

@@ -1,6 +1,8 @@
 # create_superuser.py
+import os
 import django
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pong.settings")
 django.setup()
 
 from accounts.models import User

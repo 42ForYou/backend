@@ -1,6 +1,6 @@
-from livegame.SubGameSession.balltrack import BallTrack
-from livegame.SubGameSession.balltrack_segment import BallTrackSegment
-from livegame.subgame_config import SubGameConfig
+from livegame.SubGameSession.BallTrack import BallTrack
+from livegame.SubGameSession.BallTrackSegment import BallTrackSegment
+from livegame.SubGameConfig import SubGameConfig
 from livegame.precision_config import round_coord, round_speed, round_time
 
 

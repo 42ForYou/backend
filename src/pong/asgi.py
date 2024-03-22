@@ -1,4 +1,7 @@
+import os
 import socketio
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pong.settings")
 
 import django
 

@@ -1,9 +1,7 @@
-from rest_framework import status
-
-from pong.utils import CustomError
-
 from .models import GameRoom, GamePlayer
 from .serializers import GameRoomSerializer, GameSerializer, GamePlayerSerializer
+from pong.utils import CustomError, wrap_data
+from rest_framework import status
 
 
 def get_single_game_room(game_room_id):
@@ -17,9 +15,7 @@ def get_single_game_room(game_room_id):
         data.update({"players": GamePlayerSerializer(players, many=True).data})
         return data
     except Exception as e:
-        raise CustomError(
-            e, "game_room", status_code=status.HTTP_400_BAD_REQUEST
-        ) from e
+        raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
 
 
 def create_game(user, game_data):
@@ -28,12 +24,11 @@ def create_game(user, game_data):
             user=user, game__game_room__is_playing=False
         ).exists():
             raise CustomError(
-                "You are already in a game room",
-                status_code=status.HTTP_400_BAD_REQUEST,
+                "You are already in a game room", status_code=status.HTTP_400_BAD_REQUEST
             )
         serializer = GameSerializer(data=game_data)
         serializer.is_valid(raise_exception=True)
         game = serializer.save()
         return game
     except Exception as e:
-        raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST) from e
+        raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)

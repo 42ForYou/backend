@@ -10,15 +10,15 @@ from pong.settings import LOGLEVEL_TRACE_ENABLE
 from accounts.models import User
 from socketcontrol.events import sio, get_user_by_token
 from livegame.precision_config import get_time, round_time, round_coord, round_speed
-from livegame.subgame_config import SubGameConfig
+from livegame.SubGameConfig import SubGameConfig
 from livegame.SubGameSession.Paddle import (
     Paddle,
     KeyInput,
     Player,
     PaddleAckStatus,
 )
-from livegame.SubGameSession.balltrack import BallTrack, get_random_dx_dy
-from livegame.SubGameSession.sio_adapter import serialize_balltrack
+from livegame.SubGameSession.BallTrack import BallTrack, get_random_dx_dy
+from livegame.SubGameSession.SIOAdapter import serialize_balltrack
 import pong.settings as settings
 
 
@@ -77,7 +77,7 @@ class SubGameSession(socketio.AsyncNamespace):
             )
             token = cookie_dict.get(settings.SIMPLE_JWT["AUTH_COOKIE"], None)
             if not token:
-                self.logger.warning("No token")
+                self.logger.warn("No token")
                 await self.disconnect(sid)
 
             user: User = await get_user_by_token(token)
@@ -87,7 +87,7 @@ class SubGameSession(socketio.AsyncNamespace):
             elif user.intra_id == self.intra_id_b:
                 self.sid_to_player[sid] = Player.B
             else:
-                self.logger.warning(f"connected {user.intra_id} is not assigned player")
+                self.logger.warn(f"connected {user.intra_id} is not assigned player")
                 await self.disconnect(sid)
 
         except Exception as e:
@@ -109,7 +109,7 @@ class SubGameSession(socketio.AsyncNamespace):
             return
 
         if not sid in self.sid_to_player:
-            self.logger.warning(f"sid {sid} is not connected player")
+            self.logger.warn(f"sid {sid} is not connected player")
             return
 
         player: Player = self.sid_to_player[sid]
@@ -143,7 +143,7 @@ class SubGameSession(socketio.AsyncNamespace):
             return
 
         if not sid in self.sid_to_player:
-            self.logger.warning(f"sid {sid} is not connected player")
+            self.logger.warn(f"sid {sid} is not connected player")
             return
 
         player: Player = self.sid_to_player[sid]
@@ -250,7 +250,7 @@ class SubGameSession(socketio.AsyncNamespace):
         self.logger.debug(f"ended_ack from sid {sid}, data={data}")
 
         if not sid in self.sid_to_player:
-            self.logger.warning(f"sid {sid} is not connected player")
+            self.logger.warn(f"sid {sid} is not connected player")
             return
 
         player: Player = self.sid_to_player[sid]
