@@ -3,11 +3,14 @@ import django
 
 django.setup()
 
+# pylint: disable=wrong-import-position
 from rest_framework_simplejwt.tokens import RefreshToken
 from accounts.models import User, Profile
 from game.models import Game, GameRoom, GamePlayer
 from friends.models import Friend
 from authentication.models import OAuth
+
+# pylint: enable=wrong-import-position
 
 
 def create_dummy_users(num_users=100):

@@ -3,7 +3,10 @@ import django
 
 django.setup()
 
+# pylint: disable=wrong-import-position
 from accounts.models import User
+
+# pylint: enable=wrong-import-position
 
 
 def create_superuser():
