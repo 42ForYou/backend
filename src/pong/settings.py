@@ -56,7 +56,6 @@ INSTALLED_APPS = [
     "game",
     "drf_yasg",
     "socketcontrol",
-    "livechat",
     "livegame",
     "friends",
 ]
