@@ -1,15 +1,17 @@
 from rest_framework import viewsets
 from rest_framework import mixins
 from rest_framework import permissions
+from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework import status
 
 from .models import Friend
-from .serializers import *
+from .serializers import FriendSerializer
 
 from pong.utils import CustomError, CookieTokenAuthentication
 from django.db.models import Q
 from pong.utils import CustomPageNumberPagination
+from accounts.models import Profile
 
 
 class FriendViewSet(
