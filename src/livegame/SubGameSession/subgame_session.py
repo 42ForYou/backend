@@ -45,6 +45,12 @@ class SubGameSession(socketio.AsyncNamespace):
 
         self.config = config
 
+        self.t_start: float
+        self.t_end: float
+        self.balltrack: BallTrack
+        self.paddle_defense: Paddle
+        self.paddle_offense: Paddle
+
         self.gr_session = gameroom_session
         self.idx_rank = idx_rank
         self.idx_in_rank = idx_in_rank
