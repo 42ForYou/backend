@@ -1,14 +1,15 @@
-import socketio
 import logging
+import socketio
 
-from asgiref.sync import sync_to_async
 from django.db.models import Q
 from rest_framework_simplejwt.tokens import AccessToken
-from .models import SocketSession
+from asgiref.sync import sync_to_async
+
+import pong.settings as settings
 from friends.serializers import FriendUserSerializer
 from friends.models import Friend
 from accounts.models import User
-import pong.settings as settings
+from .models import SocketSession
 
 
 """

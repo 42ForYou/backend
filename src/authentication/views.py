@@ -1,10 +1,12 @@
 import logging
+from urllib.parse import quote
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
-from urllib.parse import quote
+
 from pong.utils import CustomError, wrap_data, CookieTokenAuthentication
 import pong.settings as settings
 from accounts.serializers import UserSerializer, ProfileSerializer

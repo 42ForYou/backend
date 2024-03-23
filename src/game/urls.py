@@ -1,6 +1,7 @@
-from .views import GameRoomViewSet, PlayerViewSet, SubGameViewSet
 from django.urls import path, include
 from rest_framework import routers
+
+from .views import GameRoomViewSet, PlayerViewSet, SubGameViewSet
 
 router = routers.DefaultRouter()
 router.register("game_rooms", GameRoomViewSet, basename="game_rooms")

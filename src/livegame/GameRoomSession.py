@@ -6,19 +6,19 @@ from typing import Dict, List
 from enum import Enum
 
 import socketio
+from asgiref.sync import sync_to_async
+import pong.settings as settings
 from accounts.models import User, UserDataCache, fetch_user_data_cache
 from game.models import Game, GamePlayer, GameRoom, SubGame
-from .databaseio import left_game_room, get_room_data
 from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
-from asgiref.sync import sync_to_async
-from livegame.precision_config import get_time
-from livegame.SubGameSession.SubGameSession import SubGameSession
-from livegame.SubGameSession.Paddle import Player
-from livegame.SubGameResult import SubGameResult
-from livegame.SubGameConfig import get_default_subgame_config
-from livegame.SubGameSession.SIOAdapter import serialize_subgame_config
-import pong.settings as settings
+from .precision_config import get_time
+from .SubGameSession.SubGameSession import SubGameSession
+from .SubGameSession.Paddle import Player
+from .SubGameResult import SubGameResult
+from .SubGameConfig import get_default_subgame_config
+from .SubGameSession.SIOAdapter import serialize_subgame_config
+from .databaseio import left_game_room, get_room_data
 
 
 def is_power_of_two(n: int) -> bool:

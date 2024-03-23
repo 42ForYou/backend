@@ -1,11 +1,12 @@
+import random
 import django
 
 django.setup()
 
+from rest_framework_simplejwt.tokens import RefreshToken
 from accounts.models import User, Profile
 from game.models import Game, GameRoom, GamePlayer
 from friends.models import Friend
-from rest_framework_simplejwt.tokens import RefreshToken
 from authentication.models import OAuth
 
 
@@ -74,9 +75,6 @@ def create_game_room(num_games=50):
             nickname=profile.nickname,
             rank=0,
         )
-
-
-import random
 
 
 def assign_remaining_users_to_games(user_num):

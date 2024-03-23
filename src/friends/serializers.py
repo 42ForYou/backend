@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import Friend
+
 from accounts.models import User
+from .models import Friend
 
 
 class FriendUserSerializer(serializers.ModelSerializer):

@@ -1,30 +1,29 @@
-from rest_framework import mixins, viewsets
-from .models import Profile
-from friends.models import Friend
+import json
+import hashlib
+import os
+import logging
+from datetime import datetime
+
 from django.db.models import Q
+from django.core.files.storage import default_storage
+from rest_framework.response import Response
+from rest_framework import status, permissions, serializers, mixins, viewsets
+from rest_framework.parsers import MultiPartParser, JSONParser
+
+from pong.utils import CookieTokenAuthentication, CustomError, wrap_data
+import pong.settings as settings
+from pong.utils import CustomPageNumberPagination
+from game.models import Game
+from game.serializers import GameSerializer
+from friends.models import Friend
+from .models import User
+from .GameHistory import get_game_histories_of_user
+from .GameStats import GameStats
+from .models import Profile
 from .serializers import (
     ProfileSerializer,
     ProfileNotOwnerSerializer,
 )
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework import permissions
-from rest_framework import serializers
-from pong.utils import CookieTokenAuthentication, CustomError, wrap_data
-import hashlib
-import os
-import logging
-from django.core.files.storage import default_storage
-from rest_framework.parsers import MultiPartParser, JSONParser
-import json
-import pong.settings as settings
-from datetime import datetime
-from pong.utils import CustomPageNumberPagination
-from game.models import Game
-from game.serializers import GameSerializer
-from accounts.models import User
-from accounts.GameHistory import get_game_histories_of_user
-from accounts.GameStats import GameStats
 
 
 logger = logging.getLogger(f"{__package__}.{__name__}")

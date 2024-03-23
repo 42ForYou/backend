@@ -10,13 +10,14 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-from dotenv import load_dotenv  # pylint: disable=unused-import
-from pathlib import Path
 import os
 import datetime
 import urllib.parse
 import logging
 import time
+from pathlib import Path
+
+from dotenv import load_dotenv  # pylint: disable=unused-import
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
