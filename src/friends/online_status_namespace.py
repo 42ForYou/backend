@@ -29,7 +29,7 @@ class OnlineStatusNamespace(socketio.AsyncNamespace):
                 user = await get_user_by_token(token)
                 await update_online_sid(user, sid)
             else:
-                self.logger.warn("No token")
+                self.logger.warning("No token")
                 await self.disconnect(sid)
         except Exception as e:
             self.logger.error(f"Error in connect: {e}")
