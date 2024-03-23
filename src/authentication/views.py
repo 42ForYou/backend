@@ -112,7 +112,7 @@ class TwoFactorAuthView(APIView):
         except Exception as e:
             raise CustomError(
                 exception=e, model_name="user", status_code=status.HTTP_400_BAD_REQUEST
-            )
+            ) from e
 
     def patch(self, request, *args, **kwargs):
         try:
@@ -123,4 +123,4 @@ class TwoFactorAuthView(APIView):
         except Exception as e:
             raise CustomError(
                 exception=e, model_name="user", status_code=status.HTTP_400_BAD_REQUEST
-            )
+            ) from e

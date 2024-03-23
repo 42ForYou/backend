@@ -16,7 +16,9 @@ def get_single_game_room(game_room_id):
         data.update({"players": GamePlayerSerializer(players, many=True).data})
         return data
     except Exception as e:
-        raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
+        raise CustomError(
+            e, "game_room", status_code=status.HTTP_400_BAD_REQUEST
+        ) from e
 
 
 def create_game(user, game_data):
@@ -33,4 +35,4 @@ def create_game(user, game_data):
         game = serializer.save()
         return game
     except Exception as e:
-        raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
+        raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST) from e

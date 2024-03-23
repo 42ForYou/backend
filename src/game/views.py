@@ -39,7 +39,7 @@ def delete_game_room(game_room):
         else:
             game_room.delete()
     except Exception as e:
-        raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
+        raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST) from e
 
 
 class IsPlayerInGameRoom(permissions.BasePermission):
@@ -90,7 +90,9 @@ class GameRoomViewSet(
                 )
             return paginator.get_paginated_response(data)
         except Exception as e:
-            raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "game_room", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
     def retrieve(self, request, *args, **kwargs):
         try:
@@ -102,7 +104,9 @@ class GameRoomViewSet(
             data["my_player_id"] = my_player_id
             return Response({"data": data}, status=status.HTTP_200_OK)
         except Exception as e:
-            raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "game_room", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
     def create(self, request, *args, **kwargs):
         game = None
@@ -124,7 +128,9 @@ class GameRoomViewSet(
         except Exception as e:
             if game:
                 game.delete()
-            raise CustomError(e, "game_room", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "game_room", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
     def destroy(self, request, *args, **kwargs):
         if not kwargs.get("pk"):
@@ -146,7 +152,7 @@ class GameRoomViewSet(
             game_room = serializer.save()
             return game_room
         except Exception as e:
-            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST) from e
 
     def join_host(self, game_room):
         try:
@@ -160,7 +166,7 @@ class GameRoomViewSet(
             game_room.save()
             return player
         except Exception as e:
-            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST) from e
 
     def serialize_game_and_room(self, game, room):
         game_serializer = GameSerializer(game)
@@ -193,7 +199,9 @@ class PlayerViewSet(
                 wrap_data(players=serializer.data), status=status.HTTP_200_OK
             )
         except Exception as e:
-            raise CustomError(e, "game_player", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "game_player", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
     def retrieve(self, request, *args, **kwargs):
         try:
@@ -204,7 +212,9 @@ class PlayerViewSet(
                 wrap_data(player=serializer.data), status=status.HTTP_200_OK
             )
         except Exception as e:
-            raise CustomError(e, "game_player", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "game_player", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
     def create(self, request, *args, **kwargs):
         try:
@@ -246,8 +256,8 @@ class PlayerViewSet(
                 raise CustomError(
                     "The player is already participating",
                     status_code=status.HTTP_400_BAD_REQUEST,
-                )
-            raise CustomError(e, "game", status_code=status.HTTP_400_BAD_REQUEST)
+                ) from e
+            raise CustomError(e, "game", status_code=status.HTTP_400_BAD_REQUEST) from e
 
     def destroy(self, request, *args, **kwargs):
         try:
@@ -288,7 +298,9 @@ class PlayerViewSet(
                     status_code=status.HTTP_400_BAD_REQUEST,
                 )
         except Exception as e:
-            raise CustomError(e, "game room", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "game room", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
     def user_already_in_same_game_room(self, user, game):
         if (

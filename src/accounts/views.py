@@ -79,7 +79,9 @@ class ProfileViewSet(
                 status=status.HTTP_200_OK,
             )
         except Exception as e:
-            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "Profile", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
     def update(self, request, *args, **kwargs):
         try:
@@ -108,9 +110,11 @@ class ProfileViewSet(
                 data=wrap_data(user=serializer.data), status=status.HTTP_200_OK
             )
         except serializers.ValidationError as e:
-            raise CustomError(e.detail, status_code=status.HTTP_409_CONFLICT)
+            raise CustomError(e.detail, status_code=status.HTTP_409_CONFLICT) from e
         except Exception as e:
-            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "Profile", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
     def save_image(self, image_obj, intra_id, profile):
         extension = self.get_extension(image_obj.content_type)
@@ -166,7 +170,9 @@ class UserSearchViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
             serializer = self.get_serializer(page, many=True)
             return paginator.get_paginated_response(serializer.data)
         except Exception as e:
-            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "Profile", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
 
 class HistoryViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -195,7 +201,9 @@ class HistoryViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             dict_histories = [history.to_dict() for history in histories]
             return Response(data=dict_histories, status=status.HTTP_200_OK)
         except Exception as e:
-            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "Profile", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
 
 class StatsViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -220,4 +228,6 @@ class StatsViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
             return Response(data=stats.to_dict(), status=status.HTTP_200_OK)
         except Exception as e:
-            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "Profile", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e

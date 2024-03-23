@@ -56,7 +56,7 @@ class OAuthView(APIView):
             response = set_cookie_response(response, token["access"], token["refresh"])
             return response
         except Exception as e:
-            raise CustomError(e)
+            raise CustomError(e) from e
 
     def do_2fa(self, user):
         two_factor_auth, _ = TwoFactorAuth.objects.get_or_create(user=user)
@@ -125,4 +125,4 @@ class OAuthView(APIView):
                 profile.delete()
             if oauth:
                 oauth.delete()
-            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST) from e
