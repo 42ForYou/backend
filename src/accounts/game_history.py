@@ -13,7 +13,7 @@ class GameHistory:
         self.subgames: List[SubGame] = [
             subgame
             for subgame in game.sub_games.all()
-            if subgame.player_a == game_player or subgame.player_b == game_player
+            if game_player in (subgame.player_a, subgame.player_b)
         ]
 
     def serialize_subgame(self, subgame: SubGame) -> dict:

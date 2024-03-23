@@ -38,12 +38,12 @@ def create_dummy_users(num_users=100):
 def create_friends():
     users = User.objects.exclude(username="admin")
 
-    for i, _ in enumerate(users):
-        for j, __ in enumerate(users, i + 1):
+    for i, user_a in enumerate(users):
+        for j, user_b in enumerate(users, i + 1):
             status = "friend" if (i + j) % 2 == 0 else "pending"
             Friend.objects.create(
-                requester=users[i],
-                receiver=users[j],
+                requester=user_a,
+                receiver=user_b,
                 status=status,
             )
 
@@ -54,7 +54,7 @@ def create_game_room(num_games=50):
     ]  # 1부터 30까지의 사용자만 선택
 
     for i, user in enumerate(users):
-        is_tournament = True if (i + 1) % 3 == 0 else False
+        is_tournament = (i + 1) % 3 == 0
         n_players = 4 if is_tournament else 2
         game = Game.objects.create(
             is_tournament=is_tournament,

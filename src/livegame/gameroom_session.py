@@ -155,7 +155,7 @@ class GameRoomSession(socketio.AsyncNamespace):
             return SubGameSessionResult.INTERNAL_ERROR
 
     # SIO: F>B start
-    async def on_start(self, sid, data):
+    async def on_start(self, sid, _):
         self.logger.info(f"start from sid {sid}")
         if not self.is_host(sid):
             self.logger.warning(
@@ -279,7 +279,7 @@ class GameRoomSession(socketio.AsyncNamespace):
     # TODO: delete in production
     def is_current_rank_done(self) -> bool:
         winners = [item.winner for item in self.tournament_tree[self.rank_ongoing]]
-        return all([winner_val is not None for winner_val in winners])
+        return all(winner_val is not None for winner_val in winners)
 
     def get_sid_from_intra_id(self, intra_id) -> str:
         for sid_key, user_data in self.sid_to_user_data.items():
