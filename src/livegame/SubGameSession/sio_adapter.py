@@ -1,7 +1,7 @@
-from livegame.SubGameSession.BallTrack import BallTrack
-from livegame.SubGameSession.BallTrackSegment import BallTrackSegment
-from livegame.SubGameConfig import SubGameConfig
-from livegame.precision_config import round_coord, round_speed, round_time
+from ..SubGameSession.balltrack import BallTrack
+from ..SubGameSession.balltrack_segment import BallTrackSegment
+from ..subgame_config import SubGameConfig
+from ..precision_config import round_coord, round_speed, round_time
 
 
 def serialize_balltracksegment(seg: BallTrackSegment):

@@ -10,15 +10,15 @@ import pong.settings as settings
 from accounts.models import User
 from socketcontrol.events import sio, get_user_by_token
 from ..precision_config import get_time, round_time
-from ..SubGameConfig import SubGameConfig
-from .Paddle import (
+from ..subgame_config import SubGameConfig
+from .paddle import (
     Paddle,
     KeyInput,
     Player,
     PaddleAckStatus,
 )
-from .BallTrack import BallTrack, get_random_dx_dy
-from .SIOAdapter import serialize_balltrack
+from .balltrack import BallTrack, get_random_dx_dy
+from .sio_adapter import serialize_balltrack
 
 
 class TurnResult(Enum):

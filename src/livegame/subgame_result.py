@@ -1,8 +1,8 @@
 from typing import Union
 
 from accounts.models import UserDataCache
-from livegame.precision_config import round_time
-from livegame.SubGameSession.SubGameSession import SubGameSession
+from .precision_config import round_time
+from .SubGameSession.subgame_session import SubGameSession
 
 
 class SubGameResult:

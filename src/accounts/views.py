@@ -17,8 +17,8 @@ from game.models import Game
 from game.serializers import GameSerializer
 from friends.models import Friend
 from .models import User
-from .GameHistory import get_game_histories_of_user
-from .GameStats import GameStats
+from .game_history import get_game_histories_of_user
+from .game_stats import GameStats
 from .models import Profile
 from .serializers import (
     ProfileSerializer,

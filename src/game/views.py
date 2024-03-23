@@ -10,7 +10,7 @@ from pong.utils import (
     CustomPageNumberPagination,
 )
 from socketcontrol.events import sio
-from livegame.GameRoomSession import (
+from livegame.gameroom_session import (
     GameRoomSession,
     GAMEROOMSESSION_REGISTRY,
 )

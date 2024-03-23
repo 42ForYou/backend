@@ -13,11 +13,11 @@ from game.models import Game, GamePlayer, GameRoom, SubGame
 from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
 from .precision_config import get_time
-from .SubGameSession.SubGameSession import SubGameSession
-from .SubGameSession.Paddle import Player
-from .SubGameResult import SubGameResult
-from .SubGameConfig import get_default_subgame_config
-from .SubGameSession.SIOAdapter import serialize_subgame_config
+from .SubGameSession.subgame_session import SubGameSession
+from .SubGameSession.paddle import Player
+from .subgame_result import SubGameResult
+from .subgame_config import get_default_subgame_config
+from .SubGameSession.sio_adapter import serialize_subgame_config
 from .databaseio import left_game_room, get_room_data
 
 
