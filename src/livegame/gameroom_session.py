@@ -267,7 +267,9 @@ class GameRoomSession(socketio.AsyncNamespace):
                     player_a.rank = subgame_result.session.idx_rank
                     player_b.rank = subgame_result.session.idx_rank - 1
                 self.logger.debug(
-                    f"subgame rank {subgame_result.session.idx_rank}, winner: {subgame_result.winner} , player_a: {player_a.rank}, player_b: {player_b.rank}"
+                    f"subgame rank {subgame_result.session.idx_rank}, "
+                    f"winner: {subgame_result.winner}, "
+                    f"player_a: {player_a.rank}, player_b: {player_b.rank}"
                 )
                 player_a.save()
                 player_b.save()
@@ -325,7 +327,9 @@ class GameRoomSession(socketio.AsyncNamespace):
 
         if int(math.pow(2, self.n_ranks - 1)) != self.n_players / 2:
             raise ValueError(
-                f"Error while building tournament tree: n_players / 2 {self.n_players / 2} != int(math.pow(2, self.n_ranks - 1)) {int(math.pow(2, self.n_ranks - 1))}"
+                f"Error while building tournament tree: "
+                f"n_players / 2 {self.n_players / 2} != int(math.pow(2, self.n_ranks - 1)) "
+                f"{int(math.pow(2, self.n_ranks - 1))}"
             )
 
         # fill actual determined values for subgames in the lowest rank
