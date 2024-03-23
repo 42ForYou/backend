@@ -1,8 +1,8 @@
-from typing import Union
+from typing import Dict, Union
 
 from accounts.models import UserDataCache
 from livegame.precision_config import round_time
-from livegame.SubGameSession.subgame_session import SubGameSession
+from livegame.SubGameSession.SubGameSession import SubGameSession
 
 
 class SubGameResult:

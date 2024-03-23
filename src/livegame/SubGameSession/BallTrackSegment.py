@@ -4,7 +4,7 @@ from typing import Tuple
 from enum import Enum
 
 from pong.settings import LOGLEVEL_TRACE_ENABLE
-from livegame.subgame_config import SubGameConfig
+from livegame.SubGameConfig import SubGameConfig
 
 logger = logging.getLogger(f"{__package__}.{__name__}")
 

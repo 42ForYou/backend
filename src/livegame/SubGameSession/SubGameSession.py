@@ -10,15 +10,15 @@ from pong.settings import LOGLEVEL_TRACE_ENABLE
 from accounts.models import User
 from socketcontrol.events import sio, get_user_by_token
 from livegame.precision_config import get_time, round_time, round_coord, round_speed
-from livegame.subgame_config import SubGameConfig
+from livegame.SubGameConfig import SubGameConfig
 from livegame.SubGameSession.Paddle import (
     Paddle,
     KeyInput,
     Player,
     PaddleAckStatus,
 )
-from livegame.SubGameSession.balltrack import BallTrack, get_random_dx_dy
-from livegame.SubGameSession.sio_adapter import serialize_balltrack
+from livegame.SubGameSession.BallTrack import BallTrack, get_random_dx_dy
+from livegame.SubGameSession.SIOAdapter import serialize_balltrack
 import pong.settings as settings
 
 

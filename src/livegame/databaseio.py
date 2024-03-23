@@ -1,9 +1,10 @@
 import time
+import random
 import logging
 
 from asgiref.sync import sync_to_async
 from django.db.models import Prefetch
-from game.models import GamePlayer, GameRoom
+from game.models import GamePlayer, Game, GameRoom
 from game.serializers import GamePlayerSerializer, GameSerializer, GameRoomSerializer
 
 

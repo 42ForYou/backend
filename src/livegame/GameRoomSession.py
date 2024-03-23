@@ -1,5 +1,6 @@
 import random
 import math
+import time
 import asyncio
 import logging
 from typing import Dict, List
@@ -13,11 +14,11 @@ from socketcontrol.events import sio
 from socketcontrol.events import get_user_by_token
 from asgiref.sync import sync_to_async
 from livegame.precision_config import get_time
-from livegame.SubGameSession.subgame_session import SubGameSession
+from livegame.SubGameSession.SubGameSession import SubGameSession
 from livegame.SubGameSession.Paddle import Player
-from livegame.subgame_result import SubGameResult
-from livegame.subgame_config import get_default_subgame_config
-from livegame.SubGameSession.sio_adapter import serialize_subgame_config
+from livegame.SubGameResult import SubGameResult
+from livegame.SubGameConfig import get_default_subgame_config
+from livegame.SubGameSession.SIOAdapter import serialize_subgame_config
 import pong.settings as settings
 
 
