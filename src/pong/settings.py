@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_simplejwt",
-    'rest_framework_simplejwt.token_blacklist',
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "django_filters",
     "authentication",
@@ -194,11 +194,13 @@ AVATAR_LOCATION = os.environ.get("AVATAR_LOCATION")
 
 class EpochFormatter(logging.Formatter):
     """Custom formatter to add epoch time to log records."""
+
     def format(self, record):
         # Add the current epoch time to the record
         record.epoch = time.time()
         # Call the original formatter to use the modified record
         return super().format(record)
+
 
 DIR_LOG = os.path.join(BASE_DIR.parent, "logs")
 os.system(f"mkdir -p {DIR_LOG}")
@@ -210,6 +212,8 @@ LOGLEVEL_PONG = os.environ.get("LOGLEVEL_PONG", "WARNING")
 LOGLEVEL_LIVEGAME = os.environ.get("LOGLEVEL_LIVEGAME", "WARNING")
 LOGLEVEL_TRACE_ENABLE = os.environ.get("LOGLEVEL_TRACE_ENABLE", "0")
 
+
+log_suffix = datetime.datetime.now().strftime("%Y-%m-%d")
 
 LOGGING = {
     "version": 1,
@@ -231,7 +235,7 @@ LOGGING = {
             "class": "logging.handlers.RotatingFileHandler",
             "filename": os.path.join(
                 DIR_LOG,
-                f"log_{datetime.datetime.now().strftime("%Y-%m-%d")}.log",
+                f"log_{log_suffix}.log",
             ),
             "encoding": "UTF-8",
             "maxBytes": 1024 * 1024 * 5,  # 5 MB
@@ -271,7 +275,7 @@ LOGGING = {
         },
         "livegame": {
             "handlers": ["consolePrecise"],
-            "level":LOGLEVEL_LIVEGAME,
+            "level": LOGLEVEL_LIVEGAME,
             "propagate": False,
         },
         "authenticate": {
@@ -284,47 +288,33 @@ LOGGING = {
 
 SIMPLE_JWT = {
     # 토큰 암호화에 사용할 알고리즘
-    'ALGORITHM': 'HS256',
-
+    "ALGORITHM": "HS256",
     # 액세스 토큰의 유효 기간
-    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(days=1),
-
+    "ACCESS_TOKEN_LIFETIME": datetime.timedelta(days=1),
     # 리프레시 토큰의 유효 기간
-    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=2),
-
+    "REFRESH_TOKEN_LIFETIME": datetime.timedelta(days=2),
     # 회전(refresh) 시 새 리프레시 토큰의 유효 기간을 리셋할지 여부
-    'ROTATE_REFRESH_TOKENS': False,
-
+    "ROTATE_REFRESH_TOKENS": False,
     # 리프레시 토큰이 만료될 때 새로운 토큰 발급을 거부할지 여부
-    'BLACKLIST_AFTER_ROTATION': True,
-
+    "BLACKLIST_AFTER_ROTATION": True,
     # 토큰에 포함될 사용자 정의 클레임
-    'USER_ID_FIELD': 'intra_id',
-
+    "USER_ID_FIELD": "intra_id",
     # 사용자 정의 클레임의 필드 이름
-    'USER_ID_CLAIM': 'intra_id',
-
-    'AUTH_COOKIE': 'pp_access_token',
-
-    'AUTH_COOKIE_REFRESH': 'pp_refresh_token',
-
+    "USER_ID_CLAIM": "intra_id",
+    "AUTH_COOKIE": "pp_access_token",
+    "AUTH_COOKIE_REFRESH": "pp_refresh_token",
     # 사용자 모델의 필드를 통해 사용자를 인증할 때 사용할 필드
-    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
-
+    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
     # 토큰 발급 시 사용할 시크릿 키
-    'SIGNING_KEY': SECRET_KEY,
-
+    "SIGNING_KEY": SECRET_KEY,
     # 검증 시 사용할 공개 키 (기본적으로 시크릿 키와 동일)
-    'VERIFYING_KEY': '',
-
+    "VERIFYING_KEY": "",
     # 토큰에 포함될 헤더
-    'TOKEN_TYPE_CLAIM': 'Type',
-
+    "TOKEN_TYPE_CLAIM": "Type",
     # 토큰에 포함될 타입
-    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
-
+    "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
     # JTI (JWT ID) 클레임을 사용할지 여부
-    'JTI_CLAIM': 'jti',
+    "JTI_CLAIM": "jti",
 }
 
 
@@ -335,4 +325,4 @@ EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS")
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
