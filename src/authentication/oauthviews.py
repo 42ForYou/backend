@@ -33,12 +33,10 @@ class OAuthView(APIView):
         access_token = request.COOKIES.get(settings.SIMPLE_JWT["AUTH_COOKIE"])
         if access_token:
             try:
-                user, validated_token = CookieTokenAuthentication().authenticate(
-                    request
-                )
+                user, _ = CookieTokenAuthentication().authenticate(request)
                 response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
                 return response
-            except Exception as e:
+            except Exception:
                 pass
 
         try:
@@ -61,7 +59,7 @@ class OAuthView(APIView):
             raise CustomError(e)
 
     def do_2fa(self, user):
-        two_factor_auth, created = TwoFactorAuth.objects.get_or_create(user=user)
+        two_factor_auth, _ = TwoFactorAuth.objects.get_or_create(user=user)
         two_factor_auth.send_secret_code()
 
     def request42OAuth(self, code):

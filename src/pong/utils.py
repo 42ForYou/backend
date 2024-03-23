@@ -68,7 +68,9 @@ class CookieTokenAuthentication(JWTAuthentication):
             validated_token = AccessToken(raw_token)
             return self.get_user(validated_token), validated_token
         except Exception as e:
-            raise CustomError("Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
+            raise CustomError(
+                "Invalid token", status_code=status.HTTP_401_UNAUTHORIZED
+            ) from e
 
 
 class CustomPageNumberPagination(PageNumberPagination):

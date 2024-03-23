@@ -36,7 +36,7 @@ class LogoutView(APIView):
             if refresh_token:
                 refresh = RefreshToken(refresh_token)
                 refresh.blacklist()
-        except Exception as e:
+        except Exception:
             pass
         response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE"])
         response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"])
@@ -62,7 +62,9 @@ class CustomTokenRefreshView(TokenRefreshView):
             logger.debug(f"refreshed token: {AccessToken(token).payload}")
             return response
         except Exception as e:
-            raise CustomError("Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
+            raise CustomError(
+                "Invalid token", status_code=status.HTTP_401_UNAUTHORIZED
+            ) from e
 
 
 # JWT 유효성 검사
