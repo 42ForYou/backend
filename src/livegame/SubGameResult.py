@@ -1,4 +1,4 @@
-from typing import Dict, Union
+from typing import Union
 
 from accounts.models import UserDataCache
 from livegame.precision_config import round_time

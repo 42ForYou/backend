@@ -1,6 +1,6 @@
 from .models import GameRoom, GamePlayer
 from .serializers import GameRoomSerializer, GameSerializer, GamePlayerSerializer
-from pong.utils import CustomError, wrap_data
+from pong.utils import CustomError
 from rest_framework import status
 
 
@@ -24,7 +24,8 @@ def create_game(user, game_data):
             user=user, game__game_room__is_playing=False
         ).exists():
             raise CustomError(
-                "You are already in a game room", status_code=status.HTTP_400_BAD_REQUEST
+                "You are already in a game room",
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
         serializer = GameSerializer(data=game_data)
         serializer.is_valid(raise_exception=True)

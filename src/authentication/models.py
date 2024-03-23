@@ -3,7 +3,7 @@ import string
 from django.db import models
 from django.utils import timezone
 from rest_framework import status
-from accounts.models import User, Profile
+from accounts.models import User
 from pong.utils import CustomError
 from pong.utils import send_email
 import pong.settings as settings

@@ -1,5 +1,5 @@
 from .views import GameRoomViewSet, PlayerViewSet, SubGameViewSet
-from django.urls import re_path, path, include
+from django.urls import path, include
 from rest_framework import routers
 
 router = routers.DefaultRouter()

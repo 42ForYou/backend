@@ -14,15 +14,14 @@ from pong.utils import CookieTokenAuthentication, CustomError, wrap_data
 import hashlib
 import os
 import logging
-import math
 from django.core.files.storage import default_storage
 from rest_framework.parsers import MultiPartParser, JSONParser
 import json
 import pong.settings as settings
 from datetime import datetime
 from pong.utils import CustomPageNumberPagination
-from game.models import Game, GamePlayer, SubGame
-from game.serializers import GameSerializer, GamePlayerSerializer, SubGameSerializer
+from game.models import Game
+from game.serializers import GameSerializer
 from accounts.models import User
 from accounts.GameHistory import get_game_histories_of_user
 from accounts.GameStats import GameStats
