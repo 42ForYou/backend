@@ -48,7 +48,7 @@ def get_cause_of_termination(results: List[SubGameSessionResult]) -> str:
     for result in results:
         if result == SubGameSessionResult.INTERNAL_ERROR:
             return "internal_error"
-        elif result == SubGameSessionResult.TIMEOUT:
+        if result == SubGameSessionResult.TIMEOUT:
             return "connection_lost"
 
     raise ValueError(f"given results {results} doesn't contain not-ok result")

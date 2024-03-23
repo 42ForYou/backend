@@ -123,13 +123,13 @@ class SubGameSession(socketio.AsyncNamespace):
 
     def determine_winner(self) -> None:
         if self.time_over:  # sudden death
-            if self.paddles[Player.A].score == self.paddles[Player.B].score:
-                return  # play until someone scores
-            elif self.paddles[Player.A].score > self.paddles[Player.B].score:
+            if self.paddles[Player.A].score > self.paddles[Player.B].score:
                 self.winner = Player.A
             elif self.paddles[Player.A].score < self.paddles[Player.B].score:
                 self.winner = Player.B
-        elif self.paddles[Player.A].score == self.config.match_point:
+            return
+
+        if self.paddles[Player.A].score == self.config.match_point:
             self.winner = Player.A
         elif self.paddles[Player.B].score == self.config.match_point:
             self.winner = Player.B
@@ -321,18 +321,18 @@ class SubGameSession(socketio.AsyncNamespace):
                 f"Player {self.paddle_defense.player.name} reflects the ball"
             )
             return TurnResult.DEFENDED
-        else:
-            # fail to defend, scoring, reset
-            self.paddle_offense.score += 1
-            self.logger.debug(f"Player {self.paddle_offense.player} scored")
-            await self.emit_update_scores()
-            self.logger.debug(
-                f"Player {self.paddle_offense.player.name} scores to {self.paddle_offense.score}"
-            )
-            if self.paddle_offense.player == Player.A:
-                return TurnResult.A_SCORED
-            else:
-                return TurnResult.B_SCORED
+
+        # fail to defend, scoring, reset
+        self.paddle_offense.score += 1
+        self.logger.debug(f"Player {self.paddle_offense.player} scored")
+        await self.emit_update_scores()
+        self.logger.debug(
+            f"Player {self.paddle_offense.player.name} scores to {self.paddle_offense.score}"
+        )
+        if self.paddle_offense.player == Player.A:
+            return TurnResult.A_SCORED
+
+        return TurnResult.B_SCORED
 
     async def emit_start(self) -> None:
         event = "start"

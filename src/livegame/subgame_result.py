@@ -33,10 +33,9 @@ class SubGameResult:
 
         if self.winner == "A":
             return self.sid_a
-        elif self.winner == "B":
+        if self.winner == "B":
             return self.sid_b
-        else:
-            raise ValueError(f"Invalid winner value: {self.winner}")
+        raise ValueError(f"Invalid winner value: {self.winner}")
 
     def get_user_data_of_winner(self) -> UserDataCache:
         if not self.winner:
@@ -44,10 +43,9 @@ class SubGameResult:
 
         if self.winner == "A":
             return self.user_data_a
-        elif self.winner == "B":
+        if self.winner == "B":
             return self.user_data_b
-        else:
-            raise ValueError(f"Invalid winner value: {self.winner}")
+        raise ValueError(f"Invalid winner value: {self.winner}")
 
     def __str__(self) -> str:
         return (
