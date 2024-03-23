@@ -4,7 +4,6 @@ import logging
 from asgiref.sync import sync_to_async
 from django.db.models import Q
 from rest_framework_simplejwt.tokens import AccessToken
-from pong.utils import wrap_data
 from .models import SocketSession
 from friends.serializers import FriendUserSerializer
 from friends.models import Friend

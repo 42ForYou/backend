@@ -45,5 +45,5 @@ class Profile(models.Model):
         unique=True,
     )
     email = models.EmailField(unique=True)
-    avatar = models.CharField(max_length=256, default="")
+    avatar = models.CharField(default="")
     two_factor_auth = models.BooleanField(default=False)
