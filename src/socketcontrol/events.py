@@ -5,7 +5,7 @@ from django.db.models import Q
 from rest_framework_simplejwt.tokens import AccessToken
 from asgiref.sync import sync_to_async
 
-import pong.settings as settings
+from pong import settings
 from friends.serializers import FriendUserSerializer
 from friends.models import Friend
 from accounts.models import User

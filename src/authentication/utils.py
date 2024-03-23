@@ -1,7 +1,7 @@
 from rest_framework_simplejwt.tokens import RefreshToken
 from accounts.serializers import UserSerializer, ProfileSerializer
+from pong import settings
 from pong.utils import wrap_data
-import pong.settings as settings
 
 
 def get_token_for_user(user):

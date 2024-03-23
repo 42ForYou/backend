@@ -10,9 +10,13 @@ from rest_framework.response import Response
 from rest_framework import status, permissions, serializers, mixins, viewsets
 from rest_framework.parsers import MultiPartParser, JSONParser
 
-from pong.utils import CookieTokenAuthentication, CustomError, wrap_data
-import pong.settings as settings
-from pong.utils import CustomPageNumberPagination
+from pong import settings
+from pong.utils import (
+    CookieTokenAuthentication,
+    CustomError,
+    CustomPageNumberPagination,
+    wrap_data,
+)
 from game.models import Game
 from game.serializers import GameSerializer
 from friends.models import Friend

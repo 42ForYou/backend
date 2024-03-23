@@ -5,7 +5,8 @@ from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import PageNumberPagination
-import pong.settings as settings
+
+from pong import settings
 
 
 class CustomError(Exception):

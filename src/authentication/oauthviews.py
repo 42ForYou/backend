@@ -12,11 +12,10 @@ from accounts.serializers import (
     UserSerializer,
     ProfileSerializer,
 )
-from pong.utils import CustomError, wrap_data
+from pong import settings
+from pong.utils import CustomError, CookieTokenAuthentication, wrap_data
 from .models import OAuth, TwoFactorAuth
-from pong.utils import CookieTokenAuthentication
 from .utils import get_token_for_user, set_cookie_response
-import pong.settings as settings
 
 
 logger = logging.getLogger("authenticate.oauth")

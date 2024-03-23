@@ -5,8 +5,8 @@ from enum import Enum
 import asyncio
 import socketio
 
+from pong import settings
 from pong.settings import LOGLEVEL_TRACE_ENABLE
-import pong.settings as settings
 from accounts.models import User
 from socketcontrol.events import sio, get_user_by_token
 from ..precision_config import get_time, round_time

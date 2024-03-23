@@ -8,7 +8,7 @@ from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from pong.utils import CustomError, wrap_data, CookieTokenAuthentication
-import pong.settings as settings
+from pong import settings
 from accounts.serializers import UserSerializer, ProfileSerializer
 from accounts.models import User
 from .utils import get_token_for_user, set_cookie_response, get_response_data

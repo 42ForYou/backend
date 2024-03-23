@@ -7,7 +7,7 @@ from enum import Enum
 
 import socketio
 from asgiref.sync import sync_to_async
-import pong.settings as settings
+from pong import settings
 from accounts.models import User, UserDataCache, fetch_user_data_cache
 from game.models import Game, GamePlayer, GameRoom, SubGame
 from socketcontrol.events import sio
