@@ -1,16 +1,10 @@
 import logging
 import requests
 import json
-
 from django.conf import settings
-
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.authtoken.models import Token
-
-from pong.utils import CustomError, wrap_data
-from pong.utils import CookieTokenAuthentication
 
 from rest_framework_simplejwt.tokens import AccessToken
 from accounts.models import User, Profile
@@ -18,7 +12,9 @@ from accounts.serializers import (
     UserSerializer,
     ProfileSerializer,
 )
+from pong.utils import CustomError, wrap_data
 from .models import OAuth, TwoFactorAuth
+from pong.utils import CookieTokenAuthentication
 from .utils import get_token_for_user, set_cookie_response
 import pong.settings as settings
 

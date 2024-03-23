@@ -1,7 +1,30 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+from rest_framework import status
+from pong.utils import CustomError
 
 from .models import User, Profile
+
+
+class UserTokenProfileSerializer(serializers.Serializer):
+    user = serializers.JSONField()
+    profile = serializers.JSONField()
+
+
+class ProfileResponseSerializer(serializers.Serializer):
+    user = serializers.JSONField()
+    match_history = serializers.JSONField()
+
+
+class DataWrapperSerializer(serializers.Serializer):
+    data = serializers.SerializerMethodField()
+
+    def __init__(self, *args, **kwargs):
+        self.inner_serializer = kwargs.pop("inner_serializer", None)
+        super().__init__(*args, **kwargs)
+
+    def get_data(self, obj):
+        return self.inner_serializer(obj).data
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -49,3 +72,20 @@ class ProfileNotOwnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ("intra_id", "nickname", "avatar")
+
+
+class SwaggerProfileSerializer(serializers.Serializer):
+    user = ProfileSerializer()
+    match_history = serializers.JSONField()
+
+
+class WrapDataSwaggerProfileSerializer(serializers.Serializer):
+    data = SwaggerProfileSerializer()
+
+
+class OnlyUserProfileSerializer(serializers.Serializer):
+    user = ProfileSerializer()
+
+
+class WrapDataSwaggerOnlyProfileSerializer(serializers.Serializer):
+    data = OnlyUserProfileSerializer()

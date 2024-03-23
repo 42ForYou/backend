@@ -22,7 +22,7 @@ class TwoFactorAuth(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, primary_key=True, related_name="two_factor_auth"
     )
-    secret_code = models.CharField(null=True)
+    secret_code = models.CharField(max_length=100, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

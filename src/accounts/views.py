@@ -1,23 +1,30 @@
-import os
-import json
-import hashlib
-from datetime import datetime
-
-from django.db.models import Q
-from django.core.files.storage import default_storage
-
 from rest_framework import mixins, viewsets
+from .models import Profile
+from friends.models import Friend
+from django.db.models import Q
+from .serializers import (
+    ProfileSerializer,
+    ProfileNotOwnerSerializer,
+    ProfileResponseSerializer,
+    DataWrapperSerializer,
+    WrapDataSwaggerProfileSerializer,
+    WrapDataSwaggerOnlyProfileSerializer,
+)
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
 from rest_framework import serializers
+from drf_yasg.utils import swagger_auto_schema
+from pong.utils import CookieTokenAuthentication, CustomError, wrap_data
+import hashlib
+import os
 import logging
 import math
 from django.core.files.storage import default_storage
 from rest_framework.parsers import MultiPartParser, JSONParser
-
+import json
 import pong.settings as settings
-from pong.utils import CookieTokenAuthentication, CustomError, wrap_data
+from datetime import datetime
 from pong.utils import CustomPageNumberPagination
 from game.models import Game, GamePlayer, SubGame
 from game.serializers import GameSerializer, GamePlayerSerializer, SubGameSerializer
@@ -27,13 +34,6 @@ from accounts.GameStats import GameStats
 
 
 logger = logging.getLogger(f"{__package__}.{__name__}")
-
-from friends.models import Friend
-from .models import Profile
-from .serializers import (
-    ProfileSerializer,
-    ProfileNotOwnerSerializer,
-)
 
 
 class IsOwner(permissions.BasePermission):
@@ -57,6 +57,9 @@ class ProfileViewSet(
             self.permission_classes = [permissions.IsAuthenticated]
         return super().get_permissions()
 
+    @swagger_auto_schema(
+        responses={200: WrapDataSwaggerProfileSerializer()},
+    )
     def retrieve(self, request, *args, **kwargs):
         try:
             if request.user.intra_id != kwargs["intra_id"]:
@@ -82,12 +85,16 @@ class ProfileViewSet(
                 instance = self.get_object()
                 response_data = ProfileSerializer(instance).data
             return Response(
-                wrap_data(user=response_data),
+                wrap_data(user=response_data, match_history=[{}]),
                 status=status.HTTP_200_OK,
             )
         except Exception as e:
             raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(
+        request_body=WrapDataSwaggerOnlyProfileSerializer(),
+        responses={200: WrapDataSwaggerOnlyProfileSerializer()},
+    )
     def update(self, request, *args, **kwargs):
         try:
             user = request.user
@@ -112,7 +119,11 @@ class ProfileViewSet(
             instance = self.get_object()
             serializer = ProfileSerializer(instance)
             return Response(
-                data=wrap_data(user=serializer.data), status=status.HTTP_200_OK
+                DataWrapperSerializer(
+                    {"user": serializer.data, "match_history": [{}]},
+                    inner_serializer=ProfileResponseSerializer,
+                ).data,
+                status=status.HTTP_200_OK,
             )
         except serializers.ValidationError as e:
             raise CustomError(e.detail, status_code=status.HTTP_409_CONFLICT)
