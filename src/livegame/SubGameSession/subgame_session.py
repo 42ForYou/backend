@@ -104,7 +104,7 @@ class SubGameSession(socketio.AsyncNamespace):
         self.logger.debug(f"keyboard_input from sid {sid}, data={data}")
 
         if not self.running:
-            self.logger.debug(f"SubGameSession is not running")
+            self.logger.debug("SubGameSession is not running")
             return
 
         if not sid in self.sid_to_player:
@@ -139,7 +139,7 @@ class SubGameSession(socketio.AsyncNamespace):
         self.logger.debug(f"start_ack from sid {sid}, data={data}")
 
         if not self.running:
-            self.logger.debug(f"SubGameSession is not running")
+            self.logger.debug("SubGameSession is not running")
             return
 
         if not sid in self.sid_to_player:
