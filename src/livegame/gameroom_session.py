@@ -211,10 +211,6 @@ class GameRoomSession(socketio.AsyncNamespace):
                 await sync_to_async(self.game.delete)()
                 return
 
-            # TODO: delete in production
-            if not self.is_current_rank_done():
-                raise Exception("Logic error: current rank is not done...")
-
             self.logger.debug(f"sleeping {self.config.t_delay_rank_end} seconds...")
             await asyncio.sleep(self.config.t_delay_rank_end)
 
@@ -280,11 +276,6 @@ class GameRoomSession(socketio.AsyncNamespace):
                 player_b.save()
                 self.game.users.add(player_a.user)
                 self.game.users.add(player_b.user)
-
-    # TODO: delete in production
-    def is_current_rank_done(self) -> bool:
-        winners = [item.winner for item in self.tournament_tree[self.rank_ongoing]]
-        return all(winner_val is not None for winner_val in winners)
 
     def get_sid_from_intra_id(self, intra_id) -> str:
         for sid_key, user_data in self.sid_to_user_data.items():
