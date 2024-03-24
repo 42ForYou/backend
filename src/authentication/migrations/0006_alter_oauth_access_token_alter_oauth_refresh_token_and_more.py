@@ -6,28 +6,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('authentication', '0004_alter_oauth_access_token_alter_oauth_refresh_token'),
+        ("authentication", "0005_alter_twofactorauth_secret_code"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='oauth',
-            name='access_token',
+            model_name="oauth",
+            name="access_token",
             field=models.CharField(unique=True),
         ),
         migrations.AlterField(
-            model_name='oauth',
-            name='refresh_token',
+            model_name="oauth",
+            name="refresh_token",
             field=models.CharField(unique=True),
         ),
         migrations.AlterField(
-            model_name='oauth',
-            name='token_type',
+            model_name="oauth",
+            name="token_type",
             field=models.CharField(),
         ),
         migrations.AlterField(
-            model_name='twofactorauth',
-            name='secret_code',
+            model_name="twofactorauth",
+            name="secret_code",
             field=models.CharField(null=True),
         ),
     ]
