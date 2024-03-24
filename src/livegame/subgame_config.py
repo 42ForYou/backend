@@ -31,6 +31,8 @@ class SubGameConfig:
         delay_time_before_subgame_start: float,
         delay_time_after_scoring: float,
         delay_time_after_rank_end: float,
+        network_max_retries: int,
+        network_delay_between_retries: float,
     ) -> None:
         self.width = width
         self.height = height
@@ -56,6 +58,8 @@ class SubGameConfig:
         self.t_delay_subgame_start = delay_time_before_subgame_start
         self.t_delay_scoring = delay_time_after_scoring
         self.t_delay_rank_end = delay_time_after_rank_end
+        self.max_retry_network = network_max_retries
+        self.t_delay_retry_network = network_delay_between_retries
 
         for key, value in self.__dict__.items():
             logger.info(f"SubGameConfig {key}: {value}")
@@ -94,6 +98,10 @@ sgc_delay_time_after_scoring = os.environ.get(
 sgc_delay_time_after_rank_end = os.environ.get(
     "SUBGAMECONFIG_DELAY_TIME_AFTER_RANK_END", "5"
 )
+sgc_network_max_retries = os.environ.get("SUBGAMECONFIG_NETWORK_MAX_RETRIES", "5")
+sgc_network_delay_between_retries = os.environ.get(
+    "SUBGAMECONFIG_NETWORK_DELAY_BETWEEN_RETRIES", "3"
+)
 
 
 def get_default_subgame_config(game: Game) -> SubGameConfig:
@@ -118,4 +126,6 @@ def get_default_subgame_config(game: Game) -> SubGameConfig:
         delay_time_before_subgame_start=float(sgc_delay_time_before_subgame_start),
         delay_time_after_scoring=float(sgc_delay_time_after_scoring),
         delay_time_after_rank_end=float(sgc_delay_time_after_rank_end),
+        network_max_retries=int(sgc_network_max_retries),
+        network_delay_between_retries=float(sgc_network_delay_between_retries),
     )

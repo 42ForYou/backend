@@ -158,8 +158,7 @@ class SubGameSession(socketio.AsyncNamespace):
     async def ensure_start(self) -> None:
         self.running = True
 
-        max_retry = 5
-        for _ in range(max_retry):  # FIXME: not hardcode 5 times
+        for _ in range(self.config.max_retry_network):
             self.t_start = time.time() + self.config.t_delay_subgame_start
             self.t_end = self.t_start + self.config.t_limit
             await self.emit_start()
@@ -180,7 +179,7 @@ class SubGameSession(socketio.AsyncNamespace):
                 timeout_culprit.append(player.name)
 
         raise TimeoutError(
-            f"Max retry ({max_retry}) of emiting start event reached, "
+            f"Max retry ({self.config.max_retry_network}) of emiting start event reached, "
             f"culprit: {', '.join(timeout_culprit)}"
         )
 
@@ -265,14 +264,13 @@ class SubGameSession(socketio.AsyncNamespace):
     async def ensure_ended(self) -> None:
         self.running = False
 
-        max_retry = 5
-        for _ in range(max_retry):  # FIXME: not hardcode 5 times
+        for _ in range(self.config.max_retry_network):
             self.t_end = time.time()
             await self.emit_ended()
             await self.gr_session.report_winner_of_subgame(
                 self.idx_rank, self.idx_in_rank, self.winner
             )
-            await asyncio.sleep(3)  # FIXME: not hardcode 3 seconds
+            await asyncio.sleep(self.config.t_delay_retry_network)
 
             if all(
                 paddle.ack_status == PaddleAckStatus.ENDED
@@ -286,7 +284,7 @@ class SubGameSession(socketio.AsyncNamespace):
                 timeout_culprit.append(player.name)
 
         raise TimeoutError(
-            f"Max retry ({max_retry}) of emiting ended event reached, "
+            f"Max retry ({self.config.max_retry_network}) of emiting ended event reached, "
             f"culprit: {', '.join(timeout_culprit)}"
         )
 
