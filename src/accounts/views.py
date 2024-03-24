@@ -32,6 +32,13 @@ from .serializers import (
 
 logger = logging.getLogger(f"{__package__}.{__name__}")
 
+from friends.models import Friend
+from .models import Profile
+from .serializers import (
+    ProfileSerializer,
+    ProfileNotOwnerSerializer,
+)
+
 
 class IsOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
