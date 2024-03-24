@@ -103,11 +103,16 @@ class GameRoomSession(socketio.AsyncNamespace):
             await self.disconnect(sid)
 
     async def on_disconnect(self, sid):
-        self.logger.debug(f"disconnect from sid {self.sid_to_user_data[sid].intra_id}")
+        if sid in self.sid_to_user_data:
+            self.logger.debug(
+                f"disconnect from sid {self.sid_to_user_data[sid].intra_id}"
+            )
 
-        if not self.is_playing:
-            del self.sid_to_user_data[sid]
-            return
+            if not self.is_playing:
+                del self.sid_to_user_data[sid]
+                return
+        else:
+            self.logger.debug(f"disconnect from unknown sid {sid}")
 
     # SIO: F>B entered
     async def on_entered(self, sid, data):
