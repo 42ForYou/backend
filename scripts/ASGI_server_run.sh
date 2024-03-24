@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Wait for the Postgres container to be ready
-./scripts/wait-for-postgres.sh postgres
+./scripts/wait-for-ssl_postgres.sh postgres
 
 cd src
 
