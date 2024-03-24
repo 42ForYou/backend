@@ -1,7 +1,7 @@
 import math
 from typing import List
 
-from accounts.GameHistory import GameHistory
+from accounts.game_history import GameHistory
 
 
 class RankStats:

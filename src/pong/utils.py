@@ -1,13 +1,12 @@
-import logging
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import send_mail, EmailMessage
-from rest_framework.response import Response
+from django.core.mail import EmailMessage
 from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.pagination import PageNumberPagination
-from rest_framework_simplejwt.tokens import Token
-import pong.settings as settings
+
+from pong import settings
 
 
 class CustomError(Exception):
@@ -70,7 +69,9 @@ class CookieTokenAuthentication(JWTAuthentication):
             validated_token = AccessToken(raw_token)
             return self.get_user(validated_token), validated_token
         except Exception as e:
-            raise CustomError("Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
+            raise CustomError(
+                "Invalid token", status_code=status.HTTP_401_UNAUTHORIZED
+            ) from e
 
 
 class CustomPageNumberPagination(PageNumberPagination):

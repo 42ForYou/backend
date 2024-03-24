@@ -1,22 +1,16 @@
-import socketio
 import logging
+import socketio
 
-from asgiref.sync import sync_to_async
 from django.db.models import Q
 from rest_framework_simplejwt.tokens import AccessToken
-from pong.utils import wrap_data
-from .models import SocketSession
+from asgiref.sync import sync_to_async
+
+from pong import settings
 from friends.serializers import FriendUserSerializer
 from friends.models import Friend
 from accounts.models import User
-import pong.settings as settings
+from .models import SocketSession
 
-
-"""
-connect, disconnect 에 액세스할 수 없음 에러는 문제없다.
-이벤트를 등록하면 자동으로 connect, disconnect 가 등록된다.
-connect, disconnect 는 socketio 라이브러리에서 자동으로 등록된다.
-"""
 
 sio = socketio.AsyncServer(
     async_mode="asgi",
@@ -73,7 +67,7 @@ def get_user_by_sid(sid):
 
 @sync_to_async
 def get_session(user, sid):
-    session, created = SocketSession.objects.update_or_create(
+    session, _ = SocketSession.objects.update_or_create(
         user=user, defaults={"session_id": sid}
     )
     return session
@@ -94,7 +88,7 @@ async def connect(sid: str, environ: dict) -> None:
         token = cookie_dict.get(settings.SIMPLE_JWT["AUTH_COOKIE"], None)
         if token:
             user = await get_user_by_token(token)
-            session = await get_session(user, sid)
+            await get_session(user, sid)  # TODO: 필요 없으면 삭제
             user.is_online = True
             await sync_to_async(user.save)()
             friends_users = await get_friends(user)

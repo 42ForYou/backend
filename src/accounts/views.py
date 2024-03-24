@@ -1,29 +1,33 @@
-import os
 import json
 import hashlib
+import os
 import logging
-
 from datetime import datetime
 
 from django.db.models import Q
 from django.core.files.storage import default_storage
-
-from django.core.files.storage import default_storage
-from rest_framework import mixins, viewsets
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework import permissions
-from rest_framework import serializers
+from rest_framework import status, permissions, serializers, mixins, viewsets
 from rest_framework.parsers import MultiPartParser, JSONParser
 
-import pong.settings as settings
-from pong.utils import CookieTokenAuthentication, CustomError, wrap_data
-from pong.utils import CustomPageNumberPagination
+from pong import settings
+from pong.utils import (
+    CookieTokenAuthentication,
+    CustomError,
+    CustomPageNumberPagination,
+    wrap_data,
+)
 from game.models import Game
 from game.serializers import GameSerializer
-from accounts.models import User
-from accounts.GameHistory import get_game_histories_of_user
-from accounts.GameStats import GameStats
+from friends.models import Friend
+from .models import User
+from .game_history import get_game_histories_of_user
+from .game_stats import GameStats
+from .models import Profile
+from .serializers import (
+    ProfileSerializer,
+    ProfileNotOwnerSerializer,
+)
 
 
 logger = logging.getLogger(f"{__package__}.{__name__}")
@@ -86,7 +90,9 @@ class ProfileViewSet(
                 status=status.HTTP_200_OK,
             )
         except Exception as e:
-            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "Profile", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
     def update(self, request, *args, **kwargs):
         try:
@@ -115,9 +121,11 @@ class ProfileViewSet(
                 data=wrap_data(user=serializer.data), status=status.HTTP_200_OK
             )
         except serializers.ValidationError as e:
-            raise CustomError(e.detail, status_code=status.HTTP_409_CONFLICT)
+            raise CustomError(e.detail, status_code=status.HTTP_409_CONFLICT) from e
         except Exception as e:
-            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "Profile", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
     def save_image(self, image_obj, intra_id, profile):
         extension = self.get_extension(image_obj.content_type)
@@ -173,7 +181,9 @@ class UserSearchViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
             serializer = self.get_serializer(page, many=True)
             return paginator.get_paginated_response(serializer.data)
         except Exception as e:
-            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "Profile", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
 
 class HistoryViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -202,7 +212,9 @@ class HistoryViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             dict_histories = [history.to_dict() for history in histories]
             return Response(data=dict_histories, status=status.HTTP_200_OK)
         except Exception as e:
-            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "Profile", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e
 
 
 class StatsViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -227,4 +239,6 @@ class StatsViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
             return Response(data=stats.to_dict(), status=status.HTTP_200_OK)
         except Exception as e:
-            raise CustomError(e, "Profile", status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(
+                e, "Profile", status_code=status.HTTP_400_BAD_REQUEST
+            ) from e

@@ -1,14 +1,16 @@
 import logging
 from urllib.parse import quote
 
+from urllib.parse import quote
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
-import pong.settings as settings
 from pong.utils import CustomError, wrap_data, CookieTokenAuthentication
+from pong import settings
 from accounts.serializers import UserSerializer, ProfileSerializer
 from accounts.models import User
 from .utils import get_token_for_user, set_cookie_response, get_response_data
@@ -20,7 +22,10 @@ class LoginView(APIView):
 
     def get(self, request):
         redirect_url = quote(settings.CALLBACK_URL)
-        url = f"{settings.OAUTH_URL}?client_id={settings.CLIENT_ID}&redirect_uri={redirect_url}&response_type=code"
+        url = (
+            f"{settings.OAUTH_URL}?client_id={settings.CLIENT_ID}"
+            f"&redirect_uri={redirect_url}&response_type=code"
+        )
         return Response(wrap_data(url=url), status=status.HTTP_200_OK)
 
 
@@ -36,7 +41,7 @@ class LogoutView(APIView):
             if refresh_token:
                 refresh = RefreshToken(refresh_token)
                 refresh.blacklist()
-        except Exception as e:
+        except Exception:
             pass
         response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE"])
         response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"])
@@ -62,7 +67,9 @@ class CustomTokenRefreshView(TokenRefreshView):
             logger.debug(f"refreshed token: {AccessToken(token).payload}")
             return response
         except Exception as e:
-            raise CustomError("Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
+            raise CustomError(
+                "Invalid token", status_code=status.HTTP_401_UNAUTHORIZED
+            ) from e
 
 
 # JWT 유효성 검사
@@ -100,14 +107,13 @@ class TwoFactorAuthView(APIView):
                     response, token["access"], token["refresh"]
                 )
                 return response
-            else:
-                return Response(
-                    data={"error": "Invalid Code"}, status=status.HTTP_401_UNAUTHORIZED
-                )
+            return Response(
+                data={"error": "Invalid Code"}, status=status.HTTP_401_UNAUTHORIZED
+            )
         except Exception as e:
             raise CustomError(
                 exception=e, model_name="user", status_code=status.HTTP_400_BAD_REQUEST
-            )
+            ) from e
 
     def patch(self, request, *args, **kwargs):
         try:
@@ -118,4 +124,4 @@ class TwoFactorAuthView(APIView):
         except Exception as e:
             raise CustomError(
                 exception=e, model_name="user", status_code=status.HTTP_400_BAD_REQUEST
-            )
+            ) from e

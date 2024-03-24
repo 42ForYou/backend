@@ -4,7 +4,7 @@ from typing import Tuple
 from enum import Enum
 
 from pong.settings import LOGLEVEL_TRACE_ENABLE
-from livegame.SubGameConfig import SubGameConfig
+from ..subgame_config import SubGameConfig
 
 logger = logging.getLogger(f"{__package__}.{__name__}")
 
@@ -84,7 +84,7 @@ class BallTrackSegment:
             or self.config.flt_eq(p_coord_constr, l_constr_max)
         ):
             return False
-        if not (l_range_min <= p_coord_range <= l_range_max):
+        if not l_range_min <= p_coord_range <= l_range_max:
             return False
         return True
 
@@ -192,8 +192,8 @@ class BallTrackSegment:
             self.trace(f"{self} is not valid because end point")
             return
 
-        if self.p_start == PointCategory.INVALID or self.p_end == PointCategory.INVALID:
-            raise ValueError(f"p_start or p_end is invalid")
+        if PointCategory.INVALID in (self.p_start, self.p_end):
+            raise ValueError("p_start or p_end is invalid")
         self.trace(f"{self} is valid")
         self.is_valid = True
 

@@ -5,8 +5,8 @@ from typing import List, Tuple
 from enum import Enum
 
 from pong.settings import LOGLEVEL_TRACE_ENABLE
-from livegame.SubGameConfig import SubGameConfig
-from livegame.SubGameSession.BallTrackSegment import (
+from ..subgame_config import SubGameConfig
+from .balltrack_segment import (
     BallTrackSegment,
     get_ball_track_segment_to_wall,
     get_ball_track_segment_to_paddle,
@@ -61,28 +61,28 @@ class BallTrack:
         self, x_start: float, y_start: float, dx: float, dy: float
     ) -> None:
         while True:
-            self.trace(f"calculate_segments loop start")
-            self.trace(f"call get_ball_track_segment_to_wall")
+            self.trace("calculate_segments loop start")
+            self.trace("call get_ball_track_segment_to_wall")
             next_track = get_ball_track_segment_to_wall(
                 self.config, x_start, y_start, dx, dy
             )
             if next_track.is_valid:
-                self.trace(f"next track is valid")
+                self.trace("next track is valid")
                 self.segments.append(next_track)
                 x_start = next_track.x_end
                 y_start = next_track.y_end
                 dx, dy = next_track.next_dx_dy
                 self.trace(f"x_start {x_start} y_start {y_start} dx {dx} dy {dy}")
-                self.trace(f"continue...")
+                self.trace("continue...")
                 continue
 
             # ball doesn't hit the wall, thus must hit paddle side
             next_track = get_ball_track_segment_to_paddle(
                 self.config, x_start, y_start, dx, dy
             )
-            self.trace(f"call get_ball_track_segment_to_paddle")
+            self.trace("call get_ball_track_segment_to_paddle")
             if next_track.is_valid:
-                self.trace(f"next track is valid")
+                self.trace("next track is valid")
                 self.segments.append(next_track)
                 self.trace("break")
                 break
@@ -91,7 +91,7 @@ class BallTrack:
             raise ValueError("Error while calculating ball's movement")
 
         self.y_impact = self.segments[-1].y_end
-        len_total = sum([seg.len for seg in self.segments])
+        len_total = sum(seg.len for seg in self.segments)
         self.t_duration = len_total / self.v  # v * t = d, t = d / v
         self.t_end = self.t_start + self.t_duration
         self.trace(
@@ -111,7 +111,10 @@ class BallTrack:
         pts = [f"({seg.x_start}, {seg.y_start})" for seg in self.segments]
         pts.append(f"({self.segments[-1].x_end}, {self.segments[-1].y_end})")
         pts_str = " > ".join(pts)
-        return f"BallTrack {self.heading.name}, dt={self.t_duration}, t={self.t_start}...{self.t_end}, v={self.v}, {pts_str}"
+        return (
+            f"BallTrack {self.heading.name}, "
+            f"dt={self.t_duration}, t={self.t_start}...{self.t_end}, v={self.v}, {pts_str}"
+        )
 
 
 def get_random_dx_dy(

@@ -4,8 +4,8 @@ from enum import Enum
 from typing import Dict, Union
 
 from pong.settings import LOGLEVEL_TRACE_ENABLE
-from livegame.precision_config import round_time, round_coord, round_speed
-from livegame.SubGameConfig import SubGameConfig
+from ..precision_config import round_time, round_coord, round_speed
+from ..subgame_config import SubGameConfig
 
 
 class Player(Enum):
@@ -96,7 +96,8 @@ class Paddle:
         elif key_input.action == KeyInput.Action.RELEASE:
             self.key_pressed[key_input.key] = False
 
-            # When releasing, if other key remains being pressed, update dy according to remaining key
+            # When releasing, if other key remains being pressed,
+            # update dy according to remaining key
             # if no key is pressed, update dy to 0
             if key_input.key == KeyInput.Key.UP:
                 if self.key_pressed[KeyInput.Key.DOWN]:

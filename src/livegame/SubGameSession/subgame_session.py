@@ -1,25 +1,24 @@
 import time
-import math
-import asyncio
-import socketio
 import logging
 from typing import Dict
 from enum import Enum
+import asyncio
+import socketio
 
+from pong import settings
 from pong.settings import LOGLEVEL_TRACE_ENABLE
 from accounts.models import User
 from socketcontrol.events import sio, get_user_by_token
-from livegame.precision_config import get_time, round_time, round_coord, round_speed
-from livegame.SubGameConfig import SubGameConfig
-from livegame.SubGameSession.Paddle import (
+from ..precision_config import get_time, round_time
+from ..subgame_config import SubGameConfig
+from .paddle import (
     Paddle,
     KeyInput,
     Player,
     PaddleAckStatus,
 )
-from livegame.SubGameSession.BallTrack import BallTrack, get_random_dx_dy
-from livegame.SubGameSession.SIOAdapter import serialize_balltrack
-import pong.settings as settings
+from .balltrack import BallTrack, get_random_dx_dy
+from .sio_adapter import serialize_balltrack
 
 
 class TurnResult(Enum):
@@ -45,6 +44,12 @@ class SubGameSession(socketio.AsyncNamespace):
         )
 
         self.config = config
+
+        self.t_start: float
+        self.t_end: float
+        self.balltrack: BallTrack
+        self.paddle_defense: Paddle
+        self.paddle_offense: Paddle
 
         self.gr_session = gameroom_session
         self.idx_rank = idx_rank
@@ -77,7 +82,7 @@ class SubGameSession(socketio.AsyncNamespace):
             )
             token = cookie_dict.get(settings.SIMPLE_JWT["AUTH_COOKIE"], None)
             if not token:
-                self.logger.warn("No token")
+                self.logger.warning("No token")
                 await self.disconnect(sid)
 
             user: User = await get_user_by_token(token)
@@ -87,7 +92,7 @@ class SubGameSession(socketio.AsyncNamespace):
             elif user.intra_id == self.intra_id_b:
                 self.sid_to_player[sid] = Player.B
             else:
-                self.logger.warn(f"connected {user.intra_id} is not assigned player")
+                self.logger.warning(f"connected {user.intra_id} is not assigned player")
                 await self.disconnect(sid)
 
         except Exception as e:
@@ -105,11 +110,11 @@ class SubGameSession(socketio.AsyncNamespace):
         self.logger.debug(f"keyboard_input from sid {sid}, data={data}")
 
         if not self.running:
-            self.logger.debug(f"SubGameSession is not running")
+            self.logger.debug("SubGameSession is not running")
             return
 
         if not sid in self.sid_to_player:
-            self.logger.warn(f"sid {sid} is not connected player")
+            self.logger.warning(f"sid {sid} is not connected player")
             return
 
         player: Player = self.sid_to_player[sid]
@@ -117,19 +122,20 @@ class SubGameSession(socketio.AsyncNamespace):
 
         if self.paddles[player].update_key(key_input, time.time()):
             self.logger.debug(
-                f"Update player {player.name} key to {key_input}, y={self.paddles[player].y} dy={self.paddles[player].dy}"
+                f"Update player {player.name} key to {key_input}, "
+                f"y={self.paddles[player].y} dy={self.paddles[player].dy}"
             )
             await self.emit_update_track_paddle(self.paddles[player])
 
     def determine_winner(self) -> None:
         if self.time_over:  # sudden death
-            if self.paddles[Player.A].score == self.paddles[Player.B].score:
-                return  # play until someone scores
-            elif self.paddles[Player.A].score > self.paddles[Player.B].score:
+            if self.paddles[Player.A].score > self.paddles[Player.B].score:
                 self.winner = Player.A
             elif self.paddles[Player.A].score < self.paddles[Player.B].score:
                 self.winner = Player.B
-        elif self.paddles[Player.A].score == self.config.match_point:
+            return
+
+        if self.paddles[Player.A].score == self.config.match_point:
             self.winner = Player.A
         elif self.paddles[Player.B].score == self.config.match_point:
             self.winner = Player.B
@@ -139,11 +145,11 @@ class SubGameSession(socketio.AsyncNamespace):
         self.logger.debug(f"start_ack from sid {sid}, data={data}")
 
         if not self.running:
-            self.logger.debug(f"SubGameSession is not running")
+            self.logger.debug("SubGameSession is not running")
             return
 
         if not sid in self.sid_to_player:
-            self.logger.warn(f"sid {sid} is not connected player")
+            self.logger.warning(f"sid {sid} is not connected player")
             return
 
         player: Player = self.sid_to_player[sid]
@@ -250,7 +256,7 @@ class SubGameSession(socketio.AsyncNamespace):
         self.logger.debug(f"ended_ack from sid {sid}, data={data}")
 
         if not sid in self.sid_to_player:
-            self.logger.warn(f"sid {sid} is not connected player")
+            self.logger.warning(f"sid {sid} is not connected player")
             return
 
         player: Player = self.sid_to_player[sid]
@@ -321,18 +327,18 @@ class SubGameSession(socketio.AsyncNamespace):
                 f"Player {self.paddle_defense.player.name} reflects the ball"
             )
             return TurnResult.DEFENDED
-        else:
-            # fail to defend, scoring, reset
-            self.paddle_offense.score += 1
-            self.logger.debug(f"Player {self.paddle_offense.player} scored")
-            await self.emit_update_scores()
-            self.logger.debug(
-                f"Player {self.paddle_offense.player.name} scores to {self.paddle_offense.score}"
-            )
-            if self.paddle_offense.player == Player.A:
-                return TurnResult.A_SCORED
-            else:
-                return TurnResult.B_SCORED
+
+        # fail to defend, scoring, reset
+        self.paddle_offense.score += 1
+        self.logger.debug(f"Player {self.paddle_offense.player} scored")
+        await self.emit_update_scores()
+        self.logger.debug(
+            f"Player {self.paddle_offense.player.name} scores to {self.paddle_offense.score}"
+        )
+        if self.paddle_offense.player == Player.A:
+            return TurnResult.A_SCORED
+
+        return TurnResult.B_SCORED
 
     async def emit_start(self) -> None:
         event = "start"

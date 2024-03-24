@@ -1,15 +1,15 @@
-import os
 import socketio
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pong.settings")
 
 import django
 
 django.setup()
 
+# pylint: disable=wrong-import-position
 from django.core.asgi import get_asgi_application
 from socketcontrol.events import sio
-from friends.OnlineStatusNamespace import OnlineStatusNamespace
+from friends.online_status_namespace import OnlineStatusNamespace
+
+# pylint: enable=wrong-import-position
 
 
 django_asgi_app = get_asgi_application()

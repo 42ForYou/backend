@@ -1,7 +1,6 @@
 import logging
 import requests
 import json
-
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,9 +14,10 @@ from accounts.serializers import (
     UserSerializer,
     ProfileSerializer,
 )
+from pong import settings
+from pong.utils import CustomError, CookieTokenAuthentication, wrap_data
 from .models import OAuth, TwoFactorAuth
 from .utils import get_token_for_user, set_cookie_response
-import pong.settings as settings
 
 
 logger = logging.getLogger("authenticate.oauth")
@@ -34,10 +34,10 @@ class OAuthView(APIView):
         access_token = request.COOKIES.get(settings.SIMPLE_JWT["AUTH_COOKIE"])
         if access_token:
             try:
-                user, validated_token = CookieTokenAuthentication().authenticate(request)
+                user, _ = CookieTokenAuthentication().authenticate(request)
                 response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
                 return response
-            except Exception as e:
+            except Exception:
                 pass
 
         try:
@@ -51,16 +51,16 @@ class OAuthView(APIView):
                 return Response(data=data, status=status.HTTP_428_PRECONDITION_REQUIRED)
             token = get_token_for_user(user)
             logger.debug(
-                f"User {user} get token: {AccessToken(token["access"]).payload}"
+                f"User {user} get token: {AccessToken(token['access']).payload}"
             )
             response = Response(self.joinUserData(user), status=status.HTTP_200_OK)
             response = set_cookie_response(response, token["access"], token["refresh"])
             return response
         except Exception as e:
-            raise CustomError(e)
+            raise CustomError(e) from e
 
     def do_2fa(self, user):
-        two_factor_auth, created = TwoFactorAuth.objects.get_or_create(user=user)
+        two_factor_auth, _ = TwoFactorAuth.objects.get_or_create(user=user)
         two_factor_auth.send_secret_code()
 
     def request42OAuth(self, code):
@@ -126,4 +126,4 @@ class OAuthView(APIView):
                 profile.delete()
             if oauth:
                 oauth.delete()
-            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST)
+            raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST) from e
