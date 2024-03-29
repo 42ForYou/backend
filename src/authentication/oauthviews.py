@@ -1,6 +1,8 @@
 import logging
 import requests
 import json
+import random
+import string
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -104,10 +106,31 @@ class OAuthView(APIView):
             serializer = UserSerializer(data=data)
             serializer.is_valid(raise_exception=True)
             user = serializer.save()
+            nickname = data["intra_id"]
+            email = data["email"]
+
+            while True:
+                new_nickname = nickname
+                new_email = email
+                if Profile.objects.filter(nickname=nickname).exists():
+                    new_nickname = nickname + self.generate_random_string()
+                if Profile.objects.filter(email=email).exists():
+                    new_email = (
+                        email.split("@")[0]
+                        + self.generate_random_string()
+                        + "@"
+                        + email.split("@")[1]
+                    )
+                if (
+                    not Profile.objects.filter(nickname=new_nickname).exists()
+                    and not Profile.objects.filter(email=new_email).exists()
+                ):
+                    break
+
             profile = Profile.objects.create(
                 user=user,
-                nickname=data["intra_id"],
-                email=data["email"],
+                nickname=new_nickname,
+                email=new_email,
                 avatar="",
             )
             oauth = OAuth.objects.create(
@@ -125,3 +148,7 @@ class OAuthView(APIView):
             if oauth:
                 oauth.delete()
             raise CustomError(e, status_code=status.HTTP_400_BAD_REQUEST) from e
+
+    def generate_random_string(self, length=3):
+        letters = string.ascii_lowercase
+        return "".join(random.choice(letters) for _ in range(length))
